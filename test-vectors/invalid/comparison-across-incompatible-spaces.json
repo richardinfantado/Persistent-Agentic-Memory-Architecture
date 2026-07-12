@@ -1,0 +1,8 @@
+{
+  "semanticRule": "embedding_space_comparison",
+  "expected_failure": "embedding_space_mismatch",
+  "instance": {
+    "left_space": "emb:a",
+    "right_space": "emb:b"
+  }
+}

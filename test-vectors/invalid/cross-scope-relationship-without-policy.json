@@ -1,0 +1,13 @@
+{
+  "expected_failure": "policy_denied",
+  "instance": {
+    "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+    "relationship_id": "rel:bad",
+    "relationship_type": "supports",
+    "source_object_id": "mem:a",
+    "target_object_id": "mem:b",
+    "scope_id": "workspace:a",
+    "target_scope_id": "workspace:b"
+  },
+  "semanticRule": "cross_scope_policy_required"
+}

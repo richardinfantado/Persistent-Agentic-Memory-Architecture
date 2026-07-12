@@ -1,0 +1,26 @@
+{
+  "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+  "operation_id": "op:query:semantic:001",
+  "scope_id": "workspace:example",
+  "query": {
+    "kind": "semantic",
+    "text": "temporary context vs persistent memory",
+    "filters": {
+      "lifecycle_state": [
+        "active"
+      ]
+    }
+  },
+  "embedding_space_id": "embspace:example:v1",
+  "pagination": {
+    "limit": 10
+  },
+  "ordering": {
+    "tie_break": [
+      "semantic_score",
+      "object_id",
+      "version_id"
+    ]
+  },
+  "explain_ranking": true
+}

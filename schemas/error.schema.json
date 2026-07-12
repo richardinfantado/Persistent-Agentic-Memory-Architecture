@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/pama/schemas/error.schema.json",
+  "title": "PAMSPEC Error Candidate Schema",
+  "description": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+  "$defs": {
+    "draftStatusWarning": {
+      "const": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lifecycle": {
+      "enum": [
+        "scratch",
+        "candidate",
+        "active",
+        "superseded",
+        "deprecated",
+        "archived",
+        "redacted",
+        "deleted"
+      ]
+    },
+    "validation": {
+      "enum": [
+        "unverified",
+        "corroborated",
+        "disputed",
+        "rejected"
+      ]
+    }
+  },
+  "type": "object",
+  "required": [
+    "draftStatusWarning",
+    "code",
+    "message",
+    "retryable",
+    "operation_id",
+    "details"
+  ],
+  "properties": {
+    "draftStatusWarning": {
+      "$ref": "#/$defs/draftStatusWarning"
+    },
+    "code": {
+      "enum": [
+        "invalid_request",
+        "invalid_object",
+        "unsupported_object_type",
+        "object_not_found",
+        "scope_not_found",
+        "access_denied",
+        "policy_denied",
+        "version_conflict",
+        "duplicate_operation",
+        "invalid_state_transition",
+        "relationship_conflict",
+        "embedding_space_mismatch",
+        "snapshot_not_found",
+        "retention_restriction",
+        "legal_hold",
+        "object_redacted",
+        "object_deleted",
+        "service_unavailable",
+        "internal_error"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "operation_id": {
+      "type": "string"
+    },
+    "details": {
+      "type": "object"
+    },
+    "policy_rule_id": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

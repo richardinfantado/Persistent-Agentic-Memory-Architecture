@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/pama/schemas/query.schema.json",
+  "title": "PAMSPEC Query Candidate Schema",
+  "description": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+  "$defs": {
+    "draftStatusWarning": {
+      "const": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lifecycle": {
+      "enum": [
+        "scratch",
+        "candidate",
+        "active",
+        "superseded",
+        "deprecated",
+        "archived",
+        "redacted",
+        "deleted"
+      ]
+    },
+    "validation": {
+      "enum": [
+        "unverified",
+        "corroborated",
+        "disputed",
+        "rejected"
+      ]
+    }
+  },
+  "type": "object",
+  "required": [
+    "draftStatusWarning",
+    "operation_id",
+    "scope_id",
+    "query"
+  ],
+  "properties": {
+    "draftStatusWarning": {
+      "$ref": "#/$defs/draftStatusWarning"
+    },
+    "operation_id": {
+      "$ref": "#/$defs/id"
+    },
+    "scope_id": {
+      "$ref": "#/$defs/id"
+    },
+    "query": {
+      "type": "object"
+    },
+    "embedding_space_id": {
+      "type": "string"
+    },
+    "snapshot_id": {
+      "type": "string"
+    },
+    "pagination": {
+      "type": "object"
+    },
+    "ordering": {
+      "type": "object"
+    },
+    "explain_ranking": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

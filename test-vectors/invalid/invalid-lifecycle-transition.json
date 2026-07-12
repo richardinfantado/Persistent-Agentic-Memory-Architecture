@@ -1,0 +1,8 @@
+{
+  "semanticRule": "lifecycle_transition",
+  "expected_failure": "invalid_state_transition",
+  "instance": {
+    "from": "archived",
+    "to": "scratch"
+  }
+}

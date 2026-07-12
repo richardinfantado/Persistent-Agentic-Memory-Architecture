@@ -1,0 +1,14 @@
+{
+  "schema": "error.schema.json",
+  "expected_failure": "duplicate_operation",
+  "instance": {
+    "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+    "code": "duplicate_operation",
+    "message": "same key different content",
+    "retryable": false,
+    "operation_id": "idem:1",
+    "details": {
+      "idempotency_key": "idem:1"
+    }
+  }
+}

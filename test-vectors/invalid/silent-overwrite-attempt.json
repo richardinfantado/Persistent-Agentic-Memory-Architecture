@@ -1,0 +1,8 @@
+{
+  "semanticRule": "silent_overwrite",
+  "expected_failure": "version_conflict",
+  "instance": {
+    "operation": "update",
+    "expected_version_id": "ver:old"
+  }
+}

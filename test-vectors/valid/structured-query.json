@@ -1,0 +1,26 @@
+{
+  "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+  "operation_id": "op:query:structured:001",
+  "scope_id": "workspace:example",
+  "query": {
+    "kind": "structured",
+    "filters": {
+      "object_type": [
+        "claim"
+      ],
+      "lifecycle_state": [
+        "active"
+      ]
+    }
+  },
+  "pagination": {
+    "limit": 25
+  },
+  "ordering": {
+    "tie_break": [
+      "updated_at",
+      "object_id",
+      "version_id"
+    ]
+  }
+}

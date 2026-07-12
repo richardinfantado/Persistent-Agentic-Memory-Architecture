@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/pama/schemas/embedding-space.schema.json",
+  "title": "PAMSPEC Embedding Space Candidate Schema",
+  "description": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+  "$defs": {
+    "draftStatusWarning": {
+      "const": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lifecycle": {
+      "enum": [
+        "scratch",
+        "candidate",
+        "active",
+        "superseded",
+        "deprecated",
+        "archived",
+        "redacted",
+        "deleted"
+      ]
+    },
+    "validation": {
+      "enum": [
+        "unverified",
+        "corroborated",
+        "disputed",
+        "rejected"
+      ]
+    }
+  },
+  "type": "object",
+  "required": [
+    "draftStatusWarning",
+    "embedding_space_id",
+    "dimensions",
+    "distance_metric",
+    "embedding_kind"
+  ],
+  "properties": {
+    "draftStatusWarning": {
+      "$ref": "#/$defs/draftStatusWarning"
+    },
+    "embedding_space_id": {
+      "$ref": "#/$defs/id"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "model_revision": {
+      "type": "string"
+    },
+    "dimensions": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "distance_metric": {
+      "type": "string"
+    },
+    "normalization": {
+      "type": "string"
+    },
+    "preprocessing_profile": {
+      "type": "string"
+    },
+    "embedding_kind": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

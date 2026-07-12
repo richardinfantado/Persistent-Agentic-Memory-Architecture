@@ -1,0 +1,15 @@
+﻿.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+__pycache__/
+.pytest_cache/
+.bundle/
+vendor/bundle/
+*.gem
+pama-validated.xml
+pamspec-validated.xml
+.validated.xml

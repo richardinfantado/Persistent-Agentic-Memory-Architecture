@@ -1,0 +1,23 @@
+name: Build Internet-Draft
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python -m pip install -r requirements.txt
+      - run: bundle exec kramdown-rfc --v3 draft-infantado-agent-memory-architecture.md > draft-infantado-agent-memory-architecture-00.xml
+      - run: xml2rfc --text --out draft-infantado-agent-memory-architecture-00.txt draft-infantado-agent-memory-architecture-00.xml
+      - run: xml2rfc --html --out draft-infantado-agent-memory-architecture-00.html draft-infantado-agent-memory-architecture-00.xml
+      - run: make validate

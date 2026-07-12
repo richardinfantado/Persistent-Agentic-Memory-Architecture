@@ -1,0 +1,14 @@
+{
+  "schema": "error.schema.json",
+  "expected_failure": "legal_hold",
+  "instance": {
+    "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
+    "code": "legal_hold",
+    "message": "legal hold blocks deletion",
+    "retryable": false,
+    "operation_id": "op:delete",
+    "details": {
+      "object_id": "mem:x"
+    }
+  }
+}
