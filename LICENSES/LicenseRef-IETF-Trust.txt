@@ -1,0 +1,7 @@
+Generated Internet-Draft artifacts are subject to the IETF Trust Legal Provisions Relating to IETF Documents in effect for the generated document.
+
+The generated RFCXML, TXT, and HTML artifacts contain the applicable IETF legal boilerplate produced by the Internet-Draft toolchain. This repository classification does not replace or modify that boilerplate.
+
+Canonical information:
+https://trustee.ietf.org/documents/trust-legal-provisions/
+

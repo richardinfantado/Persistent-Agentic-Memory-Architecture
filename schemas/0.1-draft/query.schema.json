@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/query.schema.json",
+  "title": "PAMSPEC Query 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": ["operation_id", "scope_id", "query", "pagination"],
+  "properties": {
+    "operation_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "query": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["structured", "semantic", "hybrid", "temporal"]},
+        "text": {"type": "string"},
+        "filters": {
+          "type": "object",
+          "properties": {
+            "object_type": {"type": "array", "items": {"type": "string"}},
+            "lifecycle_state": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/lifecycle_state"}},
+            "availability_state": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/availability_state"}},
+            "retention_state": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/retention_state"}},
+            "validation_state": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/validation_state"}},
+            "provenance_id": {"type": "array", "items": {"type": "string"}},
+            "relationship_type": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "temporal_basis": {
+          "enum": ["observed_at", "asserted_at", "valid_time", "committed_at", "recorded_at", "sequence"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "embedding_space_id": {"type": "string"},
+    "snapshot_id": {"type": "string"},
+    "pagination": {
+      "type": "object",
+      "required": ["limit"],
+      "properties": {
+        "limit": {"type": "integer", "minimum": 1},
+        "cursor": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "ordering": {"type": "object"},
+    "explain_ranking": {"type": "boolean"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "query": {
+            "properties": {"kind": {"enum": ["semantic", "hybrid"]}}
+          }
+        }
+      },
+      "then": {"required": ["embedding_space_id"]}
+    }
+  ],
+  "additionalProperties": false
+}
+

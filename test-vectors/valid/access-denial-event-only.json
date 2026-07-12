@@ -1,0 +1,16 @@
+{
+    "event_id":  "evt:access:001",
+    "operation_id":  "op:access:001",
+    "scope_id":  "workspace:example",
+    "object_id":  "mem:task:001",
+    "event_type":  "access_denied",
+    "recorded_at":  "2026-07-12T00:00:03Z",
+    "sequence":  6,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "payload":  {
+                    "policy_rule_id":  "policy:scope"
+                }
+}

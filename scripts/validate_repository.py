@@ -5,7 +5,7 @@ root = Path(__file__).resolve().parents[1]
 source = (root / "draft-infantado-agent-memory-architecture.md").read_text(encoding="utf-8")
 required = [
     'title: "Architecture and Data Model for Persistent Memory in Agentic Systems"',
-    "docname: draft-infantado-agent-memory-architecture-00",
+    "docname: draft-infantado-agent-memory-architecture-latest",
     "category: info",
     "RFC2119",
     "RFC8174",
@@ -21,7 +21,7 @@ required = [
 missing = [item for item in required if item not in source]
 if missing:
     raise SystemExit(f"missing required draft markers: {missing}")
-for path in list((root / "schemas").glob("*.json")) + list((root / "examples").glob("*.json")) + list((root / "test-vectors").rglob("*.json")):
+for path in list((root / "schemas").rglob("*.json")) + list((root / "examples").glob("*.json")) + list((root / "test-vectors").rglob("*.json")):
     with path.open(encoding="utf-8") as handle:
         json.load(handle)
 old_refs = []

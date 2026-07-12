@@ -1,13 +1,40 @@
 {
-  "expected_failure": "policy_denied",
-  "instance": {
-    "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
-    "relationship_id": "rel:bad",
-    "relationship_type": "supports",
-    "source_object_id": "mem:a",
-    "target_object_id": "mem:b",
-    "scope_id": "workspace:a",
-    "target_scope_id": "workspace:b"
-  },
-  "semanticRule": "cross_scope_policy_required"
+    "semanticRule":  "cross_scope_policy_required",
+    "expected_failure":  "policy_denied",
+    "instance":  {
+                     "spec_version":  "0.1.0-draft",
+                     "relationship_id":  "rel:001",
+                     "version_id":  "relver:001:1",
+                     "scope_id":  "workspace:example",
+                     "relationship_type":  "supports",
+                     "source_object_id":  "mem:claim:001",
+                     "target_object_id":  "mem:artifact:001",
+                     "directionality":  "directed",
+                     "canonical_content":  {
+                                               "weight":  1
+                                           },
+                     "lifecycle_state":  "active",
+                     "availability_state":  "available",
+                     "retention_state":  "retained",
+                     "validation_state":  "corroborated",
+                     "committed_at":  "2026-07-12T00:00:01Z",
+                     "recorded_at":  "2026-07-12T00:00:02Z",
+                     "sequence":  1,
+                     "provenance":  {
+                                        "provenance_id":  "prov:rel:001",
+                                        "source_ref":  "urn:source:review",
+                                        "actor":  {
+                                                      "actor_id":  "actor:editor:001",
+                                                      "actor_kind":  "human"
+                                                  },
+                                        "activity":  "related",
+                                        "evidence_refs":  [
+                                                              "urn:evidence:001"
+                                                          ],
+                                        "observed_at":  "2026-07-12T00:00:00Z",
+                                        "recorded_at":  "2026-07-12T00:00:01Z",
+                                        "confidence":  0.8
+                                    },
+                     "target_scope_id":  "workspace:other"
+                 }
 }

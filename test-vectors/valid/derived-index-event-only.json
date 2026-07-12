@@ -1,0 +1,16 @@
+{
+    "event_id":  "evt:index:001",
+    "operation_id":  "op:index:001",
+    "scope_id":  "workspace:example",
+    "object_id":  "mem:task:001",
+    "event_type":  "index_rebuilt",
+    "recorded_at":  "2026-07-12T00:00:03Z",
+    "sequence":  5,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "payload":  {
+                    "index_id":  "idx:001"
+                }
+}

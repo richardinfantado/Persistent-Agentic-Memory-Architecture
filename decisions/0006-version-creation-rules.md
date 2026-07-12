@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed for `draft-infantado-agent-memory-architecture-00` review.
+Accepted for the semantic consistency pass.
 
 ## Date
 
@@ -18,7 +18,7 @@ Implementations need shared semantics for testing and review, but unresolved des
 
 ## Proposed Decision
 
-Create immutable logical versions or equivalent immutable transition records for Canonical Content and authoritative state changes.
+Every Authoritative State change creates a new immutable Memory Version and corresponding Event Ledger entry. Event-only operational changes do not create Memory Versions.
 
 ## Alternatives Considered
 

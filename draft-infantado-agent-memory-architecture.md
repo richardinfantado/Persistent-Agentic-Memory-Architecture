@@ -1,7 +1,7 @@
 ---
 title: "Architecture and Data Model for Persistent Memory in Agentic Systems"
 abbrev: "PAMSPEC"
-docname: draft-infantado-agent-memory-architecture-00
+docname: draft-infantado-agent-memory-architecture-latest
 category: info
 ipr: trust200902
 area: General
@@ -94,10 +94,13 @@ informative:
       - ins: M. Fowler
     date: 2005
   AGENT-COMMUNICATION-GATEWAY:
-    title: "Agent Communication Gateway"
-    target: "https://github.com/richardinfantado/Agent-Communication-Gateway"
+    title: "Agent Communication Gateway for Semantic Routing and Working Memory"
+    target: "https://datatracker.ietf.org/doc/draft-agent-gw/"
     author:
-      - ins: R. M. Infantado
+      - ins: X. Xie
+      - ins: Z. Wang
+      - ins: T. Hu
+      - ins: Y. Cui
     date: 2026
   PROV-DM:
     title: "PROV-DM: The PROV Data Model"
@@ -108,7 +111,7 @@ informative:
     date: 2013
 --- abstract
 
-Memory in current agentic systems is often fragmented across model-provider features, application databases, session histories, framework-specific stores, unstructured files, and retrieval indexes. This document distinguishes temporary context supplied to an inference request from persistent memory that remains addressable, machine-readable, and governed beyond a single request. It specifies a provider-independent architecture and data model for persistent memory in agentic systems based on Memory Scope isolation, typed and versioned Memory Objects, machine-readable provenance, append-only Event Ledger history, lifecycle and validation state, and isolated Derived Indexes and Embedding Spaces. The architecture separates a transient Compute Plane from an authoritative Persistent State Plane and treats embeddings, lexical indexes, graph projections, generated retrieval summaries, ranking caches, and retrieval caches as non-authoritative derived state. The architecture is independent of model provider, storage engine, and protocol transport while allowing future bindings and multiple independent implementations. It does not claim that related systems or standards do not exist; rather, it defines a common architectural vocabulary and interoperability target for persistent agentic memory.
+Memory in current agentic systems is often fragmented across model-provider features, application databases, session histories, framework-specific stores, unstructured files, and retrieval indexes. This document distinguishes temporary context supplied to an inference request from persistent memory that remains addressable, machine-readable, and governed beyond a single request. It specifies a provider-independent architecture and data model for persistent memory in agentic systems based on Memory Scope isolation, typed and versioned Memory Objects, machine-readable provenance, append-only Event Ledger history, separate lifecycle, availability, retention, and validation state, and isolated Derived Indexes and Embedding Spaces. The architecture separates a transient Compute Plane from an authoritative Persistent State Plane and treats embeddings, lexical indexes, graph projections, generated retrieval summaries, ranking caches, and retrieval caches as non-authoritative derived state. The architecture is independent of model provider, storage engine, and protocol transport while allowing future bindings and multiple independent implementations. It does not claim that related systems or standards do not exist; rather, it defines a common architectural vocabulary and interoperability target for persistent agentic memory.
 
 --- middle
 
@@ -120,7 +123,7 @@ A model context window is not the authoritative memory record. It is a temporary
 
 PAMSPEC is the project shorthand for the Persistent Agentic Memory Architecture Specification. The architecture defined by the project is the Persistent Agentic Memory Architecture. PAMSPEC is not an IETF standard, working group, or published RFC.
 
-The Persistent Agentic Memory Architecture separates transient computation from authoritative state. The Compute Plane performs model inference, planning, orchestration, transformation, tool execution, and context assembly. The Persistent State Plane stores authoritative Memory Objects, versions, relationships, provenance, lifecycle state, validation state, scope and policy metadata, Event Ledger entries, snapshots, and derived-index descriptors.
+The Persistent Agentic Memory Architecture separates transient computation from authoritative state. The Compute Plane performs model inference, planning, orchestration, transformation, tool execution, and context assembly. The Persistent State Plane stores authoritative Memory Objects, Relationship Objects, versions, provenance, lifecycle, availability, retention, and validation state, scope and policy metadata, Event Ledger entries, snapshots, and Derived Index descriptors.
 
 ## Motivation
 
@@ -136,7 +139,7 @@ This architecture does not define agent discovery, semantic message routing, cap
 
 ## Document Organization
 
-Sections 2 and 3 define requirements language and terminology. Sections 4 through 7 define the problem statement, goals, non-goals, and architecture. Sections 8 through 14 scaffold the memory object model, lifecycle, operations, query model, consistency, protocol bindings, and error model. Sections 15 and 16 provide architecture-level security and privacy considerations. Sections 17 and 18 scaffold operational and conformance considerations. Section 19 records IANA considerations. Appendices provide schema, state-transition, example, rationale, and related-architecture material for review.
+Sections 2 and 3 define requirements language and terminology. Sections 4 through 7 define the problem statement, goals, non-goals, and architecture. Sections 8 through 14 define the candidate object, state, operation, query, consistency, protocol-binding, and error models. Sections 15 and 16 provide security and privacy considerations. Section 17 defines operational considerations. Section 18 defines testable conformance profiles. Section 19 records IANA considerations. Appendices summarize schemas, state transitions, examples, rationale, and related architectures.
 
 # Requirements Language
 
@@ -171,16 +174,16 @@ Workspace:
 : The recommended initial top-level Memory Scope profile for project, tenant, user, organization, or task-family isolation.
 
 Memory Object:
-: A persistent, addressable, machine-readable unit of memory with stable identity, typed Canonical Content, authoritative metadata, provenance, relationships, lifecycle state, validation state, and version history.
+: A persistent, addressable, machine-readable unit of memory with stable identity, typed Canonical Content, authoritative metadata, provenance, lifecycle, availability, retention, and validation state, and version history.
 
 Memory Version:
-: An immutable logical revision of a Memory Object or an equivalent immutable state transition record that makes authoritative state evolution inspectable.
+: An immutable logical revision of a Memory Object. Every authoritative state change creates a new Memory Version and a corresponding Event Ledger entry.
 
 Canonical Content:
 : The authoritative typed content of a Memory Object, excluding derived representations such as embeddings, caches, or retrieval summaries.
 
 Authoritative State:
-: Canonical Content and authoritative metadata stored in the Persistent State Plane, including scope, identity, version, provenance, lifecycle, validation, relationship, and integrity information.
+: Canonical Content and authoritative metadata stored in the Persistent State Plane, including scope, identity, version, provenance, lifecycle, availability, retention, validation, relationship references, temporal fields, and integrity information.
 
 Context Projection:
 : A temporary representation assembled from persistent memory and other sources for a specific inference, planning, tool, or review operation.
@@ -195,13 +198,25 @@ Event Ledger:
 : An append-only logical history of memory operations and state changes. It is broader than per-object revision history and can include indexing, access denial, deletion, redaction, and administrative events.
 
 Provenance:
-: Machine-readable information describing the origin, actor, method, evidence, time, confidence, and transformation history associated with a Memory Object, version, relationship, event, or derived representation.
+: Machine-readable information describing an entity or source reference, actor or agent, generation activity, evidence, observation and recording time, confidence assertion, transformation parent, and optional integrity reference.
 
 Lifecycle State:
-: Authoritative state describing whether a Memory Object is active, deprecated, expired, redacted, deleted, retained under legal hold, or otherwise governed by lifecycle policy.
+: Authoritative maturity and operational-use state: `scratch`, `candidate`, `active`, `superseded`, `deprecated`, or `archived`.
+
+Availability State:
+: Authoritative state describing whether Canonical Content is `available`, `partially_redacted`, `redacted`, or `deleted`.
+
+Retention State:
+: Authoritative policy state describing whether an object is `retained`, `expired`, `pending_deletion`, or subject to `legal_hold`.
 
 Validation State:
-: Authoritative state describing review, verification, confidence, dispute, rejection, supersession, or acceptance status without claiming that the system is a universal truth engine.
+: Authoritative review state: `unverified`, `corroborated`, `disputed`, or `rejected`. `corroborated` means that supporting evidence or an authorized validation process exists; it does not guarantee objective truth.
+
+Relationship Object:
+: An independently identified, typed, versioned, scope-bound authoritative object that links a source Memory Object to a target Memory Object. Relationship projections embedded in query results are non-authoritative.
+
+Tombstone:
+: A terminal Memory Version that retains only policy-permitted metadata after redaction or deletion.
 
 Snapshot:
 : A stable, inspectable representation of selected authoritative memory state at a logical time, version boundary, event sequence, or export boundary.
@@ -317,7 +332,7 @@ Derived Indexes are non-authoritative and regenerable. Rebuilding a Derived Inde
 
 ## Event Ledger
 
-The Event Ledger is distinct from object revision history. Object revision history describes the evolution of a Memory Object. The Event Ledger records broader operations and state changes, including object_created, object_updated, lifecycle_transitioned, validation_transitioned, relationship_added, relationship_removed, provenance_attached, embedding_generated, index_rebuilt, access_denied, object_expired, object_redacted, and object_deleted.
+The Event Ledger is distinct from object revision history. Object revision history describes the evolution of a Memory Object. The Event Ledger records broader operations and state changes, including `object_created`, `object_updated`, `lifecycle_transitioned`, `availability_transitioned`, `retention_transitioned`, `validation_transitioned`, `relationship_created`, `relationship_updated`, `provenance_updated`, `embedding_generated`, `index_rebuilt`, `access_denied`, `object_redacted`, and `object_deleted`.
 
 State-changing operations MUST produce Event Ledger entries. Ledger events MUST NOT be silently rewritten. Event ordering MUST be preserved within an object history. Implementations may support cryptographic continuity. Append-only history does not require permanent retention of prohibited content. Redaction or erasure may retain a content-free tombstone when policy permits. Derived-index deletion must propagate independently from canonical object deletion rules.
 
@@ -325,7 +340,7 @@ State-changing operations MUST produce Event Ledger entries. Ledger events MUST 
 
 A Memory Object may have no embedding, one embedding, or multiple embeddings in different spaces. Every vector MUST reference an Embedding Space. Vectors from incompatible spaces MUST NOT be treated as directly comparable. Semantic-query results MUST identify the Embedding Space used. Embeddings may be regenerated independently.
 
-An Embedding Space descriptor should be capable of identifying provider, model, model revision, vector dimensions, distance metric, normalization, input preprocessing profile, and embedding kind. This document does not require a vector database.
+An Embedding Space descriptor identifies `embedding_space_id`, provider, model, model revision, dimensions, distance metric, normalization, preprocessing profile, embedding kind, and canonicalization rules, plus optional creation metadata. `embedding_space_id` is authoritative for identity. Compatibility MUST NOT be inferred solely from equal dimensions, provider, model name, or distance metric. Exported vectors MUST include or reference enough descriptor information to interpret the space. An identifier MAY later be derived from a canonical descriptor hash, but this revision does not define canonical serialization or require hashing.
 
 # Memory Object Model
 
@@ -359,16 +374,25 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 : Required. Contains authoritative typed content of the version. Changes create a new logical version. Silent in-place overwrite is non-conforming. It can contain personal, confidential, or regulated information.
 
 `lifecycle_state`:
-: Required. Records authoritative retention and use posture. Changes create a new version or immutable lifecycle transition record. It can reveal archival, deletion, or legal posture.
+: Required. Records maturity and operational-use posture. Changes create a new Memory Version and Event Ledger entry.
+
+`availability_state`:
+: Required. Records whether Canonical Content is available, partially redacted, redacted, or deleted. Changes create a new Memory Version and Event Ledger entry.
+
+`retention_state`:
+: Required. Records retained, expired, pending-deletion, or legal-hold policy. Changes create a new Memory Version and Event Ledger entry.
 
 `validation_state`:
-: Required. Records authoritative review and confidence posture. Changes create a new version or immutable validation transition record. It can reveal disputes, confidence, or review decisions.
+: Required. Records authoritative review and confidence posture. Changes create a new Memory Version and Event Ledger entry. `corroborated` does not guarantee objective truth.
 
-`created_at`:
-: Required. Records creation time for the logical object. It is immutable after create and can reveal activity timing.
+`observed_at`, `asserted_at`, `valid_from`, and `valid_until`:
+: Optional client- or source-supplied temporal assertions. They do not establish Event Ledger order and may require validation.
 
-`updated_at`:
-: Required. Records commit time for this version or transition. It is set when the version or transition is committed and can reveal edit timing.
+`committed_at` and `recorded_at`:
+: Required service-assigned timestamps for the Memory Version and Event Ledger record. They are not the sole ordering mechanism.
+
+`sequence`:
+: Required service-assigned logical ordering value within the authoritative object history.
 
 `actor`:
 : Required. Identifies the actor responsible for the operation that produced this version. It is immutable for a version and can contain personal data.
@@ -376,15 +400,17 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 `provenance`:
 : Required. Records machine-readable origin, source, evidence, method, and transformation information. Corrections or additions create a new version or provenance event. It can contain personal or source-sensitive data.
 
-`relationships`:
-: Optional. Contains typed references to related objects or versions. Additions or removals create relationship events and may create a new object version if represented in the envelope. Relationships can reveal sensitive associations.
+`relationship_refs`:
+: Optional non-authoritative projection of Relationship Object identifiers. Updating a Relationship Object does not create new versions of its source or target objects.
 
 `integrity`:
 : Optional. Contains hashes, signatures, ledger references, or other tamper-evidence metadata. It is bound to the version or event material it covers and can expose correlation or verification metadata.
 
 ## Type System
 
-The initial candidate object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `relation`, and `summary`. Additional object types can be defined by profiles or implementations when they have documented schemas or content profiles and export semantics.
+The standard object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `relationship`, and `summary`. Extension types use a collision-resistant reverse-domain name or absolute URI and include `schema_id`. Implementations MUST preserve unknown extension types during export and import. Implementations MAY reject unsupported extension types during creation. A reader SHOULD return the canonical envelope even when it cannot interpret extension content, subject to policy.
+
+Canonical Content MAY be any JSON value. `schema_id` defines type-specific validation. An extension type MUST include `schema_id`.
 
 A `summary` object is an externally representable abstraction of conclusions, evidence, assumptions, constraints, progress, and unresolved questions. It is not private chain-of-thought and does not require disclosure of hidden model reasoning.
 
@@ -394,23 +420,27 @@ A `summary` object is an externally representable abstraction of conclusions, ev
 
 ## Versioning
 
-Changes to `canonical_content` create a new logical version. Changes to `lifecycle_state` or `validation_state` create a new logical version or an equivalent immutable transition record visible through Inspect History. A modification using an obsolete expected version fails with `version_conflict` and does not silently overwrite a newer version.
+Every change to Authoritative State MUST create a new immutable Memory Version and MUST create a corresponding Event Ledger entry. Authoritative State includes Canonical Content, authoritative metadata, Lifecycle State, Availability State, Retention State, Validation State, authoritative provenance, authoritative relationship references, and integrity metadata that represents authoritative content. A modification using an obsolete expected version MUST fail with `version_conflict` and MUST NOT overwrite a newer version.
+
+Non-authoritative operational events, including `embedding_generated`, `index_rebuilt`, and `access_denied`, create Event Ledger entries but do not create Memory Versions. Retrieval-cache refresh does not create a Memory Version.
 
 ## Relationships
 
-Relationships are typed, scope-evaluated references from one object or version to another object or version. A relationship has a relationship type, source identifier, target identifier, scope context, actor, provenance, and lifecycle status. Cross-scope relationships require explicit policy and authorization. A relationship does not grant access to a target object by itself.
+A Relationship Object is independently identified, typed, versioned, and scope-bound. It contains `relationship_id`, `version_id`, `scope_id`, `relationship_type`, source and target object identifiers, directionality, Canonical Content or attributes, provenance, Lifecycle State, Validation State, Availability State, Retention State, temporal fields, and integrity metadata.
+
+A Relationship Object change creates a new Relationship Version and Event Ledger entry. It does not automatically create new versions of source or target objects. Deleting an object does not silently delete related Relationship Objects. Cross-scope relationships require explicit policy. A relationship reference does not grant access, and traversal applies scope and authorization checks at every step.
 
 ## Provenance
 
-Provenance records where memory came from, who or what created it, what method produced it, what evidence supports it, and how it was transformed. Provenance is authoritative metadata. Implementations should align with existing provenance vocabularies where practical while preserving a compact memory-specific profile.
+Provenance records `provenance_id`, source reference, actor, generation activity, evidence references, observed time, recorded time, transformation parent, confidence assertion, and optional signature or integrity reference. Provenance is authoritative metadata. A provenance modification creates a new Memory Version and Event Ledger entry. Provenance cannot be silently removed. Provenance visibility may be restricted independently from Canonical Content, and a provenance reference does not grant access to its source. The entity, activity, and agent concepts align informatively with W3C PROV {{PROV-DM}} without requiring PROV-O.
 
 ## Integrity Metadata
 
 Integrity metadata can include content digests, version digests, ledger references, signatures, or chain hashes. This -00 candidate profile does not mandate a cryptographic algorithm. If integrity metadata is present, it identifies what material is covered and what verification method is used.
 
-# Lifecycle and Validation
+# Lifecycle, Availability, Retention, and Validation
 
-Lifecycle State and Validation State are separate dimensions. Lifecycle governs retention and use. Validation governs review and confidence. Lifecycle promotion does not imply validation, and validation does not imply retention authorization.
+Lifecycle State, Availability State, Retention State, and Validation State are separate authoritative dimensions. Lifecycle governs maturity and operational use. Availability governs access to Canonical Content. Retention governs preservation and disposal policy. Validation governs evidence and authorized review. A transition in one dimension does not imply a transition in another.
 
 ## Lifecycle State
 
@@ -434,9 +464,27 @@ Not every Memory Object type is required to support every lifecycle state. Suppo
 | `disputed` | Content is challenged or has conflicting evidence. | Excluded unless disputes are requested. |
 | `rejected` | Content failed validation or is no longer accepted. | Excluded except audit and history. |
 
+## Availability State
+
+| State | Meaning | Retrieval Default |
+| --- | --- | --- |
+| `available` | Canonical Content is available subject to normal authorization. | Eligible when other filters permit. |
+| `partially_redacted` | A policy-permitted subset of Canonical Content is available. | Returns only the permitted projection. |
+| `redacted` | Canonical Content is unavailable; a Tombstone remains. | Excluded except history and policy review. |
+| `deleted` | The object is represented only by a terminal Tombstone. | Excluded except authorized history. |
+
+## Retention State
+
+| State | Meaning | Disposal Behavior |
+| --- | --- | --- |
+| `retained` | Normal retention policy applies. | No disposal is pending. |
+| `expired` | Retention time has elapsed. | Policy evaluates deletion or archival. |
+| `pending_deletion` | Deletion is authorized and awaits completion or propagation. | New retrieval is policy-restricted. |
+| `legal_hold` | Disposal is suspended by explicit policy. | Delete and incompatible redaction operations fail with `legal_hold`. |
+
 ## State Transitions
 
-Lifecycle transitions require an actor and policy basis. State-changing transitions produce Event Ledger entries. A transition creates a new logical version or equivalent immutable transition record. Invalid transitions fail with `invalid_state_transition`.
+Transitions require an actor and policy basis. Every successful transition creates a new Memory Version and Event Ledger entry. Invalid transitions fail with `invalid_state_transition`.
 
 | From | Allowed To | Forbidden Without Policy Override |
 | --- | --- | --- |
@@ -456,6 +504,24 @@ Validation transitions are independent from lifecycle transitions.
 | `disputed` | `corroborated`, `rejected` | none |
 | `rejected` | `disputed`, `corroborated` with review policy | `unverified` |
 
+Availability transitions are:
+
+| From | Allowed To |
+| --- | --- |
+| `available` | `partially_redacted`, `redacted`, `deleted` |
+| `partially_redacted` | `available`, `redacted`, `deleted` |
+| `redacted` | `available` with restoration policy, `deleted` |
+| `deleted` | none |
+
+Retention transitions are:
+
+| From | Allowed To |
+| --- | --- |
+| `retained` | `expired`, `pending_deletion`, `legal_hold` |
+| `expired` | `retained`, `pending_deletion`, `legal_hold` |
+| `pending_deletion` | `retained`, `legal_hold` |
+| `legal_hold` | `retained`, `expired`, `pending_deletion` after hold release |
+
 Machine-readable candidate transition table:
 
 ~~~ json
@@ -473,13 +539,25 @@ Machine-readable candidate transition table:
     "corroborated": ["disputed", "rejected", "unverified"],
     "disputed": ["corroborated", "rejected"],
     "rejected": ["disputed", "corroborated"]
+  },
+  "availability": {
+    "available": ["partially_redacted", "redacted", "deleted"],
+    "partially_redacted": ["available", "redacted", "deleted"],
+    "redacted": ["available", "deleted"],
+    "deleted": []
+  },
+  "retention": {
+    "retained": ["expired", "pending_deletion", "legal_hold"],
+    "expired": ["retained", "pending_deletion", "legal_hold"],
+    "pending_deletion": ["retained", "legal_hold"],
+    "legal_hold": ["retained", "expired", "pending_deletion"]
   }
 }
 ~~~
 
 ## Expiration, Redaction, and Deletion
 
-Expiration is policy-driven lifecycle evaluation and may transition an object to `archived`, `deprecated`, or a redacted/deleted condition represented by operation result and ledger event. Redaction removes or suppresses protected content while retaining a scope-safe tombstone when policy permits. Deletion removes active availability of the object and may retain a tombstone, subject to retention restrictions and legal hold. Deletion blocked by legal hold fails with `legal_hold`.
+Expiration changes Retention State to `expired`; it does not change Lifecycle State by itself. Redaction creates a new terminal or non-terminal Memory Version with Availability State `partially_redacted` or `redacted` and a corresponding Event Ledger entry. Deletion creates a final immutable Tombstone Memory Version with Availability State `deleted` and a corresponding Event Ledger entry. A legal hold is represented only by Retention State `legal_hold`.
 
 # Operation Semantics
 
@@ -487,7 +565,7 @@ All operations are evaluated within a Memory Scope and against authorization pol
 
 ## Create
 
-Purpose: create a new Memory Object. Required inputs: operation identifier or idempotency key, scope identifier, object type, Canonical Content, Lifecycle State, Validation State, actor, and provenance. Optional inputs: object identifier, schema identifier, relationships, integrity metadata, expected-absence precondition, and Derived Index request. Create evaluates scope and authorization before commit. A successful Create returns object identity, version identity, scope, committed envelope, and ledger event identity. It produces `object_created` and may produce relationship or indexing events. A repeated Create with the same idempotency key and identical request content returns the original result. The same key with different request content fails with `duplicate_operation`. Retry is safe only with the same idempotency key and identical content. Possible errors include `invalid_request`, `invalid_object`, `unsupported_object_type`, `scope_not_found`, `access_denied`, `policy_denied`, `duplicate_operation`, `service_unavailable`, and `internal_error`.
+Purpose: create a new Memory Object. Required inputs are an operation identifier or idempotency key, scope identifier, object type, Canonical Content, Lifecycle State, Availability State, Retention State, Validation State, actor, provenance, and `schema_id` when required by the type. Optional inputs include object identifier, temporal assertions, integrity metadata, expected-absence precondition, and Derived Index request. Create evaluates scope and authorization before commit. A successful Create returns object identity, version identity, scope, committed envelope, and ledger event identity. It produces `object_created`. A repeated Create with the same idempotency key and identical request content returns the original result. The same key with different request content fails with `duplicate_operation`.
 
 ## Read
 
@@ -499,15 +577,15 @@ Purpose: create a new logical version of Canonical Content or authoritative meta
 
 ## Transition
 
-Purpose: change Lifecycle State or Validation State. Required inputs: operation identifier, scope identifier, object identifier, expected version, transition dimension, target state, actor, and policy basis. Optional inputs: reason, evidence, replacement object, expiration time, and legal-hold metadata. A successful Transition returns the new version or transition record and produces `lifecycle_transitioned` or `validation_transitioned`. Derived Index filters may need refresh. Possible errors include `invalid_state_transition`, `version_conflict`, `policy_denied`, `access_denied`, `legal_hold`, `object_not_found`, and `retention_restriction`.
+Purpose: change Lifecycle State, Availability State, Retention State, or Validation State. Required inputs are operation identifier, scope identifier, object identifier, expected version, transition dimension, target state, actor, and policy basis. A successful Transition always returns a new Memory Version and produces the dimension-specific Event Ledger entry. Derived Index filters may need refresh. Possible errors include `invalid_state_transition`, `version_conflict`, `policy_denied`, `access_denied`, `legal_hold`, `object_not_found`, and `retention_restriction`.
 
 ## Relate
 
-Purpose: add or remove typed relationships. Required inputs: operation identifier, scope identifier, source object, target object, relationship type, actor, and provenance. Optional inputs: expected versions, cross-scope policy basis, relationship metadata, and idempotency key. Cross-scope relationships require explicit policy and authorization. A successful Relate returns relationship identity or relationship event identity and produces `relationship_added` or `relationship_removed`. Relationship conflicts fail with `relationship_conflict`.
+Purpose: create or update a Relationship Object. Required inputs are operation identifier, scope identifier, source object, target object, relationship type, directionality, actor, provenance, and the four state dimensions. Updating requires relationship identifier and expected Relationship Version. Cross-scope relationships require explicit policy and authorization. A successful Relate returns the new Relationship Version and produces `relationship_created` or `relationship_updated`. It does not change source or target object versions.
 
 ## Query
 
-Purpose: retrieve sets of Memory Objects or versions using structured, semantic, hybrid, temporal, or snapshot criteria. Required inputs: operation identifier, scope identifier, query expression, pagination parameters, and actor. Optional inputs: Lifecycle State filters, Validation State filters, provenance filters, relationship traversal, Embedding Space, snapshot identifier, ordering profile, and ranking explanation request. Query defaults to scope-bound evaluation and does not default to unscoped global semantic search. Query does not create object versions. It may create audit or denial events.
+Purpose: retrieve sets of Memory Objects, Relationship Objects, or versions using structured, semantic, hybrid, temporal, or snapshot criteria. Required inputs are operation identifier, scope identifier, query expression, pagination parameters, and actor. Optional inputs include Lifecycle State, Availability State, Retention State, Validation State, provenance, object type, temporal, and relationship filters; Embedding Space; snapshot identifier; ordering profile; and ranking explanation request. Query defaults to scope-bound evaluation and does not default to unscoped global semantic search.
 
 ## Inspect History
 
@@ -515,37 +593,37 @@ Purpose: inspect object versions, transitions, relationships, and Event Ledger e
 
 ## Redact
 
-Purpose: remove or suppress protected content while preserving permitted audit information. Required inputs: operation identifier, scope identifier, object identifier, expected version, actor, policy basis, and redaction target. Optional inputs: tombstone metadata and Derived Index deletion request. A successful Redact returns redacted state or tombstone and produces `object_redacted`. Derived Index deletion is triggered or recorded independently. Redaction blocked by retention or legal hold returns `retention_restriction` or `legal_hold`.
+Purpose: remove or suppress protected content while preserving permitted audit information. Required inputs are operation identifier, scope identifier, object identifier, expected version, actor, policy basis, and redaction target. A successful Redact creates a new Tombstone or partially redacted Memory Version, changes Availability State, and produces `object_redacted`. Derived Index deletion is triggered or recorded independently. Redaction blocked by policy returns `retention_restriction` or `legal_hold`.
 
 ## Delete
 
-Purpose: remove active availability of an object according to policy. Required inputs: operation identifier, scope identifier, object identifier, expected version, actor, and policy basis. Optional inputs: tombstone mode, purge mode if allowed, and Derived Index deletion request. A successful Delete returns deletion state and produces `object_deleted`. Delete does not imply immediate removal from backups unless policy says so. Deletion blocked by legal hold returns `legal_hold`.
+Purpose: remove active availability of an object according to policy. Required inputs are operation identifier, scope identifier, object identifier, expected version, actor, and policy basis. A successful Delete creates the final Tombstone Memory Version with Availability State `deleted` and produces `object_deleted`. Existing Relationship Objects remain independently governed. Delete does not imply immediate removal from backups unless policy says so. Deletion blocked by legal hold returns `legal_hold`.
 
 # Query and Retrieval Model
 
-Structured retrieval evaluates deterministic filters over authoritative fields, including Memory Scope, object type, Lifecycle State, Validation State, schema identifier, provenance, actor, creation time, update time, version, relationship, and integrity metadata. When evaluated against the same authoritative snapshot and ordering profile, structured retrieval is repeatable.
+Structured retrieval evaluates deterministic filters over authoritative fields, including Memory Scope, object type, Lifecycle State, Availability State, Retention State, Validation State, schema identifier, provenance, actor, observation time, validity interval, commit time, record time, sequence, version, Relationship Object, and integrity metadata. When evaluated against the same authoritative snapshot and ordering profile, structured retrieval is repeatable.
 
 Semantic retrieval evaluates approximate similarity through a Derived Index. A semantic result should identify the Embedding Space, index or snapshot identity where available, semantic score, reranking score where applicable, applied filters, and stable tie-break information. Semantic retrieval is approximate unless evaluated against a named stable index snapshot with declared ordering behavior.
 
 Hybrid retrieval combines structured filters with semantic ranking or reranking. Structured filters are evaluated within scope before protected content is disclosed. Relationship traversal evaluates authorization for each target object. Cross-scope traversal requires explicit policy.
 
-Temporal evaluation evaluates state as of a timestamp, logical version boundary, event sequence, or snapshot. Snapshot-based evaluation provides repeatable retrieval within a named snapshot. If no stable index snapshot exists, semantic retrieval is best-effort and identifies that no stable index snapshot was used.
+Temporal evaluation explicitly selects observation time, assertion time, validity interval, commit time, record time, logical sequence, or snapshot. Client-supplied times do not control conflict resolution or Event Ledger ordering. Snapshot-based evaluation provides repeatable retrieval within a named snapshot. If no stable index snapshot exists, semantic retrieval is best-effort and identifies that no stable index snapshot was used.
 
 Pagination includes a stable cursor or ordering basis when repeatability is claimed. Stable ordering uses deterministic keys such as snapshot identifier, primary score, secondary score, update time, object identifier, and version identifier. Tie-breaking is documented for any profile that claims repeatable retrieval.
 
-Lifecycle and validation defaults are conservative: `active` plus `corroborated` is the normal trusted retrieval target; `scratch`, `candidate`, `superseded`, `deprecated`, `archived`, `unverified`, `disputed`, and `rejected` require explicit query policy or filters unless a profile declares different defaults.
+Default retrieval is conservative: Lifecycle State `active`, Availability State `available`, Retention State `retained`, and Validation State `corroborated` form the normal trusted retrieval target. Other states require explicit query policy or filters unless a profile declares different defaults.
 
 # Consistency and Concurrency
 
-The candidate profile uses optimistic concurrency. Update, Transition, Redact, Delete, and relationship operations that depend on current state use expected-version semantics. An operation with an obsolete expected version fails with `version_conflict` and returns the current version identifier when policy permits.
+The candidate profile uses optimistic concurrency. Update, Transition, Redact, Delete, and Relationship Object operations use expected-version semantics. An operation with an obsolete expected version fails with `version_conflict` and returns the current version identifier when policy permits.
 
 Idempotency keys identify duplicate requests. A duplicate request with the same idempotency key and identical request content returns the original successful result or original stable error. A duplicate request with the same idempotency key and different content fails with `duplicate_operation`.
 
-A committed object revision and its required Event Ledger entry are atomic from the perspective of Inspect History. If either cannot be committed, the state-changing operation fails. Implementations can use different physical mechanisms to provide this logical atomicity.
+A committed Memory Version and its required Event Ledger entry are atomic from the perspective of Inspect History. If either cannot be committed, the state-changing operation fails. Implementations can use different physical mechanisms to provide this logical atomicity.
 
 Read-after-write behavior applies to authoritative state: after a successful state-changing operation, a scoped Read by an authorized actor observes the committed authoritative state. Derived Indexes can be eventually consistent. Query responses using derived state expose index identity, freshness, or staleness where available.
 
-Snapshots provide a consistent read boundary over authoritative state and, when declared, over derived-index state. Clock timestamps are metadata and are not the only ordering mechanism when deterministic event order is required. Implementations distinguish observed time, request time, commit time, and logical event order.
+Snapshots provide a consistent read boundary over Authoritative State and, when declared, over Derived Index state. The Memory Service assigns commit time, record time, and logical sequence. Wall-clock time alone never establishes authoritative ordering. Client-supplied future timestamps, clock skew, forged observation times, and ambiguous time zones are treated as untrusted temporal assertions.
 
 # Protocol Bindings
 
@@ -659,7 +737,7 @@ Index rebuilding regenerates Derived Indexes and does not create canonical versi
 
 ## Clock and Time Handling
 
-Implementations should distinguish observed time, event time, commit time, and logical ordering.
+Implementations distinguish observation time, assertion time, validity interval, commit time, record time, and logical sequence. The Memory Service assigns commit time, record time, and sequence. Client-supplied observation or assertion times may be absent and are untrusted until validated.
 
 ## Observability
 
@@ -671,29 +749,39 @@ Capacity planning should account for authoritative versions, ledger entries, sna
 
 # Interoperability and Conformance
 
-## Core Conformance
+Implementations declare the profile name and version they support. Partial implementation is permitted, but an implementation MUST NOT claim a profile unless it satisfies every mandatory requirement for that profile.
 
-Core conformance is expected to require scope-bound operations, stable object identity, typed canonical content, provenance, lifecycle state, validation state, and distinction between authoritative and derived state.
+## PAMSPEC-Core
 
-## Versioning Conformance
+Requires Memory Scope enforcement, the canonical Memory Object envelope, stable object identity, immutable version identity, the four state dimensions, Authoritative State versus Derived Index separation, the core error envelope, and exportable representation.
 
-Versioning conformance is expected to require immutable logical revisions or equivalent immutable transition history.
+## PAMSPEC-Versioning
 
-## Ledger Conformance
+Requires expected-version semantics, a new immutable Memory Version for every Authoritative State change, `version_conflict`, and historical reads.
 
-Ledger conformance is expected to require append-only logical event history for state-changing operations.
+## PAMSPEC-Ledger
 
-## Query Conformance
+Requires append-only event recording, object-version linkage, authoritative-change events, event-only operational events, logical ordering, and Tombstone behavior compatible with erasure and legal hold.
 
-Query conformance is expected to define structured, semantic, hybrid, temporal, and snapshot expectations.
+## PAMSPEC-Structured-Query
 
-## Protocol-Binding Conformance
+Requires scope filtering, filters for all four state dimensions, temporal filters, stable ordering, pagination, and snapshot-bound repeatability.
 
-Protocol-binding conformance is expected to require preservation of core semantics without mandating a specific transport.
+## PAMSPEC-Semantic-Query
+
+Requires Embedding Space descriptors, semantic-result metadata, incompatible-space rejection, approximate-retrieval disclosure, and index or snapshot identity where available.
+
+## PAMSPEC-Relationship
+
+Requires independently identified and versioned Relationship Objects, cross-scope policy, source and target authorization, and traversal checks at every step.
+
+## PAMSPEC-Protocol-Binding
+
+Requires preservation of operation semantics, stable error-code mapping, authorization outcomes, idempotency, version preconditions, query parameters, Event Ledger behavior, redaction, and deletion semantics without mandating a transport.
 
 ## Implementation Reports
 
-Implementation reports should document supported profiles, storage choices, authorization model, index behavior, export behavior, deletion behavior, and known deviations.
+Implementation reports MUST document supported profile names and versions. They SHOULD document storage choices, authorization model, index behavior, export behavior, deletion behavior, test-vector results, and known deviations.
 
 # IANA Considerations
 
@@ -707,11 +795,11 @@ Normative and informative references are declared in the document metadata. This
 
 # Canonical JSON Schemas
 
-The `schemas/` directory contains minimal, unstable pre-0.1 JSON Schemas for architecture review. They are not intended to freeze the protocol surface in the -00 draft.
+The `schemas/0.1-draft/` directory contains the candidate interoperability schema profile. Schema identifiers are versioned under the provisional public GitHub namespace. Schema warnings are metadata and are not transmitted in PAMSPEC instances.
 
 # State Transition Tables
 
-The proposed direction is to define lifecycle and validation transition tables after review of use cases for expiration, redaction, deletion, legal hold, validation, dispute, and supersession. Open issue: determine whether transition tables are normative or profile-specific.
+Section 9 defines human-readable and machine-readable transition tables for Lifecycle State, Availability State, Retention State, and Validation State. Object-type profiles may further restrict transitions but cannot move values between dimensions.
 
 # Example Interactions
 
@@ -735,7 +823,7 @@ Extraction-oriented memory systems, including Mem0-style memory add, update, del
 
 Graph-native memory systems and event-sourced memory databases can provide natural implementations for relationships, immutable transitions, replay, and snapshots. PAMSPEC borrows architectural vocabulary from provenance and event-sourcing practice {{PROV-DM}} {{FOWLER-EVENT-SOURCING}} without mandating a graph database, event store, or replay engine.
 
-Agent Communication Gateway focuses on agent communication, semantic routing, protocol adaptation, and active shared workflow context {{AGENT-COMMUNICATION-GATEWAY}}. PAMSPEC focuses on persistent, typed, versioned, scoped, auditable Memory Objects and Derived Indexes. The two architectures can be complementary: an agent gateway can carry references to PAMSPEC Memory Objects, while PAMSPEC does not define agent discovery, semantic routing, or protocol adaptation.
+Agent Communication Gateway for Semantic Routing and Working Memory, currently `draft-agent-gw-01` and a Work in Progress, focuses on agent communication, semantic routing, protocol adaptation, capability discovery, and active workflow or working context {{AGENT-COMMUNICATION-GATEWAY}}. PAMSPEC focuses on persistent, typed, versioned, scoped, auditable Memory Objects, Relationship Objects, Event Ledger history, and Derived Indexes. The architectures are complementary: an agent gateway can carry references to PAMSPEC Memory Objects, while PAMSPEC does not define agent discovery, semantic routing, capability negotiation, or protocol adaptation.
 
 
 # Acknowledgements

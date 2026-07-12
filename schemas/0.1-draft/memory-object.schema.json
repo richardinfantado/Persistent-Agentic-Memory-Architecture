@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
+  "title": "PAMSPEC Memory Object 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "object_id",
+    "version_id",
+    "scope_id",
+    "object_type",
+    "canonical_content",
+    "lifecycle_state",
+    "availability_state",
+    "retention_state",
+    "validation_state",
+    "committed_at",
+    "recorded_at",
+    "sequence",
+    "actor",
+    "provenance"
+  ],
+  "properties": {
+    "spec_version": {"const": "0.1.0-draft"},
+    "object_id": {"$ref": "common.schema.json#/$defs/id"},
+    "version_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "object_type": {
+      "oneOf": [
+        {"$ref": "common.schema.json#/$defs/standard_object_type"},
+        {"$ref": "common.schema.json#/$defs/extension_object_type"}
+      ]
+    },
+    "schema_id": {"type": "string", "format": "uri"},
+    "canonical_content": {},
+    "lifecycle_state": {"$ref": "common.schema.json#/$defs/lifecycle_state"},
+    "availability_state": {"$ref": "common.schema.json#/$defs/availability_state"},
+    "retention_state": {"$ref": "common.schema.json#/$defs/retention_state"},
+    "validation_state": {"$ref": "common.schema.json#/$defs/validation_state"},
+    "observed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "asserted_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "valid_from": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "valid_until": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "committed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "actor": {"$ref": "actor.schema.json"},
+    "provenance": {"$ref": "provenance.schema.json"},
+    "relationship_refs": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/id"}
+    },
+    "integrity": {
+      "type": "object",
+      "properties": {
+        "digest": {"type": "string"},
+        "algorithm": {"type": "string"},
+        "canonicalization_profile": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "object_type": {"$ref": "common.schema.json#/$defs/extension_object_type"}
+        }
+      },
+      "then": {"required": ["schema_id"]}
+    }
+  ],
+  "additionalProperties": false
+}
+

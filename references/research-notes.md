@@ -5,3 +5,5 @@ This file records references and comparison notes for future revisions. Verify e
 Initial verified anchors include RFC 2119, RFC 8174, RFC 3986, RFC 8259, RFC 6902, RFC 9110, RFC 9562, JSON Schema 2020-12, and W3C PROV-DM.
 
 Open research areas: agent memory systems, memory extraction evaluation, provenance profiles, deletion semantics for derived indexes, and protocol bindings for agent memory operations.
+
+The active Agent Communication Gateway reference is `draft-agent-gw-01`, "Agent Communication Gateway for Semantic Routing and Working Memory", by Xiaohui Xie, Zian Wang, Tianshuo Hu, and Yong Cui, Work in Progress.

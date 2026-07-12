@@ -32,14 +32,14 @@ Normative references are intentionally limited to BCP 14 terminology because the
 | MEMGPT-PAPER | MemGPT: Towards LLMs as Operating Systems | C. Packer, V. Fang, S. G. Patil, K. Lin, S. Wooders, J. E. Gonzalez | arXiv | 2023 | https://arxiv.org/abs/2310.08560 | Related work | Stateful memory research background | Verified arXiv primary paper |
 | MEM0-DOCS | Mem0 Documentation | Mem0 | Mem0 | 2025 | https://docs.mem0.ai/ | Related work | Extraction-oriented memory behavior comparison | Verified official Mem0 documentation |
 | FOWLER-EVENT-SOURCING | Event Sourcing | M. Fowler | martinfowler.com | 2005 | https://martinfowler.com/eaaDev/EventSourcing.html | Event Ledger and related work | Event sourcing background | Verified author-hosted source |
-| AGENT-COMMUNICATION-GATEWAY | Agent Communication Gateway | R. M. Infantado | GitHub repository | 2026 | https://github.com/richardinfantado/Agent-Communication-Gateway | Related work | Distinguishes gateway communication from persistent memory | Verified project repository target |
+| AGENT-COMMUNICATION-GATEWAY | Agent Communication Gateway for Semantic Routing and Working Memory | Xiaohui Xie, Zian Wang, Tianshuo Hu, Yong Cui | IETF Internet-Draft | 2026 | `draft-agent-gw-01`, Work in Progress; https://datatracker.ietf.org/doc/draft-agent-gw/ | Appendix E | Distinguishes communication, semantic routing, protocol adaptation, capability discovery, and working context from persistent memory | Verified canonical IETF Datatracker record |
 
-## Background Only / Requires Further Verification
+## Not Cited Because Primary Verification Was Unavailable
 
-- Kumiho: requires further primary-source verification before citation in the Internet-Draft.
-- MemoriesDB: requires further primary-source verification before citation in the Internet-Draft.
-- Additional long-term memory, temporal memory, memory poisoning, and semantic retrieval reproducibility research: candidate topics for future revision, not retained as formal references in this candidate.
+- Kumiho: no authoritative primary source sufficient to verify the requested architecture claims was identified during this pass. It is not cited.
+- MemoriesDB: no authoritative primary source sufficient to verify the requested architecture claims was identified during this pass. It is not cited.
+- Additional long-term memory, temporal memory, memory poisoning, and semantic retrieval reproducibility research remains candidate material for future revisions.
 
 ## Candidate Removals
 
-No retained reference is currently marked for removal. Future revisions should remove unused references if they no longer appear in the generated reference section.
+No unverified reference is retained in the Internet-Draft bibliography. Future revisions should remove unused references if they no longer appear in the generated reference section.

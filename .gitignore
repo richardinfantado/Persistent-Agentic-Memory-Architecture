@@ -13,3 +13,5 @@ vendor/bundle/
 pama-validated.xml
 pamspec-validated.xml
 .validated.xml
+build/
+release/

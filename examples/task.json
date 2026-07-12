@@ -1,37 +1,47 @@
 {
-  "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
-  "spec_version": "pamspec-00",
-  "object_id": "mem:task:001",
-  "version_id": "ver:task:001:1",
-  "scope_id": "workspace:example",
-  "object_type": "task",
-  "schema_id": "https://example.invalid/pama/task",
-  "canonical_content": {
-    "title": "Define conformance profiles"
-  },
-  "lifecycle_state": "active",
-  "validation_state": "unverified",
-  "created_at": "2026-07-11T00:00:00Z",
-  "updated_at": "2026-07-11T00:00:00Z",
-  "actor": {
-    "actor_id": "actor:editor:001",
-    "actor_kind": "human"
-  },
-  "provenance": {
-    "generated_at": "2026-07-11T00:00:00Z",
-    "actor": {
-      "actor_id": "actor:editor:001",
-      "actor_kind": "human"
-    },
-    "sources": [
-      {
-        "kind": "draft-review"
-      }
-    ],
-    "method": "human-authored"
-  },
-  "relationships": [],
-  "integrity": {
-    "digest": "sha256:example"
-  }
+    "spec_version":  "0.1.0-draft",
+    "object_id":  "mem:task:001",
+    "version_id":  "ver:task:001:1",
+    "scope_id":  "workspace:example",
+    "object_type":  "task",
+    "schema_id":  "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
+    "canonical_content":  {
+                              "title":  "Define conformance profiles."
+                          },
+    "lifecycle_state":  "active",
+    "availability_state":  "available",
+    "retention_state":  "retained",
+    "validation_state":  "unverified",
+    "observed_at":  "2026-07-12T00:00:00Z",
+    "asserted_at":  "2026-07-12T00:00:00Z",
+    "committed_at":  "2026-07-12T00:00:01Z",
+    "recorded_at":  "2026-07-12T00:00:02Z",
+    "sequence":  1,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "provenance":  {
+                       "provenance_id":  "prov:mem:task:001:1",
+                       "source_ref":  "urn:source:review",
+                       "actor":  {
+                                     "actor_id":  "actor:editor:001",
+                                     "actor_kind":  "human"
+                                 },
+                       "activity":  "created",
+                       "evidence_refs":  [
+                                             "urn:evidence:001"
+                                         ],
+                       "observed_at":  "2026-07-12T00:00:00Z",
+                       "recorded_at":  "2026-07-12T00:00:01Z",
+                       "confidence":  0.8
+                   },
+    "relationship_refs":  [
+
+                          ],
+    "integrity":  {
+                      "digest":  "sha256:example",
+                      "algorithm":  "sha-256",
+                      "canonicalization_profile":  "unresolved"
+                  }
 }

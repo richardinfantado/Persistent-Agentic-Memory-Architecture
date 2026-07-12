@@ -1,0 +1,18 @@
+{
+    "event_id":  "evt:retention:001",
+    "operation_id":  "op:retention:001",
+    "scope_id":  "workspace:example",
+    "object_id":  "mem:task:001",
+    "version_id":  "ver:task:001:4",
+    "event_type":  "retention_transitioned",
+    "recorded_at":  "2026-07-12T00:00:03Z",
+    "sequence":  4,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "payload":  {
+                    "from":  "retained",
+                    "to":  "legal_hold"
+                }
+}

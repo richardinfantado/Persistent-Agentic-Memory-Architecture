@@ -1,0 +1,9 @@
+{
+    "semanticRule":  "cross_dimension_transition",
+    "expected_failure":  "invalid_state_transition",
+    "instance":  {
+                     "dimension":  "lifecycle",
+                     "from":  "active",
+                     "to":  "redacted"
+                 }
+}

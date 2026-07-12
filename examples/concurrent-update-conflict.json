@@ -1,11 +1,10 @@
 {
-  "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
-  "code": "version_conflict",
-  "message": "Expected version is stale.",
-  "retryable": true,
-  "operation_id": "op:update:stale",
-  "details": {
-    "expected_version_id": "ver:1",
-    "current_version_id": "ver:2"
-  }
+    "code":  "version_conflict",
+    "message":  "Expected version is stale.",
+    "retryable":  true,
+    "operation_id":  "op:update:stale",
+    "details":  {
+                    "expected_version_id":  "ver:1",
+                    "current_version_id":  "ver:2"
+                }
 }
