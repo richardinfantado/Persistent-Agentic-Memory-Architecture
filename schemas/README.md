@@ -1,3 +1,9 @@
-# Schemas
+# PAMSPEC Schema Profile
 
-These pre-0.1 JSON Schemas align with Sections 8 through 14 of `draft-infantado-agent-memory-architecture-00`. They support candidate interoperability review and test-vector validation without freezing storage or transport.
+The active candidate schema profile is `0.1-draft` under [`0.1-draft/`](0.1-draft/).
+
+Schema status warnings are expressed through schema `$comment`, `description`, and profile metadata. PAMSPEC instance data does not carry repository-development warning fields.
+
+Schema IDs use the provisional public namespace:
+
+`https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/`

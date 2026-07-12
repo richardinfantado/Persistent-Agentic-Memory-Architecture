@@ -47,6 +47,14 @@ make draft
 make validate
 ```
 
+Active development builds use `draft-infantado-agent-memory-architecture-latest` metadata and write temporary outputs under `build/`. The committed `-00` XML, TXT, and HTML files are frozen baseline artifacts. To intentionally generate a numbered revision, run:
+
+```sh
+make release REV=01
+```
+
+The numbered release is written under `release/01/` for review before any artifact is committed.
+
 ## Review
 
 Critical review, interoperability feedback, security analysis, privacy analysis, and independent implementation reports are welcome. Please use public issues, pull requests, written architecture decisions, and the review guides in [`reviews/`](reviews/).

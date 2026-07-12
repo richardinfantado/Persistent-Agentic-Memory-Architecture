@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/common.schema.json",
+  "title": "PAMSPEC Common Definitions 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lifecycle_state": {
+      "enum": ["scratch", "candidate", "active", "superseded", "deprecated", "archived"]
+    },
+    "availability_state": {
+      "enum": ["available", "partially_redacted", "redacted", "deleted"]
+    },
+    "retention_state": {
+      "enum": ["retained", "expired", "pending_deletion", "legal_hold"]
+    },
+    "validation_state": {
+      "enum": ["unverified", "corroborated", "disputed", "rejected"]
+    },
+    "standard_object_type": {
+      "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "relationship", "summary"]
+    },
+    "extension_object_type": {
+      "type": "string",
+      "anyOf": [
+        {
+          "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+\\.[a-z][a-z0-9-]*$"
+        },
+        {
+          "pattern": "^[a-z][a-z0-9+.-]*:"
+        }
+      ]
+    }
+  }
+}

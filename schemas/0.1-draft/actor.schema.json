@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/actor.schema.json",
+  "title": "PAMSPEC Actor 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": ["actor_id", "actor_kind"],
+  "properties": {
+    "actor_id": {"$ref": "common.schema.json#/$defs/id"},
+    "actor_kind": {"type": "string"},
+    "display_name": {"type": "string"}
+  },
+  "additionalProperties": false
+}
+

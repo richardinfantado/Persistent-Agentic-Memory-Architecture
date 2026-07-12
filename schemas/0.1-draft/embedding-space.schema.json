@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/embedding-space.schema.json",
+  "title": "PAMSPEC Embedding Space 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": [
+    "embedding_space_id",
+    "provider",
+    "model",
+    "model_revision",
+    "dimensions",
+    "distance_metric",
+    "normalization",
+    "preprocessing_profile",
+    "embedding_kind",
+    "canonicalization_rules"
+  ],
+  "properties": {
+    "embedding_space_id": {"$ref": "common.schema.json#/$defs/id"},
+    "provider": {"type": "string"},
+    "model": {"type": "string"},
+    "model_revision": {"type": "string"},
+    "dimensions": {"type": "integer", "minimum": 1},
+    "distance_metric": {"type": "string"},
+    "normalization": {"type": "string"},
+    "preprocessing_profile": {"type": "string"},
+    "embedding_kind": {"type": "string"},
+    "canonicalization_rules": {"type": "string"},
+    "created_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "created_by": {"$ref": "actor.schema.json"}
+  },
+  "additionalProperties": false
+}
+

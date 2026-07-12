@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/error.schema.json",
+  "title": "PAMSPEC Error 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": ["code", "message", "retryable", "operation_id", "details"],
+  "properties": {
+    "code": {
+      "enum": [
+        "invalid_request",
+        "invalid_object",
+        "unsupported_object_type",
+        "object_not_found",
+        "scope_not_found",
+        "access_denied",
+        "policy_denied",
+        "version_conflict",
+        "duplicate_operation",
+        "invalid_state_transition",
+        "relationship_conflict",
+        "embedding_space_mismatch",
+        "snapshot_not_found",
+        "retention_restriction",
+        "legal_hold",
+        "object_redacted",
+        "object_deleted",
+        "service_unavailable",
+        "internal_error"
+      ]
+    },
+    "message": {"type": "string"},
+    "retryable": {"type": "boolean"},
+    "operation_id": {"type": "string"},
+    "details": {"type": "object"},
+    "policy_rule_id": {"type": "string"},
+    "correlation_id": {"type": "string"}
+  },
+  "additionalProperties": false
+}
+

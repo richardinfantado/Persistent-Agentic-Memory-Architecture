@@ -5,7 +5,7 @@ This document is informative and non-normative. PAMSPEC terminology and conforma
 ## Compatible Concepts
 
 - Project or workspace boundaries can map to PAMSPEC Memory Scopes when they provide administrative, policy, retention, security, and query isolation.
-- Persistent records can map to PAMSPEC Memory Objects when they expose stable object identity, version identity, Canonical Content, provenance, Lifecycle State, and Validation State.
+- Persistent records can map to PAMSPEC Memory Objects when they expose stable object identity, immutable version identity, Canonical Content, provenance, Lifecycle State, Availability State, Retention State, and Validation State.
 - Audit logs can map to the PAMSPEC Event Ledger if state-changing operations are append-only and inspectable.
 - Embedding indexes can map to PAMSPEC Derived Indexes when every vector identifies an Embedding Space.
 
@@ -14,7 +14,8 @@ This document is informative and non-normative. PAMSPEC terminology and conforma
 - Hidden in-place overwrite behavior must be replaced with immutable logical versions or equivalent transition records.
 - Cross-workspace search must preserve scope boundaries and must not default to unscoped global semantic retrieval.
 - Embedding comparisons need explicit Embedding Space descriptors and mismatch handling.
-- Lifecycle and validation should be separate dimensions rather than a single status field.
+- Lifecycle, availability, retention, and validation must be separate dimensions rather than a single status field.
+- Relationships must map to independently versioned Relationship Objects rather than authoritative embedded links.
 
 ## Implementation-Specific Extensions
 
@@ -24,9 +25,11 @@ OpenBrain can define local object types, policy hooks, UI labels, storage layout
 
 - Expose or export PAMSPEC-compatible object envelopes.
 - Emit Event Ledger entries for state-changing operations.
+- Create a new Memory Version for every Authoritative State change.
 - Preserve expected-version and idempotency semantics.
 - Return stable transport-neutral error codes or a lossless mapping to them.
 - Treat Derived Indexes as non-authoritative and regenerable.
+- Preserve unknown extension object types during export and import.
 
 ## Unresolved Areas
 

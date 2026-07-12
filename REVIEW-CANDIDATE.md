@@ -1,6 +1,6 @@
 # PAMSPEC -00 External Review Candidate
 
-This repository is prepared for external technical review of `draft-infantado-agent-memory-architecture-00`.
+This branch is the PAMSPEC -00 semantic consistency pass. The frozen numbered `-00` artifacts remain the publication baseline; active development builds use `draft-infantado-agent-memory-architecture-latest`.
 
 ## Review Scope
 
@@ -14,6 +14,8 @@ Review the Persistent Agentic Memory Architecture for provider independence, obj
 - Generated HTML: `draft-infantado-agent-memory-architecture-00.html`
 - Schemas: `schemas/`
 - Test vectors: `test-vectors/`
+- Consistency matrix: `CONSISTENCY-MATRIX.md`
+- Version manifest: `pamspec-version.json`
 - ADRs: `decisions/`
 - Review guides: `reviews/`
 

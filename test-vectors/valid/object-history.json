@@ -1,17 +1,18 @@
 {
-  "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
-  "event_id": "evt:history:001",
-  "operation_id": "op:history:001",
-  "scope_id": "workspace:example",
-  "object_id": "mem:claim:create",
-  "version_id": "ver:claim:create:1",
-  "event_type": "object_created",
-  "occurred_at": "2026-07-11T00:00:00Z",
-  "actor": {
-    "actor_id": "actor:editor:001",
-    "actor_kind": "human"
-  },
-  "payload": {
-    "history_visible": true
-  }
+    "event_id":  "evt:lifecycle:001",
+    "operation_id":  "op:lifecycle:001",
+    "scope_id":  "workspace:example",
+    "object_id":  "mem:task:001",
+    "version_id":  "ver:task:001:2",
+    "event_type":  "lifecycle_transitioned",
+    "recorded_at":  "2026-07-12T00:00:03Z",
+    "sequence":  2,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "payload":  {
+                    "from":  "candidate",
+                    "to":  "active"
+                }
 }

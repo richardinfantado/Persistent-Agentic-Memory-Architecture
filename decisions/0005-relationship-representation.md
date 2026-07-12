@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed for `draft-infantado-agent-memory-architecture-00` review.
+Accepted for the semantic consistency pass.
 
 ## Date
 
@@ -18,7 +18,7 @@ Implementations need shared semantics for testing and review, but unresolved des
 
 ## Proposed Decision
 
-Represent relationships as typed, scope-evaluated records or events, not as access grants.
+Represent a Relationship as an independently identified, typed, versioned, scope-bound authoritative object. Embedded relationship projections are non-authoritative and do not grant access.
 
 ## Alternatives Considered
 

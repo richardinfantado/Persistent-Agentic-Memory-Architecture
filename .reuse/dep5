@@ -1,0 +1,17 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: *.md decisions/* references/* reviews/* implementations/*
+Copyright: 2026 Richard M. Infantado
+License: CC-BY-4.0
+
+Files: schemas/* schemas/**/* examples/* test-vectors/**/* scripts/* Makefile .github/**/*
+Copyright: 2026 Richard M. Infantado
+License: Apache-2.0
+
+Files: .gitignore Gemfile requirements.txt VERSION pamspec-version.json review-candidate-manifest.json
+Copyright: 2026 Richard M. Infantado
+License: Apache-2.0
+
+Files: draft-infantado-agent-memory-architecture-00.xml draft-infantado-agent-memory-architecture-00.txt draft-infantado-agent-memory-architecture-00.html
+Copyright: Generated Internet-Draft artifacts
+License: LicenseRef-IETF-Trust

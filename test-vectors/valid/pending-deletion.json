@@ -1,0 +1,47 @@
+{
+    "spec_version":  "0.1.0-draft",
+    "object_id":  "mem:claim:pending",
+    "version_id":  "ver:claim:pending:2",
+    "scope_id":  "workspace:example",
+    "object_type":  "claim",
+    "schema_id":  "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
+    "canonical_content":  {
+                              "statement":  "Pending deletion example"
+                          },
+    "lifecycle_state":  "archived",
+    "availability_state":  "available",
+    "retention_state":  "pending_deletion",
+    "validation_state":  "corroborated",
+    "observed_at":  "2026-07-12T00:00:00Z",
+    "asserted_at":  "2026-07-12T00:00:00Z",
+    "committed_at":  "2026-07-12T00:00:01Z",
+    "recorded_at":  "2026-07-12T00:00:02Z",
+    "sequence":  2,
+    "actor":  {
+                  "actor_id":  "actor:editor:001",
+                  "actor_kind":  "human"
+              },
+    "provenance":  {
+                       "provenance_id":  "prov:mem:claim:pending:2",
+                       "source_ref":  "urn:source:review",
+                       "actor":  {
+                                     "actor_id":  "actor:editor:001",
+                                     "actor_kind":  "human"
+                                 },
+                       "activity":  "created",
+                       "evidence_refs":  [
+                                             "urn:evidence:001"
+                                         ],
+                       "observed_at":  "2026-07-12T00:00:00Z",
+                       "recorded_at":  "2026-07-12T00:00:01Z",
+                       "confidence":  0.8
+                   },
+    "relationship_refs":  [
+
+                          ],
+    "integrity":  {
+                      "digest":  "sha256:example",
+                      "algorithm":  "sha-256",
+                      "canonicalization_profile":  "unresolved"
+                  }
+}

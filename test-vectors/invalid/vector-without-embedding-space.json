@@ -1,11 +1,10 @@
 {
-  "semanticRule": "embedding_space_required",
-  "expected_failure": "embedding_space_mismatch",
-  "instance": {
-    "object_id": "mem:x",
-    "vector": [
-      0.1,
-      0.2
-    ]
-  }
+    "semanticRule":  "embedding_space_required",
+    "expected_failure":  "embedding_space_mismatch",
+    "instance":  {
+                     "vector":  [
+                                    0.1,
+                                    0.2
+                                ]
+                 }
 }

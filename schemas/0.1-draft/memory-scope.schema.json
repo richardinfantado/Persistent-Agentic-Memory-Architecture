@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-scope.schema.json",
+  "title": "PAMSPEC Memory Scope 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema.",
+  "type": "object",
+  "required": ["scope_id", "scope_kind"],
+  "properties": {
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_kind": {"type": "string"},
+    "parent_scope_id": {"type": "string"},
+    "policy": {"type": "object"}
+  },
+  "additionalProperties": false
+}

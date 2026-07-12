@@ -1,8 +1,8 @@
 {
-  "semanticRule": "validation_transition",
-  "expected_failure": "invalid_state_transition",
-  "instance": {
-    "from": "rejected",
-    "to": "unverified"
-  }
+    "semanticRule":  "validation_transition",
+    "expected_failure":  "invalid_state_transition",
+    "instance":  {
+                     "from":  "rejected",
+                     "to":  "unverified"
+                 }
 }

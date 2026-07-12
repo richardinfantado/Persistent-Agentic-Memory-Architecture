@@ -8,7 +8,13 @@
 
 ## Supported PAMSPEC Sections
 
+## Supported Conformance Profiles and Versions
+
 ## Object Model Support
+
+## Lifecycle, Availability, Retention, and Validation Support
+
+## Relationship Object Support
 
 ## Operation Semantics Support
 

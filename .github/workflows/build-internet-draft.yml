@@ -17,7 +17,5 @@ jobs:
         with:
           python-version: '3.x'
       - run: python -m pip install -r requirements.txt
-      - run: bundle exec kramdown-rfc --v3 draft-infantado-agent-memory-architecture.md > draft-infantado-agent-memory-architecture-00.xml
-      - run: xml2rfc --text --out draft-infantado-agent-memory-architecture-00.txt draft-infantado-agent-memory-architecture-00.xml
-      - run: xml2rfc --html --out draft-infantado-agent-memory-architecture-00.html draft-infantado-agent-memory-architecture-00.xml
-      - run: make validate
+      - run: gem install kramdown-rfc --no-document
+      - run: python scripts/build_draft.py validate

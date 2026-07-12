@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/provenance.schema.json",
+  "title": "PAMSPEC Provenance 0.1-draft",
+  "$comment": "Pre-1.0 candidate interoperability schema aligned informatively with W3C PROV.",
+  "type": "object",
+  "required": ["provenance_id", "actor", "activity", "recorded_at"],
+  "properties": {
+    "provenance_id": {"$ref": "common.schema.json#/$defs/id"},
+    "source_ref": {"type": "string"},
+    "actor": {"$ref": "actor.schema.json"},
+    "activity": {"type": "string", "minLength": 1},
+    "evidence_refs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "observed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "transformation_parent": {"type": "string"},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "integrity_ref": {"type": "string"}
+  },
+  "additionalProperties": false
+}
+

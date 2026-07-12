@@ -1,15 +1,13 @@
 {
-  "schema": "error.schema.json",
-  "expected_failure": "access_denied",
-  "instance": {
-    "draftStatusWarning": "Unstable pre-0.1 review schema for draft-infantado-agent-memory-architecture-00; candidate interoperability model, not a frozen protocol contract.",
-    "code": "access_denied",
-    "message": "actor cannot promote lifecycle",
-    "retryable": false,
-    "operation_id": "op:promote",
-    "details": {
-      "from": "candidate",
-      "to": "active"
-    }
-  }
+    "expected_failure":  "access_denied",
+    "instance":  {
+                     "code":  "access_denied",
+                     "message":  "actor cannot promote lifecycle",
+                     "retryable":  false,
+                     "operation_id":  "op:promote",
+                     "details":  {
+                                     "from":  "candidate",
+                                     "to":  "active"
+                                 }
+                 }
 }

@@ -1,0 +1,36 @@
+{
+    "schema":  "memory-object.schema.json",
+    "expected_failure":  "schema_required",
+    "instance":  {
+                     "spec_version":  "0.1.0-draft",
+                     "object_id":  "mem:task:001",
+                     "version_id":  "ver:task:001:1",
+                     "scope_id":  "workspace:example",
+                     "object_type":  "task",
+                     "schema_id":  "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
+                     "canonical_content":  {
+                                               "title":  "Define conformance profiles."
+                                           },
+                     "lifecycle_state":  "active",
+                     "availability_state":  "available",
+                     "retention_state":  "retained",
+                     "validation_state":  "unverified",
+                     "observed_at":  "2026-07-12T00:00:00Z",
+                     "asserted_at":  "2026-07-12T00:00:00Z",
+                     "committed_at":  "2026-07-12T00:00:01Z",
+                     "recorded_at":  "2026-07-12T00:00:02Z",
+                     "sequence":  1,
+                     "actor":  {
+                                   "actor_id":  "actor:editor:001",
+                                   "actor_kind":  "human"
+                               },
+                     "relationship_refs":  [
+
+                                           ],
+                     "integrity":  {
+                                       "digest":  "sha256:example",
+                                       "algorithm":  "sha-256",
+                                       "canonicalization_profile":  "unresolved"
+                                   }
+                 }
+}
