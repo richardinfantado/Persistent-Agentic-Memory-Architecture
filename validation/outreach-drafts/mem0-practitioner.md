@@ -49,7 +49,7 @@ Regards,
 
 - Verify who the current active maintainer/contributor is at the time of sending on `mem0ai/mem0`. Do not assume long-lived roles.
 - Prefer a comment on issue **#6277** or PR **#6278** over an unsolicited personal message.
-- **Replace `6ae806bbeb591c82c91236a191514b1775f24dbf` with the exact V08.1 commit SHA on branch `validation/08-real-framework-proof`, OR wait until the branch is merged to `main` and use `main` — do not link to `main` before the merge lands.**
+- The permalink above pins commit `6ae806bbeb591c82c91236a191514b1775f24dbf` on branch `validation/08-real-framework-proof`. If a further V08.x correction lands before you send this, either update the SHA to the newest V08.x commit or wait for merge to `main` and switch to a `main` link — but do not switch to `main` before that merge lands.
 - Do not fabricate issue numbers. If #6277/#6278/#6342 have moved or closed by send time, verify the current state and either link the successor or drop the reference.
 - Do not paste the evidence report body into the outreach — link only.
 - Do NOT mention the (retracted) derived-vector claim as a live finding. It is included in the "transparency" block only so the recipient can see the retraction — do not resurrect it as a probe.

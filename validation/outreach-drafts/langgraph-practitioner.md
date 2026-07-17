@@ -23,7 +23,7 @@ I want your view on **whether a memory-data-model spec that stops before runtime
 
 1. Which is more valuable for stateful-agent development: a portable data model for memory (identity, versioning, provenance, scope, tombstones) that leaves runtime-wiring unspecified, or something that also constrains *how* the runtime attaches persistent storage?
 2. LangGraph explicitly separates short-term (`Checkpointer`) from long-term (`Store`). Do these two feel like the same *kind* of memory expressed at different scopes, or genuinely different memory concepts? (This affects whether PAMSPEC's `working_memory` object type should exist — see `validation/reports/working-memory-evidence.md`.)
-3. When Mem0 exhibits behaviors like "update silently mutates scope" or "update does not refresh the vector index," do LangGraph users see analogous behavior when swapping in different `Store` backends?
+3. When Mem0 exhibits behavior like "`update(metadata={"user_id":...})` silently mutates native scope and moves a memory across tenants" (see the report — scenario 1), do LangGraph users see analogous scope-integrity issues when swapping in different `Store` backends? (Note: V08.1 retracted an earlier V08 claim that Mem0 leaves the derived vector index stale; a properly-controlled experiment showed Mem0 does refresh it, so please do not build on that retracted claim.)
 4. Would you be interested in a LangGraph-side adapter (over `Store`, `Checkpointer`, or both) that ran the eight PAMSPEC scenarios against LangGraph unmodified?
 5. Is there a specific real failure your users hit that PAMSPEC's current normative core (see `validation/what-pamspec-is-for.md`) does NOT address, but should?
 
