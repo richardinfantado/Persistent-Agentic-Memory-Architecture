@@ -73,7 +73,7 @@
       "type": "object",
       "$comment": "Optional machine-readable quality signals produced by automated processes. Non-authoritative; retrieval ranking and default filters MAY use them but authoritative validation remains governed by validation_state.",
       "properties": {
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "assessed_confidence": {"type": "number", "minimum": 0, "maximum": 1, "$comment": "System's or assessor's confidence in the claim after review. Distinct from provenance.source_confidence, which is the original source's confidence in what they reported."},
         "contradiction_score": {"type": "number", "minimum": 0, "maximum": 1, "$comment": "0 = no known contradictions, 1 = strongly contradicted by other memory."},
         "staleness_score": {"type": "number", "minimum": 0, "maximum": 1, "$comment": "0 = fresh, 1 = highly stale relative to related memory."},
         "evidence_strength": {"type": "number", "minimum": 0, "maximum": 1},

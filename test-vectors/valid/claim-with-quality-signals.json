@@ -20,7 +20,7 @@
     "recorded_at": "2026-07-17T00:00:00.000001Z"
   },
   "quality_signals": {
-    "confidence": 0.92,
+    "assessed_confidence": 0.92,
     "contradiction_score": 0.05,
     "staleness_score": 0.10,
     "evidence_strength": 0.85,
