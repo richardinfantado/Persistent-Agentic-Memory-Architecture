@@ -43,6 +43,8 @@ PAMSPEC defines a provider-independent architecture and data model for persisten
 - Architecture decisions (27 ADRs): [`decisions/`](decisions/)
 - Reference implementation (Python, PAMSPEC-Lite + Delegation + Subscribe): [`implementations/reference-python/`](implementations/reference-python/)
 - MCP binding profile + Python stub server: [`bindings/mcp/`](bindings/mcp/)
+- **Portable conformance harness** (adapter-based, implementation-agnostic): [`conformance/`](conformance/)
+- Implementation report for the reference impl: [`reviews/implementation-report-reference-python.md`](reviews/implementation-report-reference-python.md)
 - External review guides: [`reviews/`](reviews/)
 - Consistency matrix (cross-file review artifact): [`CONSISTENCY-MATRIX.md`](CONSISTENCY-MATRIX.md)
 - Version manifest: [`pamspec-version.json`](pamspec-version.json)
@@ -60,6 +62,21 @@ PYTHONPATH=implementations/reference-python python -m pytest implementations/ref
 ```
 
 The reference implementation is < 800 LOC, SQLite-backed, and satisfies PAMSPEC-Lite plus Delegation and Subscribe. See [`implementations/reference-python/README.md`](implementations/reference-python/README.md).
+
+## Proving conformance of any implementation
+
+```bash
+PYTHONPATH=.:implementations/reference-python python -m pytest conformance/tests
+```
+
+To claim conformance from a different implementation, write a
+~100-line adapter under `conformance/adapters/<yourimpl>.py`
+satisfying `conformance.harness.Adapter`, then a pytest file under
+`conformance/tests/` that runs the same suite against your adapter.
+The harness ships 25 behavioral cases across three profiles
+(PAMSPEC-Lite, PAMSPEC-Delegation, PAMSPEC-Subscribe) and prints a
+report you can attach to an implementation report under
+[`reviews/`](reviews/).
 
 ## Architecture Tracks
 
