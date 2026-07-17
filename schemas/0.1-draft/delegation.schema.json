@@ -34,13 +34,7 @@
     "delegated_actor": {"$ref": "actor.schema.json"},
     "granted_operations": {
       "type": "array",
-      "items": {
-        "enum": [
-          "create", "read", "update", "transition", "relate",
-          "query", "inspect_history", "redact", "delete",
-          "promote", "subscribe"
-        ]
-      },
+      "items": {"$ref": "common.schema.json#/$defs/pamspec_operation"},
       "minItems": 1,
       "uniqueItems": true
     },

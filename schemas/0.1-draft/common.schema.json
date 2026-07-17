@@ -26,6 +26,23 @@
     "validation_state": {
       "enum": ["unverified", "corroborated", "disputed", "rejected"]
     },
+    "pamspec_operation": {
+      "$comment": "Canonical set of PAMSPEC operation names. Single source of truth for delegation.schema.json, MCP binding tool descriptors, and any other artifact that enumerates operations. Adding an operation here is a coordinated change.",
+      "enum": [
+        "create",
+        "read",
+        "update",
+        "transition",
+        "relate",
+        "query",
+        "inspect_history",
+        "redact",
+        "delete",
+        "promote",
+        "subscribe",
+        "unsubscribe"
+      ]
+    },
     "standard_object_type": {
       "$comment": "Relationship Objects are represented by relationship.schema.json and are intentionally excluded from this enumeration.",
       "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "summary", "tool_invocation", "tool_result", "working_memory"]
