@@ -1,5 +1,65 @@
 # Changelog
 
+## PAMSPEC -01 Consolidation Cycle (C1-C10)
+
+Ten consolidation branches targeting IETF-review readiness, each
+merged from its own branch:
+
+- **C1** — Extended `CONSISTENCY-MATRIX.md` with 15 rows for -01
+  and consolidation concepts (PAMSPEC-Lite profile, MCP binding,
+  tool types, working memory, Promote, resource_usage, Subscribe,
+  Delegation, quality_signals, attestation, delegation_id,
+  Evaluation Snapshot, pamspec_operation enum, source vs assessed
+  confidence).
+- **C2** — Added 12 invalid test vectors covering delegation,
+  subscription, evaluation snapshot, quality signals, tool
+  invocation/result, working memory, event resource usage,
+  attestation window, promotion source, snapshot mutation.
+- **C3** — Expanded `pamspec-version.json` with full schema
+  inventory (16 schemas), all 9 conformance profiles, bindings,
+  and reference implementation.
+- **C4** — CI workflow (`.github/workflows/build-internet-draft.yml`)
+  extended to build XML/TXT/HTML on every push, run all test
+  suites, and produce numbered releases via workflow_dispatch.
+  `CORRECTION-BASELINE.md` renamed and rewritten to document the
+  artifact policy, the -00 frozen vs -latest divergence, and the
+  step-by-step -01 release procedure.
+- **C5** — MCP binding completed: `pamspec.relate`, `pamspec.redact`,
+  `pamspec.promote`, `pamspec.unsubscribe` added to `tools.json`;
+  stub Python MCP server (`bindings/mcp/server-python/`) that
+  wraps the reference implementation with 6 pytest cases.
+- **C6** — Reference implementation gap-fill:
+  `pamspec_ref.DelegationStore` (grant/revoke/check with time
+  window, granted_operations, granted_object_ids/types, usage
+  limit, revocation enforcement) and `pamspec_ref.Subscription`
+  /`SubscriptionManager` (cursor-based pull, filter matching,
+  per-event authorization, close semantics). 12 new pytest cases.
+- **C7** — Deduplicated `confidence`: `provenance.confidence` →
+  `source_confidence` (source's own confidence in what they
+  reported); `quality_signals.confidence` → `assessed_confidence`
+  (system's or reviewer's confidence in the claim).
+- **C8** — Extracted `pamspec_operation` enum to
+  `common.schema.json` as single source of truth for operation
+  names; `delegation.schema.json` and MCP binding now reference it.
+- **C9** — Integrated 30+ academic and IETF informative references:
+  CoALA, Generative Agents, HippoRAG, LongMemEval, LoCoMo, MAS-LLM
+  survey, MetaGPT, Model Cards, Datasheets, PROV-AGENT, Relative
+  Representations, Matryoshka, W3C DIDs, AIP I-D, Agent-ID
+  Framework I-D, SCITT I-D, AI Agent Protocols framework I-D,
+  MCP-over-MoQ, MCP security considerations, RAGAS, RGB, Tulving,
+  Baddeley & Hitch, Baddeley (episodic buffer), CLS theory, Squire.
+  Extended Comparison with Related Architectures to map PAMSPEC
+  object types onto the CoALA taxonomy.
+- **C10** — Refreshed all READMEs (top-level, `schemas/`,
+  `test-vectors/`, `decisions/`, `examples/`) with -01 surface,
+  conformance profile table, quick start, schema inventory,
+  invalid vector shapes and semantic rules, -01 ADR index.
+
+Post-consolidation totals: 16 schemas; 27 ADRs; 30+ informative
+references; PAMSPEC-Lite Python reference (24 tests) plus MCP
+adapter (6 tests). All validators and test suites pass on every
+merge to main.
+
 ## PAMSPEC -01 Enhancement Cycle (P1-P10)
 
 Ten additive enhancements, each merged from its own feature branch:
