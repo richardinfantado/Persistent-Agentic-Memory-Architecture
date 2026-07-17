@@ -1,6 +1,6 @@
-# PAMSPEC -00 External Review Candidate
+# PAMSPEC Internal Review-Candidate Pointer
 
-This branch is the PAMSPEC -00 semantic consistency pass. The frozen numbered `-00` artifacts remain the publication baseline; active development builds use `draft-infantado-agent-memory-architecture-latest`.
+> **IETF submission status: not submitted.** No revision of this document has been submitted to or posted by the IETF Datatracker. This file describes an INTERNAL review scope. See [`REVIEW-CANDIDATE-ARCHIVE.md`](REVIEW-CANDIDATE-ARCHIVE.md) for the archive of historical internal renderings.
 
 ## Review Scope
 
@@ -8,10 +8,8 @@ Review the Persistent Agentic Memory Architecture for provider independence, obj
 
 ## Key Artifacts
 
-- Internet-Draft source: `draft-infantado-agent-memory-architecture.md`
-- Generated RFCXML: `draft-infantado-agent-memory-architecture-00.xml`
-- Generated TXT: `draft-infantado-agent-memory-architecture-00.txt`
-- Generated HTML: `draft-infantado-agent-memory-architecture-00.html`
+- Editable Internet-Draft source (docname `-latest`): `draft-infantado-agent-memory-architecture.md`
+- Archived internal renderings (never submitted to IETF): `review-candidates/`
 - Schemas: `schemas/`
 - Test vectors: `test-vectors/`
 - Consistency matrix: `CONSISTENCY-MATRIX.md`
@@ -21,4 +19,4 @@ Review the Persistent Agentic Memory Architecture for provider independence, obj
 
 ## Contributor Identification
 
-Richard M. Infantado is the primary author and specification editor. Robert Leroux is acknowledged as a contributor. Contributor listing is separate from formal Internet-Draft authorship.
+Richard M. Infantado is the primary author and specification editor. Robert Leroux is acknowledged as a contributor. Contributor listing is separate from formal Internet-Draft authorship — no formal Internet-Draft authorship exists yet because no revision has been submitted.

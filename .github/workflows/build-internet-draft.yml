@@ -5,10 +5,11 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      revision:
-        description: 'Release revision (e.g., 01, 02). Leave blank for latest-only.'
+      submission_candidate:
+        description: 'Produce a numbered submission-candidate rendering (in addition to the neutral -latest artifact) for IETF submission review. The revision is derived from pamspec-version.json and cannot be overridden here: while ietf_submission_status is "not_submitted", only "00" is permitted. This build does NOT submit the draft and does NOT mark it as posted.'
         required: false
-        default: ''
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -41,7 +42,7 @@ jobs:
       - name: Run portable conformance suite against reference adapter
         run: PYTHONPATH=.:implementations/reference-python python -m pytest conformance/tests -q
 
-      - name: Build latest (XML/TXT/HTML)
+      - name: Build latest (XML/TXT/HTML) — neutral internal artifact
         run: python scripts/build_draft.py all
 
       - name: Upload latest artifacts
@@ -53,13 +54,25 @@ jobs:
             build/draft-infantado-agent-memory-architecture-latest.txt
             build/draft-infantado-agent-memory-architecture-latest.html
 
-      - name: Build numbered release
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.revision != '' }}
-        run: python scripts/build_draft.py release --revision "${{ inputs.revision }}"
+      - name: Resolve permitted submission-candidate revision
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.submission_candidate == true }}
+        id: revguard
+        run: |
+          set -euo pipefail
+          PERMITTED=$(python -c "from scripts.build_draft import permitted_submission_candidate_revision; print(permitted_submission_candidate_revision())")
+          echo "Permitted submission-candidate revision from manifest: $PERMITTED"
+          echo "permitted=$PERMITTED" >> "$GITHUB_OUTPUT"
 
-      - name: Upload numbered release artifacts
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.revision != '' }}
+      - name: Build submission candidate (guarded)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.submission_candidate == true }}
+        run: |
+          python scripts/build_draft.py submission-candidate \
+            --revision "${{ steps.revguard.outputs.permitted }}" \
+            --confirm-submission-candidate
+
+      - name: Upload submission-candidate artifacts
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.submission_candidate == true }}
         uses: actions/upload-artifact@v4
         with:
-          name: draft-release-${{ inputs.revision }}
-          path: release/${{ inputs.revision }}/
+          name: submission-candidate-${{ steps.revguard.outputs.permitted }}
+          path: submission-candidates/${{ steps.revguard.outputs.permitted }}/

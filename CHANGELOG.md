@@ -1,6 +1,16 @@
 # Changelog
 
-## PAMSPEC -01 C11 — Portable conformance harness (2026-07-17)
+> **Terminology note.** Entries below sometimes refer to `-00` and `-01` "cycles" or "candidates" — these are INTERNAL milestone labels only. No revision of this document has been submitted to or posted by the IETF Datatracker. The next possible Datatracker revision remains `-00`. See [`REVIEW-CANDIDATE-ARCHIVE.md`](REVIEW-CANDIDATE-ARCHIVE.md).
+
+## R1 — Repository truth correction (2026-07-18)
+
+- Renamed `CORRECTION-BASELINE.md` to [`REVIEW-CANDIDATE-ARCHIVE.md`](REVIEW-CANDIDATE-ARCHIVE.md); removed all language implying an IETF submission had occurred.
+- Moved formerly root-level `draft-infantado-agent-memory-architecture-{00,01}.{xml,txt,html}` into `review-candidates/2026-07-18/candidate-{a,b}/rendering.{xml,txt,html}` with per-candidate `MANIFEST.md` preserving source commit, generator, and SHA-256 checksums.
+- Rewrote `pamspec-version.json`: removed `frozen_internet_draft_revision` and `enhancement_cycle`; added `ietf_submission_status: not_submitted`, `next_datatracker_revision: 00`, `posted_datatracker_revisions: []`, and `latest_internal_review_candidate` pointing at the archived candidate B.
+- Rewrote `review-candidate-manifest.json` to remove `frozen_revision` and add the same submission-status keys.
+- Updated `README.md` to state submission status explicitly and remove the "-01 enhancement cycle in progress" and "frozen -00 baseline" wording.
+
+## Internal enhancement cycle C11 — Portable conformance harness (2026-07-17)
 
 Response to external review pointing out that the -01 test-vector
 coverage validated documents against schemas but did not give
@@ -30,7 +40,7 @@ Adopting implementations now have a two-step path to a checkable
 conformance claim: write an adapter, run the suite. No PAMSPEC
 internals need to be understood.
 
-## PAMSPEC -01 Consolidation Cycle (C1-C10)
+## Internal consolidation cycle (C1-C10)
 
 Ten consolidation branches targeting IETF-review readiness, each
 merged from its own branch:
@@ -50,10 +60,12 @@ merged from its own branch:
   and reference implementation.
 - **C4** — CI workflow (`.github/workflows/build-internet-draft.yml`)
   extended to build XML/TXT/HTML on every push, run all test
-  suites, and produce numbered releases via workflow_dispatch.
-  `CORRECTION-BASELINE.md` renamed and rewritten to document the
-  artifact policy, the -00 frozen vs -latest divergence, and the
-  step-by-step -01 release procedure.
+  suites, and produce numbered internal-review renderings via
+  workflow_dispatch. (Superseded by R1: the CORRECTION-BASELINE.md
+  file this milestone introduced has been replaced by
+  REVIEW-CANDIDATE-ARCHIVE.md, and any language it contained
+  about "published `-00` baseline" or "`-01` release procedure"
+  was factually wrong and has been corrected.)
 - **C5** — MCP binding completed: `pamspec.relate`, `pamspec.redact`,
   `pamspec.promote`, `pamspec.unsubscribe` added to `tools.json`;
   stub Python MCP server (`bindings/mcp/server-python/`) that
@@ -90,7 +102,7 @@ references; PAMSPEC-Lite Python reference (24 tests) plus MCP
 adapter (6 tests). All validators and test suites pass on every
 merge to main.
 
-## PAMSPEC -01 Enhancement Cycle (P1-P10)
+## Internal enhancement cycle (P1-P10)
 
 Ten additive enhancements, each merged from its own feature branch:
 
@@ -153,18 +165,18 @@ validators pass; reference implementation tests (12) pass.
 - Replaced `canonicalization_profile: "unresolved"` in examples and test vectors with the illustrative value `"none"` so `valid/` vectors no longer contain design-open markers.
 - Rewrote ADR-0006 with specific rationale, alternatives, consequences, and cross-references (previously duplicated ADR-0001 boilerplate).
 
-## PAMSPEC -00 Semantic Consistency Pass
+## Internal semantic-consistency review pass (label: -00)
 
 - Separated Lifecycle, Availability, Retention, and Validation State.
 - Required a new immutable Memory Version and Event Ledger entry for every Authoritative State change.
 - Defined independently versioned Relationship Objects.
 - Added versioned public schema IDs and removed instance warning fields.
 - Added explicit conformance profiles, temporal semantics, provenance structure, type extensions, and canonical-content shape.
-- Froze numbered `-00` artifacts and moved active development builds to `latest`.
+- Archived the internal rendering set produced by this pass under `review-candidates/2026-07-18/candidate-a/` (never submitted to IETF); active development continued under the `latest` docname.
 - Added REUSE-compliant licensing metadata, version manifests, and a cross-artifact consistency matrix.
 - Corrected Agent Communication Gateway to `draft-agent-gw-01`.
 
-## draft-infantado-agent-memory-architecture-00 - PAMSPEC -00 External Review and Publication Candidate
+## Internal review-and-publication candidate (label: -00 candidate)
 
 - Updated public project shorthand to PAMSPEC while preserving the Internet-Draft identifier.
 - Updated primary author metadata to Richard M. Infantado, Independent.
@@ -172,7 +184,7 @@ validators pass; reference implementation tests (12) pass.
 - Added dual-license documentation for CC BY 4.0 documentation and Apache-2.0 technical artifacts.
 - Added reference audit, related-work strengthening, and external review package.
 
-## draft-infantado-agent-memory-architecture-00 - PAMSPEC Object and Operation Model -00
+## Internal object-and-operation-model milestone (label: -00 candidate)
 
 - Completed candidate interoperability model for Sections 8 through 14.
 - Added architecture decision records for object, lifecycle, operation, retrieval, and error model decisions.
