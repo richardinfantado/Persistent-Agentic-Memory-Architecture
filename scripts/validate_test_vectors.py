@@ -37,6 +37,8 @@ def schema_for_valid(data):
         return "memory-event.schema.json"
     if "subscription_id" in data and "start_sequence" in data:
         return "subscription.schema.json"
+    if "snapshot_id" in data and "ledger_sequence_high_watermark" in data:
+        return "evaluation-snapshot.schema.json"
     return "memory-object.schema.json"
 
 
