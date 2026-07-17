@@ -20,6 +20,16 @@ The initial version of this document contained several inaccuracies and analytic
 9. **Independent Stream description (§4).** Corrected: the Independent Submission Stream is a distinct RFC publication path with its own editor and review process. It is not simply the fallback "if the IESG does not sponsor" the document.
 10. **AIMEM mapping appendix added (Appendix A).** The prior AIMEM disposition recommended "coordinate but remain separate" without proving AIMEM can carry PAMSPEC semantics without loss. The new Appendix A provides a field-and-behavior mapping classifying each PAMSPEC concept as lossless / lossless with extension / lossy / not representable / incompatible against AIMEM. Until this mapping stabilizes, PAMSPEC MUST NOT define its own bundle and MUST NOT normatively depend on AIMEM.
 
+## Second-pass precision corrections (2026-07-18)
+
+Further review identified precision issues in five places. These are applied in place; §6 is more extensively rewritten and readers should treat §6.1 as the authoritative current AIMEM disposition.
+
+- **Executive summary §1(5)** no longer describes the Independent Submission Stream as a fallback if the IESG does not sponsor. It is now described as a separate publication path selected deliberately.
+- **§6 AIMEM disposition** has been restructured. "Adopt AIMEM" and "profile AIMEM" are no longer ranked as currently preferred options. The current disposition is the singular position in §6.1 (coordinate but remain separate; no PAMSPEC bundle; no normative AIMEM dependency; reopening the adoption or profiling options requires *both* an agreed extension mechanism AND resolution of the expected-version conflict incompatibility). §6.2 records the adoption and profiling options as formally out of scope pending those unlocking conditions.
+- **MCP source-list label (Sources § R2-A)** now reads: "Model Context Protocol, release candidate for the planned 2026-07-28 specification, announced 2026-05-21."
+- **"no WG has jurisdiction today"** removed. Replaced with: "This review did not identify an existing IETF Working Group whose current charter clearly covers persistent agent-memory data models." Applied to both §1(5) and §4.
+- **`agents@ietf.org`** is described as a candidate discussion venue whose current suitability and activity must be verified — not asserted as an active list.
+
 ## Framing statement
 
 This document is a research crosswalk. It compares the PAMSPEC draft in the pinned repository against (a) adjacent standards work already visible in the IETF datatracker and at W3C, (b) primary academic evidence on persistent agent memory, and (c) the actual IETF process and venue rules. It is intended to inform, not to justify, downstream decisions about wording, scope, and submission timing.
@@ -32,7 +42,7 @@ Three framing rules apply throughout and are the reason several confident-soundi
 2. **Overlap?** Material overlap exists with AIMEM on bundle envelope, chunk records, identifier URN scheme, embedding metadata, and idempotent import; with SAIHM on cell shape, sharing contracts, and cryptographic erasure; with FAF/FAFM on the memory-vs-context distinction and mutation semantics; with the arXiv preprint 2605.11032 (Portable Agent Memory) on Merkle-DAG provenance and capability-scoped disclosure; and with MCP on transport binding surface.
 3. **Differentiation?** PAMSPEC's plausible differentiators are (a) an explicit atomic version+event commit protocol with a `version_conflict` semantic, (b) an "Embedding Space" identity descriptor that lets consumers reject incompatible-space vectors rather than silently re-embed, (c) a conformance-profile system (`PAMSPEC-Lite`, `-Ledger`, `-Semantic-Query`, `-Evaluation`, plus Delegation and Subscribe extensions), and (d) a portable adapter-based conformance harness. None of these is proven novel in the sense that no adjacent work touches them; each is a defensible refinement.
 4. **Remove/defer?** Delegation Objects and Subscribe operations should stay as *extension profiles*, not core, until independent implementation evidence justifies core status; agent-identity work is being actively drafted elsewhere (draft-singla, draft-aip, draft-drake, draft-larsson, draft-sharif) and PAMSPEC should not annex it. Working Memory as a first-class *portable* type is not currently supported by strong evidence and should stay optional.
-5. **IETF venue?** For a memory data-model spec with a small individual author team, no WG has jurisdiction today. The realistic near-term venues are (i) an individual submission on the standard I-D track with Intended Status **Informational** or **Experimental**, (ii) the Independent Submissions Editor (RFC Editor stream) if the IESG does not sponsor, or (iii) participation in the W3C AI Agent Memory Interoperability CG to influence conformance and test-vector work. IRTF is a plausible home if the project reframes as a research report rather than an engineering spec.
+5. **IETF venue?** This review did not identify an existing IETF Working Group whose current charter clearly covers persistent agent-memory data models. The realistic near-term venues are (i) an individual submission on the standard I-D track with Intended Status **Informational** or **Experimental**, (ii) the Independent Submission Stream — a separate RFC publication path with its own editor (the Independent Submissions Editor, ISE) and review process, selected deliberately as a stream choice rather than as a fallback, or (iii) participation in the W3C AI Agent Memory Interoperability CG to influence conformance and test-vector work. IRTF is a plausible home if the project reframes as a research report rather than an engineering spec.
 6. **What -00 should claim.** A `-00` may claim exactly this: that it is an individual submission of an Internet-Draft, that it defines a candidate data model and event ledger for persistent agent memory, that a reference implementation exists, and that it is not endorsed by the IETF and has no formal status. It must not claim: "IETF standard," "adopted," "reviewed," or novelty over documented prior art without a direct comparison paragraph.
 
 ## 2. Concern-by-concern standards matrix (R2-A)
@@ -169,7 +179,7 @@ Each item is tagged **P** (procedural — you must do this to submit), **R** (re
 - **P — Submission cutoffs.** The datatracker enforces a submission blackout for the days immediately surrounding IETF meeting weeks; check the current IETF meeting calendar before scheduling a `-00`.
 - **P — Intended status options.** Informational, Experimental, Standards Track (further split into Proposed Standard and Internet Standard per RFC 6410), and Best Current Practice.
 - **P — "Not endorsed by IETF" statement.** Individual submissions carry the standard boilerplate noting they are not the product of an IETF WG and do not represent IETF consensus. This wording is required and must not be paraphrased away in marketing.
-- **R — Working Group adoption path.** An author may seek WG adoption by identifying a WG whose charter covers the topic, presenting the draft to the WG, and asking the chairs to call for adoption. There is no WG today for agent-memory data models specifically; the closest ecosystem venues are `agents@ietf.org` and related non-WG lists.
+- **R — Working Group adoption path.** An author may seek WG adoption by identifying a WG whose charter covers the topic, presenting the draft to the WG, and asking the chairs to call for adoption. This review did not identify an existing IETF Working Group whose current charter clearly covers persistent agent-memory data models. `agents@ietf.org` and related non-WG lists are candidate discussion venues; their current suitability and activity for PAMSPEC discussion must be verified before use.
 - **R — Independent Submission Stream.** The Independent Submission Stream is a distinct RFC publication path with its own editor (the Independent Submissions Editor, ISE) and its own review process (see `rfc-editor.org/pubprocess/`). It is NOT simply the fallback "if the IESG does not sponsor" the document; that framing understates what the stream is. Choosing to submit through the Independent Stream is a strategic stream decision, not an automatic default. SAIHM (`draft-saihm-memory-protocol-01`) is currently on this path.
 - **R — IETF vs IRTF.** IETF engineering; IRTF research. If the project's near-term posture is "we want empirical study and are still iterating on core abstractions," an IRTF Research Group (or presenting at an existing RG) is more honest than pushing for a WG.
 - **R — Implementation experience for Proposed Standard.** RFC 7127: "Usually, neither implementation nor operational experience is required for the designation of a specification as a Proposed Standard," but the IESG may require it for specifications with significant operational impact, and implementation experience is a strong argument in favor.
@@ -195,18 +205,25 @@ Critically, none of the following are IETF rules: "you must have a TypeScript re
 
 ## 6. AIMEM disposition
 
-**Recommendation: coordinate but remain separate; do NOT create a PAMSPEC bundle at this time.**
+### 6.1 Current disposition (locked)
 
-Justification. AIMEM (`draft-vu-aimem-bundle-00`) already defines memory-bundle exchange semantics, including envelope with `format`/`version`/`producer`/`tenant_id`/`scope`, ChunkRecord + edges + entities, URN identifier scheme, embedding metadata with declared model identifier, SHA-256 integrity and optional COSE_Sign1, DNA-class chunk invariants, and Producer/Consumer/Bidirectional conformance levels. A second bundle format that duplicates these choices cannot honestly be called novel and increases fragmentation.
+**PAMSPEC and AIMEM remain separate but coordinated.** Specifically, at this stage:
 
-Options, in order of decreasing preference:
+- **Coordinate but remain separate.** Cite AIMEM (`draft-vu-aimem-bundle-00`) explicitly in `-00` and enumerate the concept-by-concept relationship using this document's cross-cutting matrix (§2.1) and the field-and-behavior mapping in Appendix A.
+- **No PAMSPEC bundle.** PAMSPEC MUST NOT define its own memory-bundle format at this stage. The interoperability problem that would justify one is currently addressed by AIMEM.
+- **No normative AIMEM dependency.** PAMSPEC MUST NOT declare a normative dependency on AIMEM, and MUST NOT specify AIMEM as PAMSPEC's exchange binding, at this stage. Doing so would inherit AIMEM's currently-incompatible expected-version conflict semantics (Appendix A.2) and its currently-not-representable core concepts (distinct version identity, version sequence, event history, Lifecycle State, Validation State, tombstone semantics — Appendix A).
+- **Reopening the adoption or profiling options** requires *both* (a) an agreed extension mechanism between PAMSPEC and AIMEM authors (there is no reserved `x-*` extension prefix in AIMEM `-00`), *and* (b) resolution of the expected-version conflict incompatibility (AIMEM permits consumer discretion; PAMSPEC mandates rejection of stale expected versions). Either of those unresolved gaps is sufficient on its own to block adoption or profiling.
 
-1. **Adopt AIMEM as PAMSPEC's exchange binding.** Reference `draft-vu-aimem-bundle` normatively for envelope, chunk record, and URN identifier. Focus PAMSPEC's own contribution on the parts AIMEM does not define: atomic version+event commit protocol, Event Ledger semantics, Embedding Space descriptor beyond `model_id`, and conformance profiles.
-2. **Profile AIMEM.** Publish a PAMSPEC profile that pins AIMEM options (which conformance level, which optional fields, which security posture is required) and adds PAMSPEC-specific extensions in a namespaced way.
-3. **Coordinate but remain separate.** Cite AIMEM explicitly in `-00` and enumerate divergences with justification. Acceptable only if there is a specific technical reason PAMSPEC cannot use the AIMEM envelope.
-4. **Define a different format.** Discouraged unless a technical incompatibility is documented; would require an explicit prior-art section refuting the "duplicative" reading.
+Context. AIMEM already defines memory-bundle exchange semantics, including envelope with `format`/`version`/`producer`/`tenant_id`/`scope`, ChunkRecord + edges + entities, URN identifier scheme, embedding metadata with declared model identifier, SHA-256 integrity and optional COSE_Sign1, DNA-class chunk invariants, and Producer/Consumer/Bidirectional conformance levels. That work occupies the memory-bundle interchange space; PAMSPEC's contribution lies elsewhere (see §1 and the differentiators noted there). This disposition is not a ranking of options — it is the singular current position, and the two named unlocking conditions above are the *only* triggers for revisiting it.
 
-Under all four options, PAMSPEC's `-00` must include a "Relationship to prior art" section naming AIMEM, SAIHM, FAF/FAFM, and Portable Agent Memory.
+### 6.2 Options that remain formally *out of scope* until unlocking conditions are met
+
+Documented here so future revisions do not treat them as re-openable without the unlocking conditions above being satisfied:
+
+- **Adopt AIMEM as PAMSPEC's exchange binding** — out of scope pending an agreed extension mechanism AND resolution of the expected-version conflict incompatibility. Adoption at this stage would inherit both problems and would silently drop core PAMSPEC concepts on round-trip.
+- **Profile AIMEM** — out of scope pending the same two conditions.
+
+Under this disposition, PAMSPEC's first `-00` MUST include a "Relationship to prior art" section naming AIMEM, SAIHM, FAF/FAFM, and Portable Agent Memory, and MUST reference this disposition rather than restating it.
 
 ## 7. Submission timing recommendation
 
@@ -219,7 +236,7 @@ A defensible near-term plan:
 - Complete R1–R8.
 - Integrate the Relationship-to-prior-art section and Claims Register wording.
 - Post `draft-infantado-agent-memory-architecture-00` with Intended Status Informational or Experimental.
-- Announce on relevant non-WG lists (e.g., `agents@ietf.org` if that list is active at the time, plus the W3C AI Agent Memory Interoperability CG if PAMSPEC decides to engage there).
+- Announce on relevant non-WG lists once their current suitability and activity have been verified (e.g., `agents@ietf.org` is a candidate venue whose suitability must be confirmed at the time; participation in the W3C AI Agent Memory Interoperability CG is another option if PAMSPEC decides to engage there).
 - Do not seek WG adoption until at least one independent implementation exists and a WG whose charter covers agent-memory data models has been identified or proposed.
 
 ## 8. Open questions
@@ -326,7 +343,7 @@ Confirmed rule: R2 leaves the current recommendation as "coordinate but remain s
 - draft-saihm-memory-protocol-01, "Sovereign AI Horizontal Memory Protocol," Russell Jackson, 2026-05-27. https://datatracker.ietf.org/doc/draft-saihm-memory-protocol/ (accessed 2026-07-18)
 - draft-wolfe-faf-format-02, "Foundation Agent Format / FAFM," James Wolfe, 2026-06-28 (updated 2026-07-03). https://datatracker.ietf.org/doc/draft-wolfe-faf-format/ (accessed 2026-07-18)
 - W3C AI Agent Memory Interoperability Community Group (proposed 2026-05-18). https://www.w3.org/community/ai-agent-memory-interop/ ; https://www.w3.org/groups/cg/ai-agent-memory-interop/ (accessed 2026-07-18)
-- Model Context Protocol, 2026-07-28 Release Candidate. https://modelcontextprotocol.io/specification/ ; https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/ (accessed 2026-07-18)
+- Model Context Protocol, release candidate for the planned 2026-07-28 specification, announced 2026-05-21. https://modelcontextprotocol.io/specification/ ; https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/ (accessed 2026-07-18)
 - Agent-identity landscape (context): draft-singla-agent-identity-protocol-03; draft-aip-agent-identity-protocol-00; draft-larsson-aitlp-00; draft-sharif-agent-identity-framework-00; draft-drake-agent-identity-registry-00. All at https://datatracker.ietf.org/ (accessed 2026-07-18)
 
 **R2-B (Academic)**
