@@ -21,9 +21,27 @@ profile it claims pass green.
 - `harness/adapter.py` — abstract `Adapter` interface. Every
   implementation writes a small class that satisfies this.
 - `harness/runner.py` — loads the suite, drives the adapter,
-  collects results.
-- `harness/vector_loader.py` — loads test-vectors into structured
-  cases.
+  collects results, produces `ConformanceReport` with human-readable
+  `summary()` AND machine-readable `to_json()`. JSON reports include
+  adapter/implementation metadata (name, version, protocol version,
+  spec commit, supported profiles) and the harness's own git commit
+  for suite-version pinning.
+- `harness/subprocess_adapter.py` — talks to any implementation over
+  a versioned JSON-lines stdio protocol (see `harness/PROTOCOL.md`).
+  Same suite drives in-process and subprocess adapters.
+- `harness/PROTOCOL.md` — versioned harness subprocess protocol
+  (v1). This is transport plumbing only; it defines nothing about
+  PAMSPEC memory semantics.
+- `adapters/reference_python.py` — in-process adapter wrapping the
+  Python reference implementation.
+- `adapters/reference_python_subprocess.py` — subprocess wrapper
+  exposing the same reference implementation over the harness
+  stdio protocol.
+- `adapters/broken/` — seven **negative-control adapters**, each
+  deliberately violating one property. `tests/test_broken_adapters.py`
+  asserts each broken adapter fails its designated suite case. If a
+  broken adapter starts passing, either the property no longer holds
+  or the suite case no longer asserts it — both are bugs.
 - `suite/` — the portable behavioral tests. Only use the adapter
   interface; MUST NOT touch implementation internals.
   - `test_lite.py` — PAMSPEC-Lite behavior
