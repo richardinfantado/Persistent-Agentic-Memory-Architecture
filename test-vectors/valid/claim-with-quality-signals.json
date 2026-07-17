@@ -1,0 +1,34 @@
+{
+  "spec_version": "0.1.0-draft",
+  "object_id": "mem:claim:q001",
+  "version_id": "ver:claim:q001:1",
+  "scope_id": "workspace:example",
+  "object_type": "claim",
+  "canonical_content": {"statement": "PAMSPEC separates authoritative and derived state."},
+  "lifecycle_state": "active",
+  "availability_state": "available",
+  "retention_state": "retained",
+  "validation_state": "corroborated",
+  "committed_at": "2026-07-17T00:00:00.000000Z",
+  "recorded_at": "2026-07-17T00:00:00.000001Z",
+  "sequence": 1,
+  "actor": {"actor_id": "actor:editor:001", "actor_kind": "human"},
+  "provenance": {
+    "provenance_id": "prov:claim:q001",
+    "actor": {"actor_id": "actor:editor:001", "actor_kind": "human"},
+    "activity": "created",
+    "recorded_at": "2026-07-17T00:00:00.000001Z"
+  },
+  "quality_signals": {
+    "confidence": 0.92,
+    "contradiction_score": 0.05,
+    "staleness_score": 0.10,
+    "evidence_strength": 0.85,
+    "source_diversity": 0.66,
+    "last_verified_at": "2026-07-16T12:00:00Z",
+    "last_verified_by_actor_id": "actor:reviewer:001",
+    "verification_method_id": "method:review:human-checklist-v2",
+    "assessed_at": "2026-07-17T00:00:00Z",
+    "assessed_by_actor_id": "actor:agent:quality-scorer"
+  }
+}

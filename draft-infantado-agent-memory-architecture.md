@@ -408,6 +408,9 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 `integrity`:
 : Optional. Contains hashes, signatures, ledger references, or other tamper-evidence metadata. It is bound to the version or event material it covers and can expose correlation or verification metadata.
 
+`quality_signals`:
+: Optional machine-readable quality signals produced by automated processes: `confidence`, `contradiction_score`, `staleness_score`, `evidence_strength`, `source_diversity`, `last_verified_at`, `last_verified_by_actor_id`, `verification_method_id`, `assessed_at`, and `assessed_by_actor_id`. These signals are non-authoritative and MUST NOT be used to override Validation State; retrieval ranking and default filters MAY use them, and profiles MAY define standard thresholds for their use.
+
 ## Type System
 
 The standard Memory Object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `summary`, `tool_invocation`, and `tool_result`. Relationships between Memory Objects are represented as independently identified Relationship Objects and do not appear in this enumeration; see the Relationships subsection. Extension types use a collision-resistant reverse-domain name or absolute URI and include `schema_id`. Implementations MUST preserve unknown extension types during export and import. Implementations MAY reject unsupported extension types during creation. A reader SHOULD return the canonical envelope even when it cannot interpret extension content, subject to policy.
