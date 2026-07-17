@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/bindings/mcp/tools.json",
+  "title": "PAMSPEC-over-MCP tool descriptors",
+  "$comment": "Descriptors for MCP tool discovery. Each entry is what an MCP server SHOULD register for the corresponding PAMSPEC operation.",
+  "type": "object",
+  "properties": {
+    "tools": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/tool_descriptor"}
+    }
+  },
+  "required": ["tools"],
+  "$defs": {
+    "tool_descriptor": {
+      "type": "object",
+      "required": ["name", "description", "inputSchema"],
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "inputSchema": {"type": "object"}
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "pamspec.create",
+      "description": "Create a new Memory Object. Returns the committed envelope and event id. Honors idempotency_key.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_type", "canonical_content", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "idempotency_key": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "object_type": {"type": "string"},
+          "canonical_content": {},
+          "lifecycle_state": {"type": "string"},
+          "availability_state": {"type": "string"},
+          "retention_state": {"type": "string"},
+          "validation_state": {"type": "string"},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.read",
+      "description": "Retrieve the current authoritative version of an object, or a specific historical version.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_id"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "version_id": {"type": "string"},
+          "snapshot_id": {"type": "string"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.update",
+      "description": "Create a new immutable Memory Version. Uses expected-version preconditions.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_id", "expected_version_id", "canonical_content", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "idempotency_key": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "canonical_content": {},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.transition",
+      "description": "Transition an authoritative state dimension (lifecycle, availability, retention, validation).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_id", "expected_version_id", "dimension", "target_state", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "dimension": {"enum": ["lifecycle", "availability", "retention", "validation"]},
+          "target_state": {"type": "string"},
+          "policy_basis": {"type": "string"},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.query",
+      "description": "Retrieve sets of Memory Objects using structured, semantic, hybrid, temporal, or snapshot criteria.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "filters": {"type": "object"},
+          "semantic": {"type": "object"},
+          "embedding_space_id": {"type": "string"},
+          "snapshot_id": {"type": "string"},
+          "cursor": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    {
+      "name": "pamspec.inspect_history",
+      "description": "Inspect versions, transitions, and Event Ledger entries for an object or range.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "after_sequence": {"type": "integer"},
+          "event_classes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    {
+      "name": "pamspec.delete",
+      "description": "Create a terminal tombstone Memory Version. Blocked by legal_hold.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_id", "expected_version_id", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "policy_basis": {"type": "string"},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.subscribe",
+      "description": "Open a streaming subscription to Event Ledger entries matching a filter. Notifications are delivered via MCP notifications.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "filter": {"type": "object"},
+          "after_sequence": {"type": "integer"}
+        }
+      }
+    }
+  ]
+}
