@@ -32,7 +32,10 @@
         "tool_invoked",
         "tool_completed",
         "subscription_opened",
-        "subscription_closed"
+        "subscription_closed",
+        "delegation_granted",
+        "delegation_revoked",
+        "delegation_exercised"
       ]
     },
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
