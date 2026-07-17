@@ -2,12 +2,13 @@
 
 ## Status
 
-**Proposed — decision-only.** This ADR establishes the intended scope
-boundary and the anti-drift test that governs future feature
-additions. It does NOT move files, edit schemas, rename profiles,
-delete tests, change conformance behavior, rewrite the draft, or add
-features. Any reclassification that follows will be executed under
-separate branches (R4a, R4b, R4c, R5, R6, R8) after review.
+**Accepted — current scope decision.** Reviewed, corrected, and merged
+to main at commit `8fc0afd`. This ADR establishes the scope boundary
+and the anti-drift test that governs future feature additions. It
+does NOT itself move files, edit schemas, rename profiles, delete
+tests, change conformance behavior, rewrite the draft, or add
+features. Reclassification is executed under separate branches
+(R4a, R4b, R4c, R5, R6, R8) each requiring their own review.
 
 ## Date
 
