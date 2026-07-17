@@ -148,16 +148,98 @@
       }
     },
     {
-      "name": "pamspec.subscribe",
-      "description": "Open a streaming subscription to Event Ledger entries matching a filter. Notifications are delivered via MCP notifications.",
+      "name": "pamspec.relate",
+      "description": "Create or update a Relationship Object between two Memory Objects. Cross-scope relationships require policy_basis.",
       "inputSchema": {
         "type": "object",
-        "required": ["scope_id"],
+        "required": ["scope_id", "source_object_id", "target_object_id", "relationship_type", "directionality", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "idempotency_key": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "relationship_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "source_object_id": {"type": "string"},
+          "target_object_id": {"type": "string"},
+          "target_scope_id": {"type": "string"},
+          "relationship_type": {"type": "string"},
+          "directionality": {"enum": ["directed", "bidirectional", "undirected"]},
+          "canonical_content": {},
+          "policy_basis": {"type": "string"},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.redact",
+      "description": "Suppress or remove protected content while preserving audit history. Creates a terminal or partially redacted Memory Version. Blocked by legal_hold.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "object_id", "expected_version_id", "actor", "provenance", "policy_basis", "redaction_target"],
         "properties": {
           "operation_id": {"type": "string"},
           "scope_id": {"type": "string"},
+          "object_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "policy_basis": {"type": "string"},
+          "redaction_target": {
+            "type": "object",
+            "$comment": "Field-path or subset of canonical_content to redact. Implementation-defined."
+          },
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.promote",
+      "description": "Convert a working_memory object into a canonical Memory Object type, transitioning the source to superseded and creating a derived_from Relationship Object. Atomic.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "source_object_id", "expected_version_id", "target_object_type", "target_canonical_content", "actor", "provenance"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "idempotency_key": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "source_object_id": {"type": "string"},
+          "expected_version_id": {"type": "string"},
+          "target_object_id": {"type": "string"},
+          "target_object_type": {"type": "string"},
+          "target_canonical_content": {},
+          "target_lifecycle_state": {"type": "string"},
+          "target_validation_state": {"type": "string"},
+          "actor": {"type": "object"},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.subscribe",
+      "description": "Open a streaming subscription to Event Ledger entries matching a filter. Notifications are delivered via MCP notifications. At-least-once delivery; deduplicate by event_id.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "actor", "filter"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "actor": {"type": "object"},
           "filter": {"type": "object"},
-          "after_sequence": {"type": "integer"}
+          "start_sequence": {"type": "integer", "minimum": 0},
+          "delivery": {"type": "object"}
+        }
+      }
+    },
+    {
+      "name": "pamspec.unsubscribe",
+      "description": "Close a subscription opened by pamspec.subscribe.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["scope_id", "subscription_id"],
+        "properties": {
+          "operation_id": {"type": "string"},
+          "scope_id": {"type": "string"},
+          "subscription_id": {"type": "string"}
         }
       }
     }
