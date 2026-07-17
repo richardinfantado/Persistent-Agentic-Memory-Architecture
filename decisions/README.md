@@ -19,3 +19,18 @@ This index tracks design choices and unresolved matters for PAMSPEC.
 - [Memory Object type extension model](0015-memory-object-type-extension-model.md)
 - [Canonical Content shape](0016-canonical-content-shape.md)
 - [Temporal semantics and clock model](0017-temporal-semantics-and-clock-model.md)
+
+## -01 Enhancement Cycle
+
+- [PAMSPEC-Lite profile](0018-pamspec-lite-profile.md)
+- [MCP binding profile](0019-mcp-binding.md)
+- [tool_invocation and tool_result object types](0020-tool-invocation-and-result-types.md)
+- [Working memory tier and Promote operation](0021-working-memory-tier.md)
+- [Cost and latency fields on Event Ledger](0022-cost-latency-ledger-fields.md)
+- [Subscribe operation](0023-subscribe-operation.md)
+- [Delegation Object](0024-delegation-object.md)
+- [Quality signals block](0025-quality-signals.md)
+- [Actor attestation](0026-actor-attestation.md)
+- [Evaluation Snapshot sub-profile](0027-evaluation-snapshot-profile.md)
+
+New ADRs use [`template.md`](template.md) as the starting shape.

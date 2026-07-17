@@ -4,7 +4,7 @@ PAMSPEC is the project shorthand for the **Persistent Agentic Memory Architectur
 
 Internet-Draft: **Architecture and Data Model for Persistent Memory in Agentic Systems**
 
-Draft status: initial `-00` individual contribution. This repository is not an official RFC, is not an adopted IETF working-group document, and is not an IETF standard.
+Draft status: individual contribution, `-01` enhancement cycle in progress; the frozen numbered `-00` artifacts remain the published baseline. This repository is not an official RFC, is not an adopted IETF working-group document, and is not an IETF standard.
 
 PAMSPEC defines a provider-independent architecture and data model for persistent, machine-readable memory in agentic systems. It separates transient agent computation from authoritative persistent state so memory can be audited, exported, reviewed, and implemented independently of any model provider, runtime, framework, storage engine, vector database, or transport protocol.
 
@@ -16,27 +16,57 @@ PAMSPEC defines a provider-independent architecture and data model for persisten
 4. Append-only Event Ledger
 5. Isolated Derived Indexes and Embedding Spaces
 
+## Conformance Profiles
+
+| Profile | Purpose |
+| --- | --- |
+| **PAMSPEC-Lite** | Minimal on-ramp for prototypes and single-developer agents |
+| **PAMSPEC-Core** | Full envelope, four state dimensions, error envelope |
+| **PAMSPEC-Versioning** | Expected-version concurrency + `version_conflict` |
+| **PAMSPEC-Ledger** | Append-only Event Ledger with atomic version+event commit |
+| **PAMSPEC-Structured-Query** | Scope-bound filters, temporal, snapshot-repeatable |
+| **PAMSPEC-Semantic-Query** | Embedding Space identity, incompatible-space rejection |
+| **PAMSPEC-Relationship** | Versioned Relationship Objects, cross-scope policy |
+| **PAMSPEC-Protocol-Binding** | Preserves semantics across transports |
+| **PAMSPEC-Evaluation** | Sealed snapshots, deterministic clock/RNG, run-id provenance |
+
 ## Repository Contents
 
 - Editable Internet-Draft source: [`draft-infantado-agent-memory-architecture.md`](draft-infantado-agent-memory-architecture.md)
 - Generated RFCXML: [`draft-infantado-agent-memory-architecture-00.xml`](draft-infantado-agent-memory-architecture-00.xml)
 - Generated text: [`draft-infantado-agent-memory-architecture-00.txt`](draft-infantado-agent-memory-architecture-00.txt)
 - Generated HTML: [`draft-infantado-agent-memory-architecture-00.html`](draft-infantado-agent-memory-architecture-00.html)
-- Review schemas: [`schemas/`](schemas/)
+- JSON Schemas (16): [`schemas/0.1-draft/`](schemas/0.1-draft/)
 - Examples: [`examples/`](examples/)
-- Test vectors: [`test-vectors/`](test-vectors/)
-- Architecture decisions: [`decisions/`](decisions/)
-- External review package: [`reviews/`](reviews/)
+- Test vectors (positive + negative): [`test-vectors/`](test-vectors/)
+- Architecture decisions (27 ADRs): [`decisions/`](decisions/)
+- Reference implementation (Python, PAMSPEC-Lite + Delegation + Subscribe): [`implementations/reference-python/`](implementations/reference-python/)
+- MCP binding profile + Python stub server: [`bindings/mcp/`](bindings/mcp/)
+- External review guides: [`reviews/`](reviews/)
+- Consistency matrix (cross-file review artifact): [`CONSISTENCY-MATRIX.md`](CONSISTENCY-MATRIX.md)
+- Version manifest: [`pamspec-version.json`](pamspec-version.json)
 - Contributors: [`CONTRIBUTORS.md`](CONTRIBUTORS.md)
 - Pre-publication checklist: [`PREPUBLICATION-CHECKLIST.md`](PREPUBLICATION-CHECKLIST.md)
 
+## Quick start (adopter, 5 minutes)
+
+```bash
+git clone https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture
+cd Persistent-Agentic-Memory-Architecture
+python -m pip install -r requirements.txt
+python scripts/validate_test_vectors.py
+PYTHONPATH=implementations/reference-python python -m pytest implementations/reference-python/tests
+```
+
+The reference implementation is < 800 LOC, SQLite-backed, and satisfies PAMSPEC-Lite plus Delegation and Subscribe. See [`implementations/reference-python/README.md`](implementations/reference-python/README.md).
+
 ## Architecture Tracks
 
-The core architecture defines memory semantics independently of bindings. Later interoperability tracks may define protocol bindings, export profiles, conformance profiles, implementation reports, and test vectors. MCP, HTTP, embedded libraries, gRPC, and message buses may be future bindings, but none is mandatory for the core architecture.
+The core architecture defines memory semantics independently of bindings. The `-01` cycle adds a reference MCP binding profile ([`bindings/mcp/`](bindings/mcp/)) and a stub Python MCP server that wraps the reference implementation. HTTP, embedded libraries, gRPC, and message buses are future bindings; none is mandatory for the core architecture.
 
 ## Licensing
 
-Specification text and documentation are licensed under CC BY 4.0 as described in [`LICENSE-DOCUMENTATION.md`](LICENSE-DOCUMENTATION.md). Technical repository artifacts, including schemas, examples, test vectors, validation scripts, Makefile, and workflows, are licensed under Apache License 2.0 as described in [`LICENSE-APACHE-2.0`](LICENSE-APACHE-2.0). Internet-Draft submissions are also subject to applicable IETF contribution, copyright, and legal provisions.
+Specification text and documentation are licensed under CC BY 4.0 as described in [`LICENSE-DOCUMENTATION.md`](LICENSE-DOCUMENTATION.md). Technical repository artifacts, including schemas, examples, test vectors, reference implementations, validation scripts, Makefile, and workflows, are licensed under Apache License 2.0 as described in [`LICENSE-APACHE-2.0`](LICENSE-APACHE-2.0). Internet-Draft submissions are also subject to applicable IETF contribution, copyright, and legal provisions.
 
 ## Building
 
@@ -57,7 +87,7 @@ The numbered release is written under `release/01/` for review before any artifa
 
 ## Review
 
-Critical review, interoperability feedback, security analysis, privacy analysis, and independent implementation reports are welcome. Please use public issues, pull requests, written architecture decisions, and the review guides in [`reviews/`](reviews/).
+Critical review, interoperability feedback, security analysis, privacy analysis, and independent implementation reports are welcome. Please use public issues, pull requests, written architecture decisions, and the review guides in [`reviews/`](reviews/). The [`reviews/implementation-report-template.md`](reviews/implementation-report-template.md) is the template for submitting an implementation report against any conformance profile.
 
 ## Contributors
 
