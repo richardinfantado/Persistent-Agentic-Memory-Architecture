@@ -1,0 +1,7 @@
+# Pinned dependencies for the PAMSPEC-vs-Mem0 validation sprint.
+# Do NOT modify these versions without recording the change in
+# reports/real-framework-validation-report.md — a version bump could
+# change which PAMSPEC requirements Mem0 satisfies natively.
+mem0ai==2.0.12
+chromadb>=0.5.0,<1.0
+sentence-transformers>=3.0,<4.0
