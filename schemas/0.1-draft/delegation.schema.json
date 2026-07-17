@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/delegation.schema.json",
+  "title": "PAMSPEC Delegation Object 0.1-draft",
+  "$comment": "A Delegation Object binds a granting actor to a delegated actor within a scope for a bounded set of operations, over a bounded time window, under a stated policy basis. Delegation Objects are independently identified, typed, versioned authoritative objects. They enable auditable multi-agent handoff and close confused-deputy gaps.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "delegation_id",
+    "version_id",
+    "scope_id",
+    "granting_actor",
+    "delegated_actor",
+    "granted_operations",
+    "policy_basis",
+    "not_before",
+    "not_after",
+    "lifecycle_state",
+    "availability_state",
+    "retention_state",
+    "validation_state",
+    "committed_at",
+    "recorded_at",
+    "sequence",
+    "actor",
+    "provenance"
+  ],
+  "properties": {
+    "spec_version": {"const": "0.1.0-draft"},
+    "delegation_id": {"$ref": "common.schema.json#/$defs/id"},
+    "version_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "granting_actor": {"$ref": "actor.schema.json"},
+    "delegated_actor": {"$ref": "actor.schema.json"},
+    "granted_operations": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "create", "read", "update", "transition", "relate",
+          "query", "inspect_history", "redact", "delete",
+          "promote", "subscribe"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "granted_object_types": {
+      "type": "array",
+      "items": {"type": "string"},
+      "$comment": "Optional restriction on which object types the delegation applies to. Absent means all types the delegate would otherwise be able to touch."
+    },
+    "granted_object_ids": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/id"},
+      "$comment": "Optional restriction to specific objects. Absent means all objects in scope."
+    },
+    "target_scope_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "For cross-scope delegation. Requires explicit cross-scope policy."
+    },
+    "policy_basis": {"type": "string", "minLength": 1},
+    "not_before": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "not_after": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "revocable": {"type": "boolean", "default": true},
+    "usage_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "$comment": "Optional cap on the number of times the delegate may exercise the delegation."
+    },
+    "lifecycle_state": {"$ref": "common.schema.json#/$defs/lifecycle_state"},
+    "availability_state": {"$ref": "common.schema.json#/$defs/availability_state"},
+    "retention_state": {"$ref": "common.schema.json#/$defs/retention_state"},
+    "validation_state": {"$ref": "common.schema.json#/$defs/validation_state"},
+    "committed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "actor": {"$ref": "actor.schema.json"},
+    "provenance": {"$ref": "provenance.schema.json"},
+    "integrity": {"$ref": "common.schema.json#/$defs/integrity"}
+  },
+  "additionalProperties": false
+}

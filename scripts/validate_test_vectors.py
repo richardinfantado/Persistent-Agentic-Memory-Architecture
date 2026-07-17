@@ -29,10 +29,14 @@ def schema_for_valid(data):
         return "error.schema.json"
     if "query" in data:
         return "query.schema.json"
+    if "delegation_id" in data:
+        return "delegation.schema.json"
     if "relationship_id" in data:
         return "relationship.schema.json"
     if "event_id" in data:
         return "memory-event.schema.json"
+    if "subscription_id" in data and "start_sequence" in data:
+        return "subscription.schema.json"
     return "memory-object.schema.json"
 
 
