@@ -35,13 +35,37 @@ Outputs land in `build/` and use the `latest` docname. They are not archived unl
 
 The `Build Internet-Draft` GitHub Actions workflow also builds `latest` on every push and uploads the artifacts under the `draft-latest` artifact name for the last workflow run.
 
+## Numbered submission-candidate builds (guarded)
+
+Numbered renderings (e.g. `draft-...-00.{xml,txt,html}`) are produced only under an explicit **submission-candidate** mode. The build script enforces the revision policy from `pamspec-version.json`:
+
+- While `ietf_submission_status == "not_submitted"`, the only permitted submission-candidate revision is **`00`**.
+- After posted revisions exist, the only permitted next revision is the successor of the highest posted revision, zero-padded to two digits.
+- Generating a submission candidate does NOT modify `posted_datatracker_revisions`. Marking a revision as posted is a separate manual step that follows actual Datatracker submission.
+
+Local invocation:
+
+```bash
+# Ask the script what revision it will accept right now
+python -c "import sys; sys.path.insert(0,'scripts'); \
+  from build_draft import permitted_submission_candidate_revision as p; print(p())"
+
+# Build the candidate (must match the permitted revision, must include --confirm)
+python scripts/build_draft.py submission-candidate --revision 00 --confirm-submission-candidate
+```
+
+Outputs land in `submission-candidates/<rev>/` and are reviewed BEFORE any Datatracker submission. They are not IETF submissions and MUST NOT be described as such.
+
+CI invocation: use the `Build Internet-Draft` workflow's `workflow_dispatch` with the `submission_candidate` boolean input set to `true`. The workflow reads the permitted revision from the manifest and passes it to the script; the caller cannot override the revision. Any mismatch fails the build.
+
 ## How and when a Datatracker revision would be produced
 
-If and when this project pursues an IETF individual submission, a dedicated release procedure will:
+If and when this project pursues an IETF individual submission, the sequence is:
 
 1. Verify the review-candidate-archive contract (no top-level numbered files, no false-publication language anywhere).
-2. Build the exact XML that would be submitted, with `docname` set to `draft-infantado-agent-memory-architecture-00` for the first submission.
-3. Submit through https://datatracker.ietf.org/submit/ under a specific author's Datatracker account.
-4. On acceptance, add a `posted_datatracker_revisions[]` entry to `pamspec-version.json` and archive the submitted rendering with its Datatracker-assigned URL.
+2. Confirm `pamspec-version.json` `ietf_submission_status` is `"not_submitted"` (for a first submission) or that `posted_datatracker_revisions` records the correct history (for a follow-up).
+3. Run the guarded submission-candidate build (see above) and review the output.
+4. Submit through https://datatracker.ietf.org/submit/ under a specific author's Datatracker account.
+5. On acceptance, add a `posted_datatracker_revisions[]` entry to `pamspec-version.json`, flip `ietf_submission_status` to `"submitted"`, and archive the submitted rendering with its Datatracker-assigned URL.
 
-Until step 3 has actually occurred, the repository MUST NOT declare any Datatracker revision as posted, frozen, or otherwise published.
+Until step 5 has actually occurred, the repository MUST NOT declare any Datatracker revision as posted, frozen, or otherwise published. Step 5 is manual precisely so that generating a candidate cannot accidentally imply a posted status.
