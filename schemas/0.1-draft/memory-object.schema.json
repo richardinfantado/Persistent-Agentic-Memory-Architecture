@@ -51,15 +51,7 @@
       "type": "array",
       "items": {"$ref": "common.schema.json#/$defs/id"}
     },
-    "integrity": {
-      "type": "object",
-      "properties": {
-        "digest": {"type": "string"},
-        "algorithm": {"type": "string"},
-        "canonicalization_profile": {"type": "string"}
-      },
-      "additionalProperties": false
-    }
+    "integrity": {"$ref": "common.schema.json#/$defs/integrity"}
   },
   "allOf": [
     {

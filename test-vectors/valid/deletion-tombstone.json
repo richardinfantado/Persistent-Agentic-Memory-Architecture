@@ -4,7 +4,6 @@
     "version_id":  "ver:claim:deleted:3",
     "scope_id":  "workspace:example",
     "object_type":  "claim",
-    "schema_id":  "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
     "canonical_content":  {
                               "tombstone":  true
                           },
@@ -42,6 +41,6 @@
     "integrity":  {
                       "digest":  "sha256:example",
                       "algorithm":  "sha-256",
-                      "canonicalization_profile":  "unresolved"
+                      "canonicalization_profile":  "none"
                   }
 }

@@ -6,7 +6,6 @@
                      "object_id":  "mem:claim:001",
                      "version_id":  "ver:claim:001:1",
                      "object_type":  "claim",
-                     "schema_id":  "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/memory-object.schema.json",
                      "canonical_content":  {
                                                "statement":  "Persistent memory is distinct from temporary context."
                                            },
@@ -44,7 +43,7 @@
                      "integrity":  {
                                        "digest":  "sha256:example",
                                        "algorithm":  "sha-256",
-                                       "canonicalization_profile":  "unresolved"
+                                       "canonicalization_profile":  "none"
                                    }
                  }
 }
