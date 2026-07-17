@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/subscription.schema.json",
+  "title": "PAMSPEC Subscription 0.1-draft",
+  "$comment": "Subscribe operation request and Subscription descriptor. Delivery guarantee is at-least-once; subscribers deduplicate by event_id.",
+  "type": "object",
+  "required": ["subscription_id", "scope_id", "actor", "filter", "start_sequence"],
+  "properties": {
+    "subscription_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "actor": {"$ref": "actor.schema.json"},
+    "filter": {
+      "type": "object",
+      "properties": {
+        "object_id": {"$ref": "common.schema.json#/$defs/id"},
+        "object_type": {"type": "string"},
+        "event_classes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1
+        },
+        "predicate": {
+          "type": "object",
+          "$comment": "Optional structured predicate over Event Ledger entries. Semantics are profile-defined."
+        }
+      },
+      "additionalProperties": false
+    },
+    "start_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "Ledger sequence at which delivery begins. Values <= last committed sequence enable catch-up."
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "batching_max_events": {"type": "integer", "minimum": 1},
+        "batching_max_wait_ms": {"type": "integer", "minimum": 0},
+        "keepalive_interval_ms": {"type": "integer", "minimum": 0},
+        "backpressure_policy": {"enum": ["drop_oldest", "close_on_lag", "block"]}
+      },
+      "additionalProperties": false
+    },
+    "channel_ref": {"type": "string", "$comment": "Binding-specific delivery channel identifier."}
+  },
+  "additionalProperties": false
+}

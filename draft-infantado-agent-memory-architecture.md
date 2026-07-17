@@ -599,6 +599,16 @@ Purpose: retrieve sets of Memory Objects, Relationship Objects, or versions usin
 
 Purpose: inspect object versions, transitions, relationships, and Event Ledger entries. Required inputs: operation identifier, scope identifier, object identifier or event range, and actor. Optional inputs: version range, event classes, snapshot boundary, and redaction policy. A successful result returns scope-safe history. Redacted content can appear as tombstone metadata rather than content.
 
+## Subscribe
+
+Purpose: open a durable stream of Event Ledger entries that match a filter within a scope, so that agents and integrators react to memory changes instead of polling. Required inputs are operation identifier, scope identifier, actor, and a filter expression. Optional inputs include object type, event class list, object identifier, `after_sequence` (a starting point in the ledger for at-least-once catch-up), and delivery preferences (batching, keepalive interval, backpressure policy).
+
+A successful Subscribe returns a `subscription_id`, the resolved filter, the ledger sequence at which delivery starts, and a delivery channel identifier appropriate to the binding (for example, a WebSocket URL, an MCP notification stream, or a message-bus topic). While the subscription is open, the Memory Service MUST deliver every event that (a) satisfies the filter, (b) occurs within an authorized scope, and (c) has a ledger sequence greater than the last acknowledged sequence for that subscription. Ordering within a single scope MUST be preserved.
+
+Delivery guarantees are at-least-once. Subscribers are responsible for idempotent processing keyed by `event_id`. Subscriptions MAY be closed by the caller (`Unsubscribe`, referencing `subscription_id`) or by the service on authorization revocation, scope deletion, prolonged unacknowledged backpressure, or shutdown. On service-initiated close, a terminal close event identifies the last delivered `ledger_sequence` so the subscriber can resume against a new subscription with `after_sequence` set appropriately.
+
+Subscribe does not create Memory Versions. Subscribe creates a `subscription_opened` Event Ledger entry when the subscription starts and a `subscription_closed` entry when it ends. Filter evaluation and authorization MUST be applied per event, not only at subscription time, so that events an actor loses authorization for during the subscription lifetime are excluded from further delivery. Possible errors include `invalid_request`, `scope_not_found`, `access_denied`, `policy_denied`, `service_unavailable`, and `internal_error`.
+
 ## Redact
 
 Purpose: remove or suppress protected content while preserving permitted audit information. Required inputs are operation identifier, scope identifier, object identifier, expected version, actor, policy basis, and redaction target. A successful Redact creates a new Tombstone or partially redacted Memory Version, changes Availability State, and produces `object_redacted`. Derived Index deletion is triggered or recorded independently. Redaction blocked by policy returns `retention_restriction` or `legal_hold`.
