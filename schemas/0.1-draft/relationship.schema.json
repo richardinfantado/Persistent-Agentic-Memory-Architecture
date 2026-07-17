@@ -21,6 +21,7 @@
     "committed_at",
     "recorded_at",
     "sequence",
+    "actor",
     "provenance"
   ],
   "properties": {
@@ -31,19 +32,31 @@
     "relationship_type": {"type": "string", "minLength": 1},
     "source_object_id": {"$ref": "common.schema.json#/$defs/id"},
     "target_object_id": {"$ref": "common.schema.json#/$defs/id"},
-    "target_scope_id": {"type": "string"},
+    "target_scope_id": {"$ref": "common.schema.json#/$defs/id"},
     "directionality": {"enum": ["directed", "bidirectional", "undirected"]},
     "canonical_content": {},
     "lifecycle_state": {"$ref": "common.schema.json#/$defs/lifecycle_state"},
     "availability_state": {"$ref": "common.schema.json#/$defs/availability_state"},
     "retention_state": {"$ref": "common.schema.json#/$defs/retention_state"},
     "validation_state": {"$ref": "common.schema.json#/$defs/validation_state"},
+    "observed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "asserted_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "valid_from": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "valid_until": {"$ref": "common.schema.json#/$defs/timestamp"},
     "committed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "sequence": {"type": "integer", "minimum": 1},
+    "actor": {"$ref": "actor.schema.json"},
     "provenance": {"$ref": "provenance.schema.json"},
-    "policy_basis": {"type": "string"},
-    "integrity": {"type": "object"}
+    "policy_basis": {"type": "string", "minLength": 1},
+    "integrity": {"$ref": "common.schema.json#/$defs/integrity"}
   },
+  "allOf": [
+    {
+      "$comment": "When target_scope_id is present the relationship crosses scopes and a policy_basis MUST be recorded. Schema validation cannot itself compare target_scope_id to scope_id; implementations MUST enforce that same-scope relationships omit target_scope_id or set it equal to scope_id and that differing values are authorized.",
+      "if": {"required": ["target_scope_id"]},
+      "then": {"required": ["policy_basis"]}
+    }
+  ],
   "additionalProperties": false
 }

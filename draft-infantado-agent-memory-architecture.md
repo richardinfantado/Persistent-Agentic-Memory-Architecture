@@ -365,7 +365,7 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 : Required. Identifies the authoritative Memory Scope for the object. It is immutable for a version; cross-scope movement requires export/import, remapping, or policy-governed transition. It can reveal tenant, workspace, project, or legal context.
 
 `object_type`:
-: Required. Declares the typed content family. Initial candidates are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `relation`, and `summary`. It is immutable for a version; type conversion creates a new version or new object with provenance. It can reveal sensitive purpose or classification.
+: Required. Declares the typed content family. Standard object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, and `summary`. Relationship Objects are represented separately (see the Relationships subsection) and are not a Memory Object type. It is immutable for a version; type conversion creates a new version or new object with provenance. It can reveal sensitive purpose or classification.
 
 `schema_id`:
 : Optional. Identifies the schema or profile used to interpret `canonical_content`. It is immutable for a version; schema migration creates a new version or migration event. It can reveal application domain.
@@ -386,13 +386,13 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 : Required. Records authoritative review and confidence posture. Changes create a new Memory Version and Event Ledger entry. `corroborated` does not guarantee objective truth.
 
 `observed_at`, `asserted_at`, `valid_from`, and `valid_until`:
-: Optional client- or source-supplied temporal assertions. They do not establish Event Ledger order and may require validation.
+: Optional client- or source-supplied temporal assertions. They do not establish Event Ledger order and may require validation. A `valid_until` value in the past is a client-asserted validity boundary and does not by itself change Retention State, Lifecycle State, or any other authoritative dimension; any lifecycle, retention, or availability effect requires an explicit Transition operation. Implementations MAY use these fields as inputs to temporal queries or scheduled policy evaluation but MUST NOT treat them as authoritative state changes.
 
 `committed_at` and `recorded_at`:
 : Required service-assigned timestamps for the Memory Version and Event Ledger record. They are not the sole ordering mechanism.
 
 `sequence`:
-: Required service-assigned logical ordering value within the authoritative object history.
+: Required service-assigned logical ordering value within the authoritative object history. Sequence values within a single object's version history MUST be strictly increasing. Sequence values MUST NOT be reused within an object history and are not required to be globally unique across objects or scopes.
 
 `actor`:
 : Required. Identifies the actor responsible for the operation that produced this version. It is immutable for a version and can contain personal data.
@@ -408,7 +408,7 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 
 ## Type System
 
-The standard object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `relationship`, and `summary`. Extension types use a collision-resistant reverse-domain name or absolute URI and include `schema_id`. Implementations MUST preserve unknown extension types during export and import. Implementations MAY reject unsupported extension types during creation. A reader SHOULD return the canonical envelope even when it cannot interpret extension content, subject to policy.
+The standard Memory Object types are `claim`, `decision`, `task`, `artifact`, `observation`, `entity`, and `summary`. Relationships between Memory Objects are represented as independently identified Relationship Objects and do not appear in this enumeration; see the Relationships subsection. Extension types use a collision-resistant reverse-domain name or absolute URI and include `schema_id`. Implementations MUST preserve unknown extension types during export and import. Implementations MAY reject unsupported extension types during creation. A reader SHOULD return the canonical envelope even when it cannot interpret extension content, subject to policy.
 
 Canonical Content MAY be any JSON value. `schema_id` defines type-specific validation. An extension type MUST include `schema_id`.
 
@@ -429,6 +429,8 @@ Non-authoritative operational events, including `embedding_generated`, `index_re
 A Relationship Object is independently identified, typed, versioned, and scope-bound. It contains `relationship_id`, `version_id`, `scope_id`, `relationship_type`, source and target object identifiers, directionality, Canonical Content or attributes, provenance, Lifecycle State, Validation State, Availability State, Retention State, temporal fields, and integrity metadata.
 
 A Relationship Object change creates a new Relationship Version and Event Ledger entry. It does not automatically create new versions of source or target objects. Deleting an object does not silently delete related Relationship Objects. Cross-scope relationships require explicit policy. A relationship reference does not grant access, and traversal applies scope and authorization checks at every step.
+
+`relationship_type` values SHOULD use either a short, well-known label from an implementation- or profile-defined vocabulary (for example, `supports`, `contradicts`, `derives_from`, `references`, `supersedes`, `part_of`), or a collision-resistant identifier following the same conventions as extension `object_type` values (reverse-domain name or absolute URI). A future revision may define a registry of well-known relationship types. Implementations MUST preserve unknown `relationship_type` values during export and import.
 
 ## Provenance
 

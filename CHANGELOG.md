@@ -1,5 +1,19 @@
 # Changelog
 
+## PAMSPEC -00 Review Feedback Pass (fix/review-feedback-critical)
+
+- Removed the internally inconsistent `relation` type name and clarified that Relationship Objects are represented separately from Memory Object types; removed `relationship` from `standard_object_type` enum in `common.schema.json`.
+- Removed misuse of `schema_id` in examples and test vectors where it incorrectly pointed at the envelope schema rather than a content schema.
+- Extracted an `integrity` definition into `common.schema.json` and referenced it from both `memory-object.schema.json` and `relationship.schema.json` so tamper-evidence structure is consistent across authoritative objects.
+- Added top-level `actor` as a required field on `relationship.schema.json`, aligning with the Relate operation semantics.
+- Constrained `id` values in `common.schema.json` to a scheme-prefixed form and documented that a future revision may narrow this to URNs or UUIDs.
+- Added a conditional in `relationship.schema.json` requiring `policy_basis` whenever `target_scope_id` is present (cross-scope relationship).
+- Added `relationship_type` naming guidance to the Relationships subsection (well-known short label or reverse-domain/URI extension form).
+- Clarified that `valid_from`/`valid_until` are informational and do not by themselves change Retention, Lifecycle, or Availability State.
+- Specified strict monotonicity of `sequence` within a single object's version history.
+- Replaced `canonicalization_profile: "unresolved"` in examples and test vectors with the illustrative value `"none"` so `valid/` vectors no longer contain design-open markers.
+- Rewrote ADR-0006 with specific rationale, alternatives, consequences, and cross-references (previously duplicated ADR-0001 boilerplate).
+
 ## PAMSPEC -00 Semantic Consistency Pass
 
 - Separated Lifecycle, Availability, Retention, and Validation State.

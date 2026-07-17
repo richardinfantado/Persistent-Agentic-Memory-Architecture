@@ -20,6 +20,10 @@
                      "committed_at":  "2026-07-12T00:00:01Z",
                      "recorded_at":  "2026-07-12T00:00:02Z",
                      "sequence":  1,
+                     "actor":  {
+                                   "actor_id":  "actor:editor:001",
+                                   "actor_kind":  "human"
+                               },
                      "provenance":  {
                                         "provenance_id":  "prov:rel:001",
                                         "source_ref":  "urn:source:review",

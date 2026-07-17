@@ -6,7 +6,9 @@
   "$defs": {
     "id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9+.\\-]*:[A-Za-z0-9+._:\\-/]+$",
+      "$comment": "Identifiers use a scheme-prefixed form (scheme:opaque) such as 'urn:uuid:...', 'mem:claim:001', or 'workspace:example'. A future revision may narrow this to RFC 8141 URNs or RFC 9562 UUIDs."
     },
     "timestamp": {
       "type": "string",
@@ -25,7 +27,8 @@
       "enum": ["unverified", "corroborated", "disputed", "rejected"]
     },
     "standard_object_type": {
-      "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "relationship", "summary"]
+      "$comment": "Relationship Objects are represented by relationship.schema.json and are intentionally excluded from this enumeration.",
+      "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "summary"]
     },
     "extension_object_type": {
       "type": "string",
@@ -37,6 +40,17 @@
           "pattern": "^[a-z][a-z0-9+.-]*:"
         }
       ]
+    },
+    "integrity": {
+      "type": "object",
+      "properties": {
+        "digest": {"type": "string", "minLength": 1},
+        "algorithm": {"type": "string", "minLength": 1},
+        "canonicalization_profile": {"type": "string", "minLength": 1},
+        "signature": {"type": "string"},
+        "ledger_ref": {"type": "string"}
+      },
+      "additionalProperties": false
     }
   }
 }
