@@ -336,6 +336,8 @@ The Event Ledger is distinct from object revision history. Object revision histo
 
 State-changing operations MUST produce Event Ledger entries. Ledger events MUST NOT be silently rewritten. Event ordering MUST be preserved within an object history. Implementations may support cryptographic continuity. Append-only history does not require permanent retention of prohibited content. Redaction or erasure may retain a content-free tombstone when policy permits. Derived-index deletion must propagate independently from canonical object deletion rules.
 
+Event Ledger entries MAY carry an optional `resource_usage` block recording cost, latency, and model attribution for the operation that produced the event (`input_tokens`, `output_tokens`, `cached_input_tokens`, `wall_clock_ms`, `compute_ms`, `cost_amount`, `cost_currency`, `cost_unit`, `model_ref`, `provider_ref`, `region_ref`). This block is non-authoritative and its absence carries no meaning; its presence enables per-scope, per-actor, and per-task cost and latency analysis without requiring a separate observability path.
+
 ## Derived Indexes
 
 A Memory Object may have no embedding, one embedding, or multiple embeddings in different spaces. Every vector MUST reference an Embedding Space. Vectors from incompatible spaces MUST NOT be treated as directly comparable. Semantic-query results MUST identify the Embedding Space used. Embeddings may be regenerated independently.

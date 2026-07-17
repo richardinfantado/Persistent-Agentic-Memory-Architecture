@@ -27,13 +27,34 @@
         "index_rebuilt",
         "access_denied",
         "object_redacted",
-        "object_deleted"
+        "object_deleted",
+        "working_memory_promoted",
+        "tool_invoked",
+        "tool_completed"
       ]
     },
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "sequence": {"type": "integer", "minimum": 1},
     "actor": {"$ref": "actor.schema.json"},
-    "payload": {"type": "object"}
+    "payload": {"type": "object"},
+    "resource_usage": {
+      "type": "object",
+      "$comment": "Optional per-event accounting for cost and latency. Not authoritative; recorded for observability, budgeting, and evaluation. Absence carries no meaning.",
+      "properties": {
+        "input_tokens": {"type": "integer", "minimum": 0},
+        "output_tokens": {"type": "integer", "minimum": 0},
+        "cached_input_tokens": {"type": "integer", "minimum": 0},
+        "wall_clock_ms": {"type": "integer", "minimum": 0},
+        "compute_ms": {"type": "integer", "minimum": 0},
+        "cost_amount": {"type": "number", "minimum": 0},
+        "cost_currency": {"type": "string", "minLength": 3, "maxLength": 3, "$comment": "ISO 4217 currency code (e.g., 'USD'), or an implementation-defined non-currency code such as 'CRD' for credits when documented."},
+        "cost_unit": {"type": "string", "$comment": "Optional. If cost_amount is measured in a non-currency unit (e.g., 'credits'), describe it here."},
+        "model_ref": {"type": "string"},
+        "provider_ref": {"type": "string"},
+        "region_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
   },
   "allOf": [
     {
