@@ -7,11 +7,11 @@ boundary and the anti-drift test that governs future feature
 additions. It does NOT move files, edit schemas, rename profiles,
 delete tests, change conformance behavior, rewrite the draft, or add
 features. Any reclassification that follows will be executed under
-separate branches after review.
+separate branches (R4a, R4b, R4c, R5, R6, R8) after review.
 
 ## Date
 
-2026-07-18
+2026-07-18 (revised)
 
 ## Context
 
@@ -29,174 +29,260 @@ authorization, observability, or runtime concerns rather than
 persistent memory.
 
 The purpose of this ADR is to make the scope narrowing decision
-explicitly, capture the four-part test that gates any future
-addition, and enumerate — without moving anything — how every
-current concept classifies.
+explicitly, capture the four gates that gate any future addition,
+capture the three-layer separation between architectural context and
+normative requirements, and enumerate — without moving anything —
+how every current concept classifies.
 
 ## Proposed decision
 
-Adopt the four-part anti-drift rule below as the governing test.
-Adopt the scope classification in §3 as the target scope for the
-first `-00` submission. Do NOT execute file moves, schema edits, or
-draft rewrites in this ADR — those are separate branches, gated on
-approval of this decision.
+Adopt the four gates in §1 as the governing test. Adopt the
+three-layer separation in §2 as the target structure for the first
+`-00`. Adopt the classification in §3 as the target scope. Do NOT
+execute file moves, schema edits, or draft rewrites in this ADR —
+those are separate branches, gated on approval of this decision.
 
-### 1. The four-part anti-drift rule
+### 1. Anti-drift gates (four gates, all four required, all four auditable)
 
 A capability belongs in the PAMSPEC normative core if and only if
-**all four** conditions hold:
+**all four gates** hold. Each gate is stated to be checkable
+independently, so every normative-core row in §3 must claim all four
+gates AND name the concrete interoperability failure that gate 2
+guards against.
 
-1. **Interoperability failure:** Two independent implementations
-   would otherwise exchange the same persistent-memory concept with
-   materially incompatible semantics.
-2. **Cannot be handled by extension or profile:** The concept cannot
-   be adequately expressed through an extension mechanism or an
-   optional profile outside the normative core.
-3. **Concrete failure named:** A specific, documentable
-   interoperability failure can be named — a concrete example of
-   two systems miscommunicating in the field.
-4. **In-scope: persistent memory state.** The capability concerns
-   persistent memory state — not general runtime coordination,
-   transport behavior, identity, authorization, billing, or
-   observability.
+1. **Persistent-memory boundary.** The concept concerns persistent
+   memory semantics, or a security property necessary to preserve or
+   interpret persistent memory. Adjacent concerns (identity,
+   authorization, billing, observability, transport, streaming,
+   runtime coordination) fail this gate.
+2. **Concrete interoperability failure.** Leaving the concept
+   unspecified would cause two independent implementations to
+   exchange, update, retrieve, or interpret memory incompatibly.
+   The row must name that failure concretely (a described scenario,
+   not "in general").
+3. **Core necessity.** An extension, binding, or optional profile
+   cannot adequately preserve the interoperability property named
+   under gate 2.
+4. **Implementable specification.** The concept can be defined
+   implementation-neutrally and tested through examples, schemas,
+   or behavioral conformance cases.
 
-If any one of the four conditions fails, the feature does NOT
-belong in the PAMSPEC normative core. It may belong in an optional
-profile, in a companion document, in an experimental repository
-subtree, or outside PAMSPEC entirely. Which of those homes is the
-right one is decided per-feature under §3 below.
+Descriptive architectural material that fails any of these gates
+does not become normative-core. It may still belong in
+architectural context (§2 layer 1) so long as it is not phrased as
+a wire-level conformance requirement.
 
-The fourth condition is deliberate: without it, adjacent concerns
-(identity, authorization, streaming, observability) tend to pass
-the first three conditions through creative reasoning. Persistent
-memory state is what PAMSPEC standardizes; everything else
-belongs elsewhere.
+### 2. Three-layer separation (architecture context / Lite normative / optional profiles)
 
-### 2. Proposed first-`-00` normative boundary
+Concepts fall into exactly one of the three layers below. The
+distinction between "architectural context" and "normative Lite
+semantics" is deliberate: descriptive architecture must not be
+silently converted into a mandatory implementation surface.
 
-For the first Datatracker submission (`draft-infantado-agent-memory-architecture-00`), the normative core is intended to contain only the following concepts:
+#### 2.1 Architectural context (descriptive; NOT wire-level conformance)
+
+These are foundational models that shape how PAMSPEC is understood.
+They are prose and reasoning aids, not conformance fields. An
+implementation is not "conformant" to these; it either instantiates
+the pattern or it doesn't.
 
 - Compute Plane versus Persistent State Plane separation.
-- Memory Scope with enforcement of isolation on read, write, query, export, and import.
-- Stable object identity (`object_id`).
-- Immutable version identity and monotonic ordering (`version_id`, `version_sequence`).
-- Canonical Content (arbitrary typed payload).
-- Minimal provenance (a small required block; details left to the profile document, but the base requirement lives in `-00`).
-- Extensible object typing (mechanism for standard and extension types; NOT a normative cognitive taxonomy).
-- Conditional Embedding Space identity (required only when an implementation carries embeddings).
-- Basic operation semantics for `create`, `read`, `update`, `history`, `delete`.
-- Expected-version conflict semantics (`version_conflict`).
-- Idempotent `create` semantics.
-- Error envelope.
-- Definition of the `PAMSPEC-Lite` conformance profile.
-- Architectural description of the Event Ledger; full behavioral requirements deferred to `PAMSPEC-Ledger` profile.
+- Authoritative versus derived state.
+- Event Ledger as an architectural pattern (append-only history,
+  ordering across authoritative changes). Behavioral requirements
+  belong in the Ledger profile (layer 3).
+- Isolation of Derived Indexes from authoritative state.
 
-Everything else described in §3 is architectural background,
-optional profile material, experimental/companion work, or
-out-of-scope.
+#### 2.2 Normative Lite semantics (must pass all four gates in §1)
+
+Every row here MUST be justified against all four gates and name
+its concrete interoperability failure in §3.
+
+- Memory Scope with enforcement of isolation on read, write, query,
+  export, and import.
+- Stable object identity (`object_id`).
+- Immutable version identity and monotonic ordering (`version_id`,
+  `version_sequence`).
+- Canonical Content (arbitrary typed payload).
+- Minimal provenance (a small required block).
+- Extensible object typing (mechanism for standard and extension
+  types; NOT a normative cognitive taxonomy).
+- Conditional Embedding Space identity (required only when an
+  implementation carries embeddings).
+- Basic operation semantics: `create`, `read`, `update`, `history`,
+  `delete`.
+- Concurrency: expected-version conflict semantics (`version_conflict`).
+- Idempotency: idempotent `create` semantics.
+- Error envelope.
+- Minimal deletion semantics (see §4 below — deletion is locked at
+  the Lite level, not deferred to a profile).
+
+#### 2.3 Optional profiles
+
+Each of these already passes gate 1 (persistent memory state), but
+gate 3 (core necessity) fails: the capability CAN be adequately
+expressed as an optional profile without going into core.
+
+- Full Event Ledger ordering, replay, and atomicity — **PAMSPEC-Ledger**.
+- Full lifecycle / availability / retention / validation governance
+  — **Governance Profile**.
+- Relationship Objects — **Relationship Profile**.
+- Structured query beyond basic filters, semantic query, snapshots
+  — **Query Profile**.
+- Semantic retrieval / Embedding-index query — **Query Profile** (or its own).
 
 ### 3. Classification of every current concept
 
-Classifications follow the four-part rule. "Move to" columns are
-target destinations; they are not executed by this ADR.
+Each core row lists all four gates AND names the concrete
+interoperability failure that gate 2 prevents. This is the audit
+promised by §1.
 
-#### 3.1 Core (belongs in first `-00` normative section)
+#### 3.1 Normative Lite semantics (each MUST pass all four gates)
 
-| Concept | Rationale under the four-part rule |
+| Concept | (1) Memory? | (2) Concrete failure | (3) Cannot be extension/profile? | (4) Implementable? |
+|---|---|---|---|---|
+| Memory Scope + isolation enforcement | Yes | Two impls with mismatched scope enforcement leak a memory object across users/tenants/agents that should never have seen it (cross-scope read succeeds when it should return `object_not_found`). | Yes — cannot be an extension; every operation reads it. | Yes — schema + `case_scope_isolation`. |
+| `object_id` (stable object identity) | Yes | Two impls with divergent identifier semantics silently create duplicates on re-import, or overwrite unrelated memory when identifiers collide. | Yes — identity is required by every operation. | Yes — schema + envelope test. |
+| `version_id` + `version_sequence` (distinct identity + monotonic order) | Yes | Two impls that do not agree on distinct version identity replay history in the wrong order; expected-version updates cannot be checked; AIMEM already does not carry these (R2 App. A). | Yes — required by concurrency semantics. | Yes — schema + `case_update_creates_new_version`, `case_history_is_monotonic`. |
+| Canonical Content (arbitrary typed payload) | Yes | Two impls that disagree on where the payload lives cannot exchange the data at all; the content is why memory exists. | Yes — the payload is the memory. | Yes — schema + read/write cases. |
+| Minimal provenance (`actor_id`, `activity`, `recorded_at`; details in R5) | Yes | Two impls that drop or invent provenance cannot answer "who wrote this and when"; audit and rollback fail. R2 verdict: defensible design requirement (not proven mandatory, but concrete failure exists on the audit path). | Yes — dropping to a profile means Lite-conformant systems cannot audit at all. | Yes — schema + envelope test. |
+| Extensible object typing (mechanism) | Yes | Two impls that lack an agreed extension mechanism either reject every new type or silently strip it; forward compatibility breaks. | Yes — extension mechanism itself must be in core to be authoritative. | Yes — schema `oneOf` between `standard_object_type` and `extension_object_type`. |
+| Conditional Embedding Space identity | Yes (retrieval-integrity property) | Two impls that carry vectors from different models silently compare them and produce wrong retrieval on the same query. AIMEM already prohibits silent re-embedding. | Partly — the fact of the descriptor is core; individual descriptor fields (metric, canonicalization) can be profile-scoped. | Yes — schema + `case_...` when Embedding Space adopter exists. |
+| `create`, `read`, `update`, `history`, `delete` operation semantics | Yes | Two impls that disagree on what these operations MEAN cannot round-trip anything. | Yes — base operation set. | Yes — behavioral conformance cases in `test_lite.py`. |
+| Concurrency: expected-version conflict + `version_conflict` | Yes | Two impls that permit silent overwrite of a stale expected version corrupt authoritative state under normal concurrent update. AIMEM currently permits consumer discretion here (R2 App. A) — this is exactly the semantic gap that concrete failure names. | Yes — cannot be pushed to a profile without breaking the update contract. | Yes — `case_stale_expected_version_raises_version_conflict`. |
+| Idempotency: idempotent `create` | Yes | Two impls that treat idempotency keys differently produce duplicate persistence under retry, or accept different content under the same key silently. | Yes — the idempotency semantics of `create` are part of the operation contract. | Yes — `case_idempotent_create_returns_same_result`, `case_idempotent_key_reuse_with_different_body_fails`. |
+| Error envelope | Yes | Two impls that emit different failure shapes cannot cross-diagnose or programmatically retry; every consumer must special-case each producer. | Yes — the envelope is on every failure path. | Yes — `error.schema.json`. |
+| Minimal deletion semantics (see §4) | Yes | Two impls that disagree on what "deleted" means round-trip deleted content as if it still exists, or lose identity so the same object can be silently recreated with the same id. | Yes — deletion behavior on the base operation set must be locked. | Yes — `case_delete_creates_tombstone_and_blocks_default_read` + §4 rules. |
+
+**`PAMSPEC-Lite` profile definition** is a normative-core row too: it names the required subset of the above and is what implementers claim conformance to.
+
+#### 3.2 Architectural context (not wire-level; not audited by the four gates)
+
+| Concept | Purpose in the document |
 |---|---|
-| Compute Plane / Persistent State Plane separation | (1)(2)(3)(4) all hold. Two impls that conflate transient context with authoritative state exchange incoherent memory. |
-| Memory Scope + isolation enforcement | Engineering (security) requirement per R2. Concrete failure: cross-tenant/user leakage. |
-| `object_id` (stable object identity) | (1)(2)(3)(4). Two impls that reuse identifiers for unrelated memory silently corrupt round-trips. |
-| `version_id` + `version_sequence` (distinct identity + monotonic order) | (1)(2)(3)(4). AIMEM does not carry either; without them replay is ambiguous. |
-| Canonical Content (arbitrary typed payload) | (1)(2)(4). Content interoperability is the point of the format. |
-| Minimal provenance block | (1)(3)(4). PAMSPEC design requirement per R2 (defensible, not "proven mandatory"). |
-| Extensible object typing (mechanism) | (1)(2)(4). Without an extension mechanism, every new object type forces a spec revision. |
-| Conditional Embedding Space identity | (1)(3)(4). Concrete failure: silent re-embedding under a different model on import; AIMEM already prohibits this. |
-| `create`, `read`, `update`, `history`, `delete` operation semantics | (1)(4). Base operation set. |
-| Expected-version conflict + `version_conflict` | (1)(3)(4). Documented incompatibility with AIMEM's consumer-discretion model (R2 Appendix A). |
-| Idempotent `create` | (1)(3)(4). Prevents duplicate persistence on retries — well-established distributed-systems concern. |
-| Error envelope | (1)(2)(4). Without a shared error taxonomy, cross-impl failure modes are un-interoperable. |
-| `PAMSPEC-Lite` profile definition | (1)(2)(4). Minimum on-ramp profile. |
-| Event Ledger architectural description (not full behavioral requirements) | (4). Architectural concept belongs in `-00`; full ledger semantics are `PAMSPEC-Ledger`. |
+| Compute Plane versus Persistent State Plane separation | Foundational model. Prose. |
+| Authoritative versus derived state | Foundational model. Prose. |
+| Event Ledger as an architectural pattern (append-only history, ordering of authoritative changes) | Foundational model. Behavioral ledger requirements are in the profile below. |
+| Isolation of Derived Indexes from authoritative state | Foundational model. Prose. |
 
-#### 3.2 Core architecture, optional conformance (Event Ledger)
+These appear in the first `-00` as architectural context. They are NOT called out as wire-level conformance fields.
 
-The Event Ledger is one of PAMSPEC's genuinely distinctive ideas
-and belongs in the architecture. Full atomic ledger behavior would
-force every Lite implementation into complete event sourcing, which
-is not required for basic exchange interoperability.
+#### 3.3 Optional profiles
 
-| Concept | Destination |
-|---|---|
-| Event Ledger — architectural concept and event vocabulary | Core (in `-00`) |
-| Event Ledger — full atomic version+event commit behavior, event ordering guarantees, replay semantics | Optional profile: `PAMSPEC-Ledger` |
-
-#### 3.3 Optional profiles (defined in the repository under `profiles/` when the reclassification runs)
-
-Each satisfies rule (4) — persistent memory state — but rule (2) is
-also satisfied: the capability can be adequately expressed as an
-optional profile without going into core.
+Each satisfies gate 1 but fails gate 3 — the capability can be adequately expressed as an optional profile without going into core.
 
 | Concept | Target profile | Rationale |
 |---|---|---|
-| Full lifecycle / availability / retention / validation governance | Governance Profile | Enterprise governance dimension; R2 verdict: "plausible but unproven" as universal; keep out of Lite. |
+| Full Event Ledger — atomic version+event commit, replay, ordering guarantees | `PAMSPEC-Ledger` | Behavioral requirements distinct from the architectural context (§2.1). |
+| Full lifecycle / availability / retention / validation governance | Governance Profile | R2 verdict: "plausible but unproven" as universal. Lite carries the slim subset in §4. |
 | Relationship Objects (independently identified, versioned) | Relationship Profile | Not needed for basic exchange; adds significant surface. |
 | Structured query beyond basic filters | Query Profile | Filter mechanics are useful but not universal. |
 | Semantic query (embedding-based) | Query Profile (or its own) | Requires Embedding Space; not universal. |
 | Snapshots | Query Profile | Advanced retrieval feature. |
-| Working Memory (`working_memory` type + Promote) | Working-Memory Profile | R2 verdict: "outside academic evidence" for portability; belongs as optional. |
-| Evaluation Snapshot sub-profile | Evaluation Profile | Testing infrastructure — not exchange semantics. |
 
 #### 3.4 Experimental / companion (repository subtree; not in first `-00`)
 
-Each fails at least one of rules (1)-(4) as an interoperability
-requirement, but retains value as experimental exploration.
+Each fails at least one of gates 1-4 as an interoperability requirement OR lacks independent-implementation pressure. A repository profile would imply that PAMSPEC is standardizing the behavior; there is not yet enough evidence for that in these cases.
 
-| Concept | Destination | Failing rule and reason |
+| Concept | Destination | Failing gate and reason |
 |---|---|---|
-| Delegation Object | `experimental/delegation/` | (4) fails: identity/authorization, not memory. R2 verdict: "contradicted (partly)". Active agent-identity draft landscape covers this. |
-| Subscribe operation | `experimental/subscribe/` | (4) fails: runtime coordination / event streaming, not memory. R2 verdict: "plausible but unproven" as memory concern. |
-| Tool invocation / tool result archives | `experimental/tool-trace/` | (4) fails: MCP already models tool calls in-band; PAMSPEC records are archives of MCP interactions, best treated as observation records if kept at all. |
-| Actor `attestation` block | `experimental/actor-attestation/` (or coordination with AIP) | (4) fails: identity concern; multiple active agent-identity I-Ds cover it. |
-| MCP binding profile | `experimental/mcp-binding/` (rename from `bindings/mcp/`) | Binding is optional and belongs outside the normative core; profile is exploratory pending stable MCP spec. |
-| `quality_signals` block | `experimental/quality-signals/` | (1)(3) fail: no named consumer for these signals in the exchange contract. |
+| Delegation Object | `experimental/delegation/` | Gate 1 fails: identity/authorization, not memory. R2 verdict: partly contradicted. Active agent-identity draft landscape covers this. |
+| Subscribe operation | `experimental/subscribe/` | Gate 1 fails: runtime coordination / event streaming, not memory. |
+| Tool invocation / tool result archives | `experimental/tool-trace/` | Gate 1 fails: MCP already models tool calls in-band. |
+| Actor `attestation` block | `experimental/actor-attestation/` (or coordination with AIP) | Gate 1 fails: identity concern; multiple active agent-identity I-Ds cover it. |
+| **Working Memory type + Promote operation** | `experimental/working-memory/` | Gate 1 boundary: portable Working Memory is described as *outside academic evidence* in R2. There is not yet enough cross-implementation pressure for a repository profile; keep in experimental until a concrete cross-implementation failure and an adopter exist. Graduation to a profile requires a new ADR. |
+| **Evaluation Snapshot** | `experimental/evaluation/` | Gate 1 fails: evaluation snapshots are testing infrastructure, not exchange semantics. Anti-drift boundary explicitly excludes adjacent concerns. Graduation to a profile requires a new ADR. |
+| MCP binding profile | `bindings/experimental/mcp/` (see §5) | Binding, not a memory profile. Retained under `bindings/` so the binding-vs-profile distinction is preserved; nested under `experimental/` so the non-normative status is unmistakable. |
+| `quality_signals` block | `experimental/quality-signals/` | Gates 2 and 3 fail: no named consumer for these signals in the exchange contract. |
 
-#### 3.5 Remove from PAMSPEC scope entirely
+#### 3.5 Removed and re-classified telemetry (field-level disposition)
 
-| Concept | Reason |
-|---|---|
-| `resource_usage` on Event Ledger (tokens, cost, latency, model_ref, provider_ref, region_ref) | (4) fails: billing/observability telemetry, not persistent memory state. Every provider produces this in its own format; PAMSPEC does not solve a memory interop failure by standardizing it. |
-| Token cost accounting | (4) fails: billing, not memory. |
-| Billing and provider telemetry generally | (4) fails: observability, not memory. |
+`memory-event.schema.json` currently carries a `resource_usage` block whose fields do not all warrant the same treatment.
 
-### 4. Planned file-move and impact matrix (planning only — NOT executed here)
-
-For each destination in §3, the following is the planned file
-movement AND the identified impact. **No files are moved by this
-ADR.** Execution happens under separate branches (R4 and later),
-each of which will:
-
-- update the destination path,
-- update every cross-reference (README, CHANGELOG, CONSISTENCY-MATRIX, ADR indexes, spec source, conformance harness routing, and any code imports),
-- run the schema, repository, test-vector, reference-impl, MCP adapter, and conformance test suites, and
-- state a rollback plan.
-
-| Source path (current) | Planned destination | Impact scope |
+| Field | Disposition | Rationale |
 |---|---|---|
-| `schemas/0.1-draft/delegation.schema.json` | `experimental/delegation/schema.json` | validator schema-list; test-vector routing in `scripts/validate_test_vectors.py`; ADR-0024 cross-refs; delegation test vectors; reference-impl `pamspec_ref/delegation.py` (moved with schema OR remains as experimental); conformance harness `PAMSPEC-Delegation` profile (renamed or moved); spec `draft-*.md` delegation section; CI workflow references. |
-| `schemas/0.1-draft/subscription.schema.json` | `experimental/subscribe/schema.json` | validator schema-list; ADR-0023 cross-refs; subscription-related event types in `memory-event.schema.json` (need re-scoping decision); reference-impl `pamspec_ref/subscription.py`; conformance harness `PAMSPEC-Subscribe` profile; spec `draft-*.md` Subscribe operation section. |
-| `schemas/0.1-draft/evaluation-snapshot.schema.json` | `experimental/evaluation/schema.json` (interim); may promote to `profiles/evaluation/` if profile decision confirms | validator schema-list; ADR-0027; evaluation test vectors; spec `draft-*.md` Evaluation profile section. |
-| `schemas/0.1-draft/tool-invocation-content.schema.json`, `tool-result-content.schema.json` | `experimental/tool-trace/` | validator schema-list; ADR-0020; tool-invocation and tool-result test vectors; standard-object-type enum in `common.schema.json` (needs coordination with core-type freeze). |
-| `actor.schema.json` `attestation` sub-block | `experimental/actor-attestation/` (split out of `actor.schema.json`) | ADR-0026; test vector `attested-agent-actor.json`; conformance suite has no direct coverage; may coordinate with AIP. |
-| `common.schema.json` `quality_signals` definition | `experimental/quality-signals/` (split out of `common.schema.json`) | ADR-0025; test vector `claim-with-quality-signals.json`; spec `draft-*.md` quality_signals paragraph. |
-| `bindings/mcp/` (directory) | `experimental/mcp-binding/` (rename) | ADR-0019; `bindings/mcp/server-python/` adapter tests; CI workflow if it references the path; spec `draft-*.md` MCP binding paragraph. |
-| `memory-event.schema.json` `resource_usage` block | **Removed** (not moved) | ADR-0022; test vector `event-with-resource-usage.json`; spec `draft-*.md` `resource_usage` paragraph. |
-| Lifecycle/Availability/Retention/Validation full state machinery | `profiles/governance/` (retain slimmed subset in Lite core; details moved) | ADR-0004, ADR-0013; state-transition tables in spec; conformance suite lifecycle cases; test vectors for expiration, redaction, pending-deletion, retention-transition, validation-transition, lifecycle-transition, deletion-tombstone, invalid-lifecycle-transition, invalid-validation-transition, invalid-cross-dimensional-transition. |
-| Relationship Objects (schema + spec section) | `profiles/relationship/` | ADR-0005; `relationship.schema.json`; test vectors `relationship-creation.json`, `cross-scope-relationship-without-policy.json`; conformance harness (no direct cases yet). |
-| Structured / semantic query, snapshots | `profiles/query/` | Query schema (if any), spec Query and Retrieval Model section, semantic-query and structured-query test vectors. |
-| Working Memory type + Promote operation | `profiles/working-memory/` | `working-memory-content.schema.json`; ADR-0021; spec Type System + Promote operation paragraphs; `working-memory.json` test vector; `working-memory-missing-task-ref.json` invalid vector. |
+| `input_tokens` | **Remove** | Billing/observability; gate 1 fails. |
+| `output_tokens` | **Remove** | Billing/observability; gate 1 fails. |
+| `cached_input_tokens` | **Remove** | Billing/observability; gate 1 fails. |
+| `wall_clock_ms` | **Remove** | Observability latency; gate 1 fails. |
+| `compute_ms` | **Remove** | Observability latency; gate 1 fails. |
+| `cost_amount` | **Remove** | Billing; gate 1 fails. |
+| `cost_currency` | **Remove** | Billing; gate 1 fails. |
+| `cost_unit` | **Remove** | Billing; gate 1 fails. |
+| `region_ref` | **Remove** | Deployment metadata; gate 1 fails. |
+| `model_ref` | **Evaluate for relocation to provenance-generation context** | Reproducibility metadata for model-generated memory. Not billing. R5 (Lite simplification) will decide whether this belongs inside `provenance` for `object_type = "claim" \| "summary"` or under an optional generation-context block. Removed from `resource_usage`; destination decided in R5. |
+| `provider_ref` | **Evaluate for relocation to provenance-generation context** | Same as `model_ref`. Removed from `resource_usage`; destination decided in R5. |
 
-### 5. Non-goals of this ADR
+Nothing is preserved merely because it existed. Nothing that carries reproducibility metadata is discarded under the label "billing."
+
+### 4. Minimal deletion semantics (locked at the Lite level)
+
+Deletion is a core operation. It cannot remain underspecified while the governance machinery moves to an optional profile. The Lite level locks the following:
+
+- A successful `delete` MUST create a persistent deletion marker or a terminal deleted Memory Version (tombstone).
+- After a successful `delete`, ordinary `read` MUST NOT return the deleted content and MUST raise `object_deleted` (or the binding's equivalent error).
+- Identity MUST be preserved sufficiently to prevent accidental recreation or stale resurrection: subsequent `create` with the same `object_id` MUST be treated as an error or as an idempotent replay of the deletion, at the implementation's choice; it MUST NOT silently recreate the object as if it had never been deleted.
+- Version history remains inspectable via `history` (subject to profile-level Availability rules).
+- The Lite level does NOT require: redaction, legal hold, retention schedules, physical purge, restoration policy, erasure evidence, or content-free tombstone metadata beyond what Lite already stores.
+
+Governance profiles MAY add:
+
+- redaction,
+- legal hold,
+- retention schedules,
+- physical purge,
+- restoration policy,
+- erasure evidence.
+
+This gives every Lite implementation a deterministic delete contract while leaving records-management to those who need it.
+
+### 5. Lite state subset (locked)
+
+Lite is defined against a slim subset of the state dimensions. The full state machinery moves to the Governance Profile.
+
+Locked minimal Lite subset:
+
+- `lifecycle_state`: `active | archived`
+- `availability_state`: `available | deleted`
+- **No mandatory Retention State** at Lite.
+- **No mandatory Validation State** at Lite.
+
+Rationale for retaining two slim dimensions rather than dropping Lifecycle entirely: existing behavior already distinguishes "archive" (present, not surfaced by default) from "delete" (tombstoned per §4). Removing Lifecycle would force implementations to conflate the two. Retention and Validation impose governance processes a prototype may not have and belong in the Governance Profile.
+
+### 6. Planned file-move and impact matrix (planning only — NOT executed here)
+
+Execution is split across four branches (R4a, R4b, R4c, R5) as detailed under §7 below. **No files are moved by this ADR.**
+
+| Source path (current) | Planned destination | Branch | Impact scope |
+|---|---|---|---|
+| `memory-event.schema.json` `resource_usage` block (remove `input_tokens`, `output_tokens`, `cached_input_tokens`, `wall_clock_ms`, `compute_ms`, `cost_amount`, `cost_currency`, `cost_unit`, `region_ref`; hold `model_ref` and `provider_ref` for R5 decision) | **removed / relocated field-level** | **R4a** | ADR-0022; test vector `event-with-resource-usage.json`; spec `draft-*.md` `resource_usage` paragraph. |
+| `schemas/0.1-draft/delegation.schema.json` | `experimental/delegation/schema.json` | **R4b** | validator schema-list; test-vector routing in `scripts/validate_test_vectors.py`; ADR-0024 cross-refs; delegation test vectors; reference-impl `pamspec_ref/delegation.py`; conformance harness Delegation profile; spec delegation section; CI workflow references. |
+| `schemas/0.1-draft/subscription.schema.json` | `experimental/subscribe/schema.json` | **R4b** | validator schema-list; ADR-0023; subscription-related event types (need re-scoping decision in R5); reference-impl `pamspec_ref/subscription.py`; conformance harness Subscribe profile; spec Subscribe section. |
+| `schemas/0.1-draft/tool-invocation-content.schema.json`, `tool-result-content.schema.json` | `experimental/tool-trace/` | **R4b** | validator schema-list; ADR-0020; tool-invocation and tool-result test vectors; standard-object-type enum in `common.schema.json` (coordinated with core-type freeze in R5). |
+| `schemas/0.1-draft/evaluation-snapshot.schema.json` | `experimental/evaluation/schema.json` | **R4b** | validator schema-list; ADR-0027; evaluation test vectors; spec Evaluation section. |
+| `schemas/0.1-draft/working-memory-content.schema.json` | `experimental/working-memory/schema.json` | **R4b** | ADR-0021; spec Type System + Promote operation paragraphs; `working-memory.json` valid vector; `working-memory-missing-task-ref.json` invalid vector. Standard-object-type enum update coordinated with R5. |
+| `actor.schema.json` `attestation` sub-block | `experimental/actor-attestation/` | **R4b** | ADR-0026; test vector `attested-agent-actor.json`; may coordinate with AIP. |
+| `common.schema.json` `quality_signals` definition | `experimental/quality-signals/` | **R4b** | ADR-0025; test vector `claim-with-quality-signals.json`; spec `quality_signals` paragraph. |
+| `bindings/mcp/` | **`bindings/experimental/mcp/`** (nested, preserves binding-vs-profile distinction) | **R4b** | ADR-0019; `bindings/mcp/server-python/`; CI workflow if it references the path; spec MCP binding paragraph. |
+| `profiles/governance/` (new) — full state transitions, redact, legal hold | new subtree | **R4c** | ADR-0004, ADR-0013; state-transition tables in spec; conformance suite lifecycle cases; multiple test vectors. |
+| `profiles/relationship/` (new) — Relationship Objects | new subtree | **R4c** | ADR-0005; `relationship.schema.json`; relationship test vectors. |
+| `profiles/query/` (new) — structured/semantic query, snapshots | new subtree | **R4c** | Query schema (if any), spec Query and Retrieval Model section, query test vectors. |
+| Slim Lite state subset (§5), minimal provenance (per R2 downgrade), simplified deletion semantics per §4, standard-object-type enum aligned with experimental moves | Lite schema + spec + conformance | **R5** | `common.schema.json`, `memory-object.schema.json`, `provenance.schema.json`, Lite spec section, `conformance/suite/test_lite.py`, test vectors. R5 owns semantic changes so schema, implementation, conformance suite, and documentation move together. |
+
+### 7. Execution plan (branch split, not executed by this ADR)
+
+Do NOT execute all file movements in one branch. Split by risk and semantic footprint:
+
+- **R4a — Remove and extract telemetry.** Removes the resource_usage fields listed under §3.5 (except `model_ref`/`provider_ref`, which are held). Non-semantic for Lite. Small, contained. Cannot alter any conformance test that isn't specifically for `resource_usage`.
+- **R4b — Move experimental capabilities.** Moves delegation, subscribe, tool-trace, evaluation, working-memory, attestation, quality-signals, and MCP binding to `experimental/*` and `bindings/experimental/mcp/`. Updates validator schema-lists, ADRs, test vectors, and conformance harness routing (retire the experimental-profile harness cases OR relocate them under `conformance/experimental/`). Does NOT alter Lite semantics.
+- **R4c — Establish optional profile directories.** Creates `profiles/governance/`, `profiles/relationship/`, `profiles/query/` and relocates the corresponding material. Documents each profile's boundary. Does NOT alter Lite semantics.
+- **R5 — Simplify Lite and align schemas/tests.** Owns all semantic changes: applies §4 deletion semantics, §5 Lite state subset, minimal provenance shape, standard-object-type enum trim, `model_ref`/`provider_ref` relocation decision, matching updates to `conformance/suite/test_lite.py`, and cross-file consistency.
+- **R6 — Adjacent-author coordination.** Reaches out to AIMEM, SAIHM/W3C CG, FAF authors per ADR-0030. No repository changes required beyond coordination artifacts.
+- **R8 — Rewrite draft-latest.** Aligns the draft to the narrowed core after R4a-R5 land.
+
+R4a-R4c are non-semantic for Lite. R5 is where semantic changes concentrate; that split keeps schema, implementation, conformance suite, and documentation moving together and prevents an in-flight schema move from making conformance tests fail for the wrong reason.
+
+### 8. Non-goals of this ADR
 
 - Does NOT move any file.
 - Does NOT edit any schema.
@@ -206,41 +292,43 @@ each of which will:
 - Does NOT rewrite the draft.
 - Does NOT add features.
 
-Everything above is a proposal for the reviewer to accept, modify,
-or reject before any narrowing branches are authorized.
+Everything above is a proposal for the reviewer to accept, modify, or reject before any narrowing branches are authorized.
 
 ## Alternatives considered
 
-- **Do not narrow.** Rejected: R2 documents overlap with adjacent standards, and the current source has grown well beyond what the four-part rule permits in core. Doing nothing preserves the drift.
-- **Narrow more aggressively (remove Working Memory, remove all extensions).** Rejected: R2 supports Working Memory as an optional-profile concept; removing extensibility entirely would prevent legitimate future object types.
-- **Narrow less aggressively (keep Delegation and Subscribe in core).** Rejected: both fail rule (4) and the active adjacent drafts (agent-identity landscape, MCP-side streaming) make PAMSPEC's inclusion a duplication of work happening elsewhere.
-- **Rewrite the draft first, then classify.** Rejected: classifying before rewriting is safer — reviewers can push back on classification without a rewrite being in flight.
+- **Do not narrow.** Rejected: R2 documents overlap with adjacent standards, and the current source has grown beyond what the four gates permit in core.
+- **Narrow more aggressively (drop Lifecycle entirely from Lite; remove all extensions).** Rejected: dropping Lifecycle conflates archive with deletion; removing extensibility prevents legitimate future types.
+- **Keep Delegation and Subscribe in core.** Rejected: both fail gate 1 and active adjacent drafts make PAMSPEC's inclusion a duplication.
+- **Promote Working Memory and Evaluation to optional profiles now.** Rejected: R2 shows insufficient independent-implementation pressure. A repository profile implies PAMSPEC is standardizing the behavior. Keep them in `experimental/` until an adopter and a concrete cross-implementation failure appear; graduation requires a new ADR.
+- **Remove the entire resource_usage block indiscriminately.** Rejected: `model_ref` and `provider_ref` are provenance metadata for model-generated memory, not billing.
+- **Move MCP binding to `experimental/mcp-binding/`.** Rejected: loses the binding-vs-profile distinction. Use `bindings/experimental/mcp/` instead.
 
 ## Consequences
 
-- Establishes a stable rule (§1) that governs every future feature-addition proposal.
-- Establishes a stable target scope (§2, §3) for the first `-00`.
-- Creates zero repository churn; downstream branches will do that under explicit authorization.
-- Forces every future ADR to answer the four-part test.
+- Establishes an auditable rule (§1) that governs every future feature-addition proposal.
+- Distinguishes descriptive architecture from wire-level conformance (§2), preventing foundational models from being silently converted into mandatory implementation surfaces.
+- Locks the deletion contract (§4) and the Lite state subset (§5) BEFORE any schema movement, so R5 can execute against a fixed target.
+- Creates zero repository churn; downstream branches (R4a, R4b, R4c, R5) do that under explicit authorization.
+- Forces every future ADR to answer the four gates and name the concrete failure it prevents.
 
 ## Interoperability impact
 
-The four-part test explicitly gates interoperability-relevant additions. Narrowing to the §2 boundary makes the eventual `-00` reviewable without dragging in adjacent identity/authorization/observability concerns that other IETF/W3C work already addresses.
+The four gates explicitly protect interoperability. The Lite deletion lock (§4) and state subset (§5) close the two gaps the reviewer identified: an unspecified core delete would let implementations diverge on the meaning of "deleted"; an unspecified Lite state subset would let R5 negotiate the subset piecemeal.
 
 ## Security impact
 
-Scope isolation is retained in core as an engineering (security) requirement (R2 §3.2). Removing `resource_usage`, Delegation, and Subscribe from core reduces PAMSPEC's role in domains where security guarantees are actually the identity/authz/streaming layer's job.
+Scope isolation is retained in core as an engineering (security) requirement (R2 §3.2). Deletion is locked to prevent stale resurrection. Removing billing telemetry, Delegation, and Subscribe from core avoids PAMSPEC's role in domains where security guarantees are the identity/authz/streaming layer's job.
 
 ## Privacy impact
 
-Retention and legal-hold governance move to an optional Governance Profile. Any implementation that needs those guarantees adopts that profile; Lite implementations are not silently exposed to a governance regime they cannot implement.
+Retention and legal-hold governance move to an optional Governance Profile (§3.3). Any implementation that needs those guarantees adopts that profile; Lite implementations are not silently exposed to a governance regime they cannot implement.
 
 ## Unresolved questions
 
-1. Should some of the `experimental/*` subtrees become deprecated instead of moved, given adjacent standards work is already better positioned to own them (e.g., delegation → AIP; MCP binding → post-2026-07-28 MCP spec; tool trace → MCP)?
-2. Should Working Memory remain as a standard object type in the core (with the type mechanism) or move entirely to `profiles/working-memory/`? Current classification puts it in the profile; the extensible type mechanism in core is what would let it live there.
-3. Are there any core concepts in §3.1 that DO NOT satisfy the four-part rule and should be re-examined? Reviewers should challenge specific rows.
-4. Timing: R4 executes §3 file moves and R8 rewrites the draft. Do we execute R4 in one branch or split by destination (`experimental/`, `profiles/`, and remove `resource_usage`)?
+1. `model_ref` and `provider_ref` relocation destination: R5 will decide whether these belong inside `provenance` for `object_type = "claim" | "summary"`, under a separate `generation_context` block, or in a distinct experimental subtree.
+2. Standard-object-type enum handling for experimental types: when R4b moves `working_memory`, `tool_invocation`, `tool_result` to `experimental/`, should their names remain in the `standard_object_type` enum in Lite (as reserved) or be removed? R5 owns this.
+3. Conformance harness treatment of the retired Delegation/Subscribe profile cases: R7 built cases against the current harness. When R4b moves these to `experimental/`, do the cases move to `conformance/experimental/` or retire? Recommend the former to preserve the harness's ability to test experimental behavior when someone opts in.
+4. Whether Event Ledger architectural context in the first `-00` needs a normative reference to the future `PAMSPEC-Ledger` profile, or whether that reference can be added when the profile lands.
 
 ## References
 
