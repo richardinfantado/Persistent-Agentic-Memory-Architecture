@@ -30,7 +30,9 @@
         "object_deleted",
         "working_memory_promoted",
         "tool_invoked",
-        "tool_completed"
+        "tool_completed",
+        "subscription_opened",
+        "subscription_closed"
       ]
     },
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
