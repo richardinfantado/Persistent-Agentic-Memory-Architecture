@@ -6,9 +6,10 @@ The mapping is deliberately narrow — only the three issue classes named in the
 
 ## 1. Mem0 — scope mutation / cross-tenant leakage
 
-- **Observed failure class:** `update(memory_id, metadata={"user_id": <different>})` silently changes the native scope field of a memory, moving it from one tenant to another without any explicit re-scope operation and without warning.
+- **Observed failure class:** `update(memory_id, metadata={"user_id": <different>})` silently changes the native scope field of a memory, moving it from one tenant to another without any explicit re-scope operation and without warning. Independent visibility probe via `get_all(filters={"user_id": ...})` before and after the update confirms cross-tenant movement: the memory disappears from the source tenant's list and appears in the target tenant's list.
 - **Affected framework:** Mem0 OSS.
-- **Reproduced in scenario 7-1 (this sprint):** Yes. `after_native_user_id == "bob"` when the memory was created with `user_id="alice"`. Classification: **GAP**.
+- **Primary Mem0 issue (Python):** **#6277** (open at time of test). **TypeScript twin:** **#6342**. V08.1 corrects the V08 report, which had cited #6342 as the primary — since this sprint exercises the Python SDK, #6277 is the accurate primary reference.
+- **Reproduced in scenario 1 (this sprint):** Yes. `after_native_user_id == "bob"` when the memory was created with `user_id="alice"`, AND `alice_sees_mid` flipped True→False AND `bob_sees_mid` flipped False→True. Classification: **GAP**.
 - **What PAMSPEC currently says:**
   - ADR-0029 §3.1 lists Memory Scope with enforcement as a normative Lite requirement whose concrete failure is "Two impls with mismatched scope enforcement leak a memory object across users/tenants/agents that should never have seen it (cross-scope read succeeds when it should return `object_not_found`)."
   - The `scope_id` field is described as immutable for a version in the draft's Memory Object Model section.

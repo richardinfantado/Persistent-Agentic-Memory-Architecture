@@ -17,12 +17,17 @@ AMP overlaps PAMSPEC directly on:
 
 Under R8's evidence, PAMSPEC therefore cannot distinguish itself by any of those six axes alone. AMP already occupies them.
 
-## What R8 evidence says PAMSPEC's distinct contribution is
+The four questions this note recommends asking of AMP (in the Recommendation section below) narrow from four to **three** in V08.1: derived-artifact refresh is no longer part of PAMSPEC's demonstrated distinct contribution because Mem0 supplies it natively.
 
-Under the eight-scenario Mem0 evidence, the **four GAPs** — scope immutability, expected-version conflict, idempotency-key, derived-vector refresh on authoritative update — are what a framework like Mem0 does not natively give an implementer. Two clusters emerge:
+## What R8 evidence says PAMSPEC's distinct contribution is (V08.1)
 
-1. **Stable identity + strict update contract.** Scope immutability, expected-version conflict rejection, idempotency-key semantics. These are correctness properties on the *authoritative* update path.
-2. **Authoritative-vs-derived integrity.** Updating authoritative content should refresh (or invalidate) derived artifacts — vectors, summaries, indexes. Mem0 currently does not; this is the strongest single R8 result.
+**V08.1 correction.** V08 of this note listed *authoritative-vs-derived integrity* as one of PAMSPEC's two distinct contributions, on the strength of the V08 scenario-7 finding. That finding was retracted in the V08.1 corrective pass: a properly-controlled experiment (five distinctive control memories + direct fetch of the target's stored embedding from the underlying Chroma collection before and after `update(text=...)`) shows Mem0 DOES refresh the vector — L2 delta ≈ 1.374, old-query rank moved 0→6, new-query rank moved absent→1. See the reversal notice in `real-framework-validation-report.md`.
+
+Under the corrected evidence, PAMSPEC's distinct contribution — that this sprint can actually demonstrate — is a single cluster:
+
+1. **Stable identity + strict update contract.** Scope immutability (scenario 1, doubly established including cross-tenant visibility), expected-version conflict rejection (scenario 3), and idempotency-key semantics (scenario 4). These are correctness properties on the *authoritative* update path that Mem0 does not enforce today.
+
+The authoritative-vs-derived-integrity argument remains architecturally interesting but is **not evidenced by this sprint**. If PAMSPEC wants to make an empirical case for that distinction, it will need a framework or storage path where an authoritative update demonstrably leaves derived artefacts stale — Mem0 2.0.12 with Chroma is not that framework.
 
 Whether AMP addresses (1) and (2) is the question that decides PAMSPEC's distinct contribution. Based on AMP's stated scope as a wire format for operations, plus adapters and governance hooks:
 

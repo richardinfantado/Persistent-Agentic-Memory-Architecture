@@ -2,6 +2,8 @@
 
 **Branch:** `validation/08-real-framework-proof`
 
+**Revision:** V08.1 (2026-07-18) — corrective pass after reviewer verdict. Supersedes V08 in every material claim. In particular: the V08 "derived-vector staleness" headline finding was retracted after a properly-controlled experiment (five distinctive control memories + direct fetch of the stored embedding from the underlying Chroma collection) showed Mem0 does refresh the vector on `update(text=...)`. See the reversal notice in `reports/real-framework-validation-report.md`.
+
 **Purpose:** Determine whether PAMSPEC solves real agent-memory problems that an ordinary versioned document store does not, by running PAMSPEC's requirements against an unmodified production-oriented agent-memory framework.
 
 This branch is **implementation-and-evidence**, not governance. It does NOT add new ADRs, reorganize schemas, or rewrite the Internet-Draft. It produces a Mem0 subprocess adapter, a real-framework validation report, a short (≤ 500-word) `what-pamspec-is-for.md`, and three practitioner-outreach drafts.

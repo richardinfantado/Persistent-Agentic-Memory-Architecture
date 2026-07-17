@@ -1,6 +1,6 @@
 # Practitioner outreach — LangGraph maintainer or active stateful-agent builder
 
-**Status: draft, not sent.**
+**Status: draft. HOLD — do NOT send. Reviewer verdict: PAMSPEC describes the LangGraph checkpointer failure but does not prevent runtime misconfiguration, which makes this weak outreach material for PAMSPEC's normative memory contract. Better retained as a scope-boundary example.**
 
 **Suggested recipient (verify before sending):** A LangGraph project maintainer, someone actively building stateful multi-agent systems on LangGraph, or someone who has recently opened or commented on issues about `langgraph dev` checkpointer behavior. Reach out via a LangGraph GitHub issue or discussion.
 
@@ -13,7 +13,7 @@ Hi,
 I'm developing PAMSPEC — the Persistent Agentic Memory Architecture Specification — as a public, pre-submission work in progress. Its subject is the correctness of authoritative agent memory: identity, versioning, provenance, scope, deletion, and the distinction between authoritative and derived state.
 
 I ran a small evidence sprint against Mem0 OSS 2.0.12 to check whether PAMSPEC's proposed requirements describe real problems agents actually encounter. The report is at:
-https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/main/validation/reports/real-framework-validation-report.md
+https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/<COMMIT-SHA>/validation/reports/real-framework-validation-report.md  <!-- replace <COMMIT-SHA> with the V08.1 commit or wait until merged to main -->
 
 The report cites a LangGraph-related issue class: `langgraph dev` ignoring the configured persistent checkpointer and silently substituting an in-memory runtime, causing all agent state to disappear on restart. PAMSPEC's *architectural* language (Compute Plane vs Persistent State Plane) describes this failure, but PAMSPEC's *normative* contract does not currently detect or prevent it — a memory-data-model spec can't force a runtime to wire up the right backing store. Honest limit.
 
