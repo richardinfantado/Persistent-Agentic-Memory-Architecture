@@ -63,6 +63,35 @@ class MemoryService:
         self._lock = threading.RLock()
         self._init_schema()
 
+    def delegations(self):
+        from .delegation import DelegationStore
+        if not hasattr(self, "_delegations"):
+            self._delegations = DelegationStore(self._conn, self._lock)
+        return self._delegations
+
+    def subscriptions(self):
+        from .subscription import SubscriptionManager
+        if not hasattr(self, "_subs"):
+            self._subs = SubscriptionManager()
+        return self._subs
+
+    def subscribe(
+        self,
+        scope_id: str,
+        actor: dict,
+        filter_spec: dict | None = None,
+        start_sequence: int = 0,
+        authorize=None,
+    ):
+        return self.subscriptions().open(
+            scope_id=scope_id,
+            actor=actor,
+            event_source=lambda s, after: list(self.events(scope_id=s, after_sequence=after)),
+            filter_spec=filter_spec,
+            start_sequence=start_sequence,
+            authorize=authorize,
+        )
+
     def _init_schema(self) -> None:
         with self._lock, self._conn:
             self._conn.executescript(
