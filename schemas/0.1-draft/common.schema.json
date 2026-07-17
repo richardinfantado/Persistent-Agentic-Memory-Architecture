@@ -28,7 +28,7 @@
     },
     "standard_object_type": {
       "$comment": "Relationship Objects are represented by relationship.schema.json and are intentionally excluded from this enumeration.",
-      "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "summary"]
+      "enum": ["claim", "decision", "task", "artifact", "observation", "entity", "summary", "tool_invocation", "tool_result"]
     },
     "extension_object_type": {
       "type": "string",

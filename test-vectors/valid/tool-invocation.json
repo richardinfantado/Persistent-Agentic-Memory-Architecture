@@ -1,0 +1,28 @@
+{
+  "spec_version": "0.1.0-draft",
+  "object_id": "mem:toolinv:001",
+  "version_id": "ver:toolinv:001:1",
+  "scope_id": "workspace:example",
+  "object_type": "tool_invocation",
+  "canonical_content": {
+    "tool_name": "web_search",
+    "tool_version": "1.4.0",
+    "arguments": {"query": "PAMSPEC agentic memory"},
+    "invocation_reason": "gather background on prior work",
+    "requested_by_actor_id": "actor:agent:planner"
+  },
+  "lifecycle_state": "active",
+  "availability_state": "available",
+  "retention_state": "retained",
+  "validation_state": "corroborated",
+  "committed_at": "2026-07-17T00:00:00.000000Z",
+  "recorded_at": "2026-07-17T00:00:00.000001Z",
+  "sequence": 1,
+  "actor": {"actor_id": "actor:agent:planner", "actor_kind": "agent"},
+  "provenance": {
+    "provenance_id": "prov:toolinv:001",
+    "actor": {"actor_id": "actor:agent:planner", "actor_kind": "agent"},
+    "activity": "invoked_tool",
+    "recorded_at": "2026-07-17T00:00:00.000001Z"
+  }
+}

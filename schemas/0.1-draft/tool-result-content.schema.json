@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/tool-result-content.schema.json",
+  "title": "PAMSPEC tool_result canonical_content 0.1-draft",
+  "$comment": "Canonical content shape for object_type = 'tool_result'.",
+  "type": "object",
+  "required": ["invocation_object_id", "outcome"],
+  "properties": {
+    "invocation_object_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "object_id of the corresponding tool_invocation Memory Object."
+    },
+    "invocation_version_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "Specific tool_invocation version this result corresponds to."
+    },
+    "outcome": {"enum": ["success", "error", "partial", "timeout", "cancelled"]},
+    "result": {"$comment": "Tool output. Any JSON value; may be a reference to an artifact."},
+    "result_schema_ref": {"type": "string", "format": "uri"},
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "retryable": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "started_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "completed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "latency_ms": {"type": "integer", "minimum": 0},
+    "cost": {
+      "type": "object",
+      "properties": {
+        "amount": {"type": "number", "minimum": 0},
+        "currency": {"type": "string"},
+        "unit": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "resource_usage": {
+      "type": "object",
+      "properties": {
+        "input_tokens": {"type": "integer", "minimum": 0},
+        "output_tokens": {"type": "integer", "minimum": 0},
+        "wall_clock_ms": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
