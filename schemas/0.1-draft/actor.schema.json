@@ -8,8 +8,41 @@
   "properties": {
     "actor_id": {"$ref": "common.schema.json#/$defs/id"},
     "actor_kind": {"type": "string"},
-    "display_name": {"type": "string"}
+    "display_name": {"type": "string"},
+    "on_behalf_of_actor_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "When the acting principal is different from the executing entity (delegation, service account acting for a user), record the ultimate principal here."
+    },
+    "delegation_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "If this operation was performed under a Delegation Object, reference it."
+    },
+    "attestation": {
+      "type": "object",
+      "$comment": "Optional verifiable identity attestation for the actor. Non-authoritative in this profile; a future profile may make attestation mandatory for specific actor_kind values (e.g., 'agent').",
+      "properties": {
+        "agent_manifest_ref": {
+          "type": "string",
+          "$comment": "URI or content-addressable reference to the agent's manifest (declared capabilities, model reference, tool list, safety profile)."
+        },
+        "manifest_digest": {"type": "string"},
+        "manifest_digest_algorithm": {"type": "string"},
+        "attestation_authority": {"type": "string", "$comment": "Identifier of the party attesting to the manifest and identity."},
+        "attestation_method": {"type": "string", "$comment": "e.g., 'sigstore', 'x509', 'jws', 'did'."},
+        "signature": {"type": "string"},
+        "signature_algorithm": {"type": "string"},
+        "issued_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "not_before": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "not_after": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "capabilities_declared": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "did_ref": {"type": "string", "$comment": "Optional Decentralized Identifier reference (W3C DID)."}
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }
-

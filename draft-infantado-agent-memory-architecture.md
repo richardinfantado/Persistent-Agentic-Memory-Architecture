@@ -397,7 +397,7 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 : Required service-assigned logical ordering value within the authoritative object history. Sequence values within a single object's version history MUST be strictly increasing. Sequence values MUST NOT be reused within an object history and are not required to be globally unique across objects or scopes.
 
 `actor`:
-: Required. Identifies the actor responsible for the operation that produced this version. It is immutable for a version and can contain personal data.
+: Required. Identifies the actor responsible for the operation that produced this version. It is immutable for a version and can contain personal data. The actor MAY declare `on_behalf_of_actor_id` when acting for another principal, `delegation_id` when the operation was authorized by a Delegation Object, and an optional `attestation` block containing a verifiable identity attestation for the actor (agent manifest reference and digest, attestation authority and method, signature, validity window, and declared capabilities). Attestation is non-authoritative in the base profile; a future profile MAY require attestation for specific `actor_kind` values (for example, `agent`) or in specific scopes.
 
 `provenance`:
 : Required. Records machine-readable origin, source, evidence, method, and transformation information. Corrections or additions create a new version or provenance event. It can contain personal or source-sensitive data.
