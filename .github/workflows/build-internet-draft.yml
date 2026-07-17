@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       revision:
-        description: 'Release revision (e.g., 01, 02). Leave blank for latest-only.'
+        description: 'Datatracker revision for intentional submission builds. Leave blank for latest-only. No revision has ever been submitted; the first submission MUST be "00". Any other value is only for internal review-candidate renderings and MUST NOT be described as an IETF revision.'
         required: false
         default: ''
 

@@ -1,9 +1,11 @@
 {
-  "milestone": "PAMSPEC -00 Semantic Consistency Pass",
+  "note": "This file records an internal review milestone. See REVIEW-CANDIDATE-ARCHIVE.md for the current archive index. No revision of this document has been submitted to or posted by the IETF Datatracker.",
+  "milestone": "PAMSPEC internal semantic-consistency review pass",
   "starting_commit": "5d3dd27a2f52c0e36ae8dd2842b49347b1ab5dd3",
-  "branch": "fix/semantic-consistency-00",
+  "internal_correction_branch": "fix/semantic-consistency-00",
   "draft_source": "draft-infantado-agent-memory-architecture.md",
-  "frozen_revision": "00",
+  "ietf_submission_status": "not_submitted",
+  "next_datatracker_revision": "00",
   "architecture_profile": "0.1.0-draft",
   "schema_profile": "0.1-draft",
   "test_vector_suite": "0.1.0",
@@ -12,4 +14,3 @@
     "Robert Leroux"
   ]
 }
-

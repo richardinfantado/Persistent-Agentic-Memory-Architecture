@@ -1,12 +1,20 @@
 {
   "project": "PAMSPEC",
   "internet_draft_subject": "draft-infantado-agent-memory-architecture",
-  "frozen_internet_draft_revision": "01",
+  "ietf_submission_status": "not_submitted",
   "active_development_docname": "draft-infantado-agent-memory-architecture-latest",
+  "next_datatracker_revision": "00",
+  "posted_datatracker_revisions": [],
+  "latest_internal_review_candidate": {
+    "path": "review-candidates/2026-07-18/candidate-b/",
+    "generated_at": "2026-07-17",
+    "source_commit": "b1ec925",
+    "generator": "github-actions/build-internet-draft.yml run 29582048438",
+    "note": "Internal review rendering only. Not submitted to IETF."
+  },
   "architecture_profile": "0.1.0-draft",
   "schema_profile": "0.1-draft",
   "test_vector_suite": "0.1.0",
-  "enhancement_cycle": "-01",
   "conformance_profiles": [
     "PAMSPEC-Lite",
     "PAMSPEC-Core",
