@@ -753,6 +753,24 @@ Capacity planning should account for authoritative versions, ledger entries, sna
 
 Implementations declare the profile name and version they support. Partial implementation is permitted, but an implementation MUST NOT claim a profile unless it satisfies every mandatory requirement for that profile.
 
+## PAMSPEC-Lite
+
+PAMSPEC-Lite is a minimal on-ramp profile for single-developer agents, prototypes, and embedded deployments. A Conforming Implementation of PAMSPEC-Lite MUST support:
+
+- Memory Scope enforcement for reads, writes, and queries.
+- The canonical Memory Object envelope with stable `object_id` and immutable `version_id`.
+- The Lifecycle State subset `active`, `superseded`, and `archived`.
+- The Availability State subset `available` and `deleted` (with a terminal tombstone).
+- The Retention State subset `retained` and `pending_deletion`.
+- The Validation State subset `unverified` and `corroborated`.
+- Append-only Event Ledger recording of `object_created`, `object_updated`, `object_deleted`, `lifecycle_transitioned`, and `validation_transitioned` events, with atomic version+event commit.
+- Expected-version preconditions on Update, Transition, and Delete, and `version_conflict` on stale expectations.
+- Idempotency-key handling for Create.
+
+PAMSPEC-Lite deliberately omits Relationship Objects, Semantic Query, Snapshots, Redaction (beyond deletion), Legal Hold, and Derived Index management. Implementations that support any of those areas SHOULD declare the corresponding full profile instead of, or in addition to, PAMSPEC-Lite.
+
+A reference implementation of PAMSPEC-Lite is provided under `implementations/reference-python/` for illustration; it is not normative.
+
 ## PAMSPEC-Core
 
 Requires Memory Scope enforcement, the canonical Memory Object envelope, stable object identity, immutable version identity, the four state dimensions, Authoritative State versus Derived Index separation, the core error envelope, and exportable representation.
