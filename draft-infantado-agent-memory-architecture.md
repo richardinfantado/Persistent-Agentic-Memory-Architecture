@@ -412,6 +412,8 @@ The standard Memory Object types are `claim`, `decision`, `task`, `artifact`, `o
 
 A `tool_invocation` object records that an agent, tool, or user requested execution of a named tool with specified arguments. Its canonical content conforms to `tool-invocation-content.schema.json`. A `tool_result` object records the outcome of a corresponding invocation and references the invocation via `invocation_object_id`; its canonical content conforms to `tool-result-content.schema.json`. Together they make an agent's tool-call history first-class, versioned, and provenanced memory rather than transcript ephemera. Relationship Objects MAY link a `decision` or `claim` to the `tool_result` that informed it (`informed_by`) and a `tool_result` to its `tool_invocation` (`produced_by`).
 
+A `working_memory` object holds persistent per-task scratchpad state that survives process restarts but is distinct from consolidated long-term memory. Its canonical content conforms to `working-memory-content.schema.json`. Working memory objects are created with `lifecycle_state` `scratch` by default, are excluded from default trusted retrieval, and are expected to be either promoted (via the Promote operation) to a canonical Memory Object type such as `claim`, `decision`, `task`, or `summary`, or archived once the associated task is complete. Working memory is how PAMSPEC distinguishes "state the agent needs to resume" from "beliefs the agent has committed to."
+
 Canonical Content MAY be any JSON value. `schema_id` defines type-specific validation. An extension type MUST include `schema_id`.
 
 A `summary` object is an externally representable abstraction of conclusions, evidence, assumptions, constraints, progress, and unresolved questions. It is not private chain-of-thought and does not require disclosure of hidden model reasoning.
@@ -598,6 +600,14 @@ Purpose: inspect object versions, transitions, relationships, and Event Ledger e
 ## Redact
 
 Purpose: remove or suppress protected content while preserving permitted audit information. Required inputs are operation identifier, scope identifier, object identifier, expected version, actor, policy basis, and redaction target. A successful Redact creates a new Tombstone or partially redacted Memory Version, changes Availability State, and produces `object_redacted`. Derived Index deletion is triggered or recorded independently. Redaction blocked by policy returns `retention_restriction` or `legal_hold`.
+
+## Promote
+
+Purpose: convert a `working_memory` object into a canonical Memory Object of a target type such as `claim`, `decision`, `task`, or `summary`, preserving provenance and creating an explicit link. Required inputs are operation identifier, scope identifier, source `working_memory` object identifier, expected version, target `object_type`, target `canonical_content` (which MUST conform to the target type's content schema when one is defined), actor, and provenance. Optional inputs include target `object_id`, target Lifecycle State, target Validation State, and idempotency key.
+
+A successful Promote creates a new canonical Memory Object with `provenance.transformation_parent` set to the source `working_memory` version identifier, and transitions the source `working_memory` object's Lifecycle State to `superseded` in a paired ledger event. Both new versions and their events commit atomically. The Promote operation produces `object_created` for the new object, `lifecycle_transitioned` for the source, and a `working_memory_promoted` Event Ledger entry that links the two. Possible errors include `invalid_request`, `object_not_found`, `version_conflict`, `access_denied`, `policy_denied`, and `invalid_state_transition`.
+
+Promote does not require deletion of the source; consolidation history remains inspectable through `inspect_history` and via the Relationship Object that Promote creates (`derived_from`, directed from the new object to the source `working_memory`).
 
 ## Delete
 
