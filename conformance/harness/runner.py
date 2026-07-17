@@ -5,16 +5,25 @@ against a provided Adapter factory, and produces a ConformanceReport.
 
 Each test function receives a fresh Adapter (constructed via the
 factory) so state does not leak between cases.
+
+Reports are producible as human-readable text (summary()) and as
+machine-readable JSON (to_json()). JSON reports include adapter and
+implementation metadata plus suite/spec commit pinning; see
+PROTOCOL.md for the source of the metadata.
 """
 
 from __future__ import annotations
 
 import importlib
 import inspect
+import json
+import os
+import subprocess
 import time
 import traceback
 from dataclasses import dataclass, field
-from typing import Callable
+from datetime import datetime, timezone
+from typing import Any, Callable
 
 from .adapter import Adapter
 
@@ -25,6 +34,24 @@ PROFILE_SUITE_MODULES = {
     "PAMSPEC-Subscribe": "conformance.suite.test_subscription",
 }
 
+REPORT_FORMAT_VERSION = 1
+
+
+def _git_head_commit() -> str:
+    """Return the current git HEAD commit SHA if inside a repo, else empty."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True, timeout=2.0,
+        )
+        return out.stdout.strip()
+    except Exception:
+        return ""
+
+
+def _iso_utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
 
 @dataclass
 class CaseResult:
@@ -33,12 +60,29 @@ class CaseResult:
     duration_ms: float
     error: str | None = None
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "passed": self.passed,
+            "duration_ms": round(self.duration_ms, 3),
+        }
+        if self.error is not None:
+            d["error"] = self.error
+        return d
+
 
 @dataclass
 class ConformanceReport:
     profile: str
     adapter_class: str
     cases: list[CaseResult] = field(default_factory=list)
+    # Metadata (populated by run_profile; safe to leave blank when
+    # constructing manually for testing).
+    started_at: str = ""
+    finished_at: str = ""
+    suite_commit: str = ""
+    adapter_info: dict[str, Any] | None = None
+    report_format_version: int = REPORT_FORMAT_VERSION
 
     @property
     def passed(self) -> bool:
@@ -68,21 +112,71 @@ class ConformanceReport:
                     lines.append(f"        {line}")
         return "\n".join(lines)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "report_format_version": self.report_format_version,
+            "profile": self.profile,
+            "adapter_class": self.adapter_class,
+            "adapter_info": self.adapter_info,
+            "suite_commit": self.suite_commit,
+            "started_at": self.started_at,
+            "finished_at": self.finished_at,
+            "totals": {
+                "total": self.total,
+                "passed": self.passed_count,
+                "failed": self.total - self.passed_count,
+                "all_passed": self.passed,
+            },
+            "cases": [c.to_dict() for c in self.cases],
+        }
+
+    def to_json(self, indent: int | None = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+
+def _collect_adapter_info(adapter: Adapter) -> dict[str, Any]:
+    """Extract adapter-and-implementation metadata for the report.
+    Works for both in-process and subprocess adapters."""
+    info: dict[str, Any] = {
+        "class_name": adapter.__class__.__name__,
+        "supported_profiles": list(adapter.supported_profiles()),
+    }
+    subprocess_info = getattr(adapter, "info", None)
+    if subprocess_info is not None:
+        info["subprocess"] = {
+            "protocol_version": getattr(subprocess_info, "protocol_version", None),
+            "adapter_name": getattr(subprocess_info, "adapter_name", None),
+            "adapter_version": getattr(subprocess_info, "adapter_version", None),
+            "implementation_name": getattr(subprocess_info, "implementation_name", None),
+            "implementation_version": getattr(subprocess_info, "implementation_version", None),
+            "spec_commit": getattr(subprocess_info, "spec_commit", None),
+        }
+    return info
+
 
 def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceReport:
     """Run every case_* function in the profile's suite module against
-    a fresh Adapter produced by `factory`. Returns a ConformanceReport.
+    a fresh Adapter produced by `factory`. Returns a ConformanceReport
+    with metadata suitable for JSON serialization.
     """
     module_name = PROFILE_SUITE_MODULES.get(profile)
     if module_name is None:
         raise ValueError(f"unknown profile: {profile}")
     module = importlib.import_module(module_name)
 
+    started_at = _iso_utc_now()
     probe = factory()
     adapter_class = probe.__class__.__name__
+    adapter_info = _collect_adapter_info(probe)
     probe.close()
 
-    report = ConformanceReport(profile=profile, adapter_class=adapter_class)
+    report = ConformanceReport(
+        profile=profile,
+        adapter_class=adapter_class,
+        adapter_info=adapter_info,
+        suite_commit=_git_head_commit(),
+        started_at=started_at,
+    )
     for name, fn in sorted(inspect.getmembers(module, inspect.isfunction)):
         if not name.startswith("case_"):
             continue
@@ -109,4 +203,5 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
         elapsed_ms = (time.perf_counter() - started) * 1000
         report.cases.append(CaseResult(name=name, passed=passed, duration_ms=elapsed_ms, error=error))
 
+    report.finished_at = _iso_utc_now()
     return report

@@ -172,3 +172,18 @@ def case_history_is_monotonic(a: Adapter) -> None:
     seqs = [v["sequence"] for v in hist]
     assert seqs == sorted(set(seqs)), f"sequences must be strictly increasing, got {seqs}"
     assert len(seqs) == 2
+
+
+def case_unknown_extension_fields_preserved_on_read(a: Adapter) -> None:
+    """An extension field placed inside canonical_content MUST survive
+    a round-trip through create + read. Implementations that strip
+    unknown keys break forward compatibility with future PAMSPEC
+    extensions.
+    """
+    r = _mk(a, canonical_content={"statement": "hi", "x-experimental-ext": {"nested": [1, 2, 3]}})
+    env = a.read(scope_id=SCOPE, object_id=r["object_id"])
+    cc = env["canonical_content"]
+    assert "x-experimental-ext" in cc, f"unknown extension key was stripped; got keys {list(cc)}"
+    assert cc["x-experimental-ext"] == {"nested": [1, 2, 3]}, (
+        f"unknown extension value corrupted; got {cc['x-experimental-ext']!r}"
+    )
