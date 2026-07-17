@@ -1,0 +1,31 @@
+{
+  "spec_version": "0.1.0-draft",
+  "object_id": "mem:toolres:001",
+  "version_id": "ver:toolres:001:1",
+  "scope_id": "workspace:example",
+  "object_type": "tool_result",
+  "canonical_content": {
+    "invocation_object_id": "mem:toolinv:001",
+    "invocation_version_id": "ver:toolinv:001:1",
+    "outcome": "success",
+    "result": {"hits": 3},
+    "started_at": "2026-07-17T00:00:00.100000Z",
+    "completed_at": "2026-07-17T00:00:00.850000Z",
+    "latency_ms": 750,
+    "resource_usage": {"input_tokens": 42, "output_tokens": 128}
+  },
+  "lifecycle_state": "active",
+  "availability_state": "available",
+  "retention_state": "retained",
+  "validation_state": "corroborated",
+  "committed_at": "2026-07-17T00:00:00.900000Z",
+  "recorded_at": "2026-07-17T00:00:00.900001Z",
+  "sequence": 1,
+  "actor": {"actor_id": "actor:tool:web_search", "actor_kind": "tool"},
+  "provenance": {
+    "provenance_id": "prov:toolres:001",
+    "actor": {"actor_id": "actor:tool:web_search", "actor_kind": "tool"},
+    "activity": "tool_completed",
+    "recorded_at": "2026-07-17T00:00:00.900001Z"
+  }
+}

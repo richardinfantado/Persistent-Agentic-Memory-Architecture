@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/tool-invocation-content.schema.json",
+  "title": "PAMSPEC tool_invocation canonical_content 0.1-draft",
+  "$comment": "Canonical content shape for object_type = 'tool_invocation'.",
+  "type": "object",
+  "required": ["tool_name", "arguments"],
+  "properties": {
+    "tool_name": {"type": "string", "minLength": 1},
+    "tool_version": {"type": "string"},
+    "tool_ref": {"type": "string", "$comment": "URI or identifier locating the tool definition."},
+    "arguments": {"$comment": "Tool arguments as passed. Any JSON value."},
+    "arguments_schema_ref": {"type": "string", "format": "uri"},
+    "invocation_reason": {"type": "string", "$comment": "Human- or agent-readable purpose."},
+    "requested_by_actor_id": {"$ref": "common.schema.json#/$defs/id"},
+    "safety_check_outcome": {
+      "type": "object",
+      "properties": {
+        "checker": {"type": "string"},
+        "outcome": {"enum": ["allowed", "denied", "flagged", "not_evaluated"]},
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
