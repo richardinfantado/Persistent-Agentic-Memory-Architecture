@@ -109,6 +109,227 @@ informative:
       - ins: L. Moreau
       - ins: P. Missier
     date: 2013
+  COALA:
+    title: "Cognitive Architectures for Language Agents"
+    target: "https://arxiv.org/abs/2309.02427"
+    author:
+      - ins: T. R. Sumers
+      - ins: S. Yao
+      - ins: K. Narasimhan
+      - ins: T. L. Griffiths
+    date: 2024
+  GENERATIVE-AGENTS:
+    title: "Generative Agents: Interactive Simulacra of Human Behavior"
+    target: "https://arxiv.org/abs/2304.03442"
+    author:
+      - ins: J. S. Park
+      - ins: J. C. O'Brien
+      - ins: C. J. Cai
+      - ins: M. R. Morris
+      - ins: P. Liang
+      - ins: M. S. Bernstein
+    date: 2023
+  HIPPORAG:
+    title: "HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models"
+    target: "https://arxiv.org/abs/2405.14831"
+    author:
+      - ins: B. J. Gutiérrez
+      - ins: Y. Shu
+      - ins: Y. Gu
+      - ins: M. Yasunaga
+      - ins: Y. Su
+    date: 2024
+  AGENT-MEMORY-SURVEY:
+    title: "A Survey on the Memory Mechanism of Large Language Model Based Agents"
+    target: "https://arxiv.org/abs/2404.13501"
+    author:
+      - ins: Z. Zhang
+      - ins: X. Bo
+      - ins: C. Ma
+    date: 2024
+  LONGMEMEVAL:
+    title: "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory"
+    target: "https://arxiv.org/abs/2410.10813"
+    author:
+      - ins: D. Wu
+    date: 2024
+  LOCOMO:
+    title: "Evaluating Very Long-Term Conversational Memory of LLM Agents"
+    target: "https://arxiv.org/abs/2402.17753"
+    author:
+      - ins: A. Maharana
+      - ins: D.-H. Lee
+      - ins: S. Tulyakov
+      - ins: M. Bansal
+      - ins: F. Barbieri
+      - ins: Y. Fang
+    date: 2024
+  MAS-LLM-SURVEY:
+    title: "Large Language Model based Multi-Agents: A Survey of Progress and Challenges"
+    target: "https://arxiv.org/abs/2402.01680"
+    author:
+      - ins: T. Guo
+      - ins: X. Chen
+      - ins: Y. Wang
+    date: 2024
+  METAGPT:
+    title: "MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework"
+    target: "https://arxiv.org/abs/2308.00352"
+    author:
+      - ins: S. Hong
+      - ins: M. Zhuge
+    date: 2024
+  MODEL-CARDS:
+    title: "Model Cards for Model Reporting"
+    target: "https://dl.acm.org/doi/10.1145/3287560.3287596"
+    author:
+      - ins: M. Mitchell
+      - ins: S. Wu
+      - ins: A. Zaldivar
+      - ins: P. Barnes
+      - ins: L. Vasserman
+      - ins: B. Hutchinson
+      - ins: E. Spitzer
+      - ins: I. D. Raji
+      - ins: T. Gebru
+    date: 2019
+  DATASHEETS:
+    title: "Datasheets for Datasets"
+    target: "https://arxiv.org/abs/1803.09010"
+    author:
+      - ins: T. Gebru
+      - ins: J. Morgenstern
+      - ins: B. Vecchione
+      - ins: J. W. Vaughan
+      - ins: H. Wallach
+      - ins: H. Daumé III
+      - ins: K. Crawford
+    date: 2021
+  PROV-AGENT:
+    title: "PROV-AGENT: Unified Provenance for Tracking AI Agent Interactions in Agentic Workflows"
+    target: "https://arxiv.org/abs/2508.02866"
+    author:
+      - ins: R. Souza
+      - ins: L. Azevedo
+    date: 2025
+  RELATIVE-REPRESENTATIONS:
+    title: "Relative Representations Enable Zero-Shot Latent Space Communication"
+    target: "https://arxiv.org/abs/2209.15430"
+    author:
+      - ins: L. Moschella
+      - ins: V. Maiorca
+      - ins: M. Fumero
+      - ins: A. Norelli
+      - ins: F. Locatello
+      - ins: E. Rodolà
+    date: 2023
+  MATRYOSHKA:
+    title: "Matryoshka Representation Learning"
+    target: "https://arxiv.org/abs/2205.13147"
+    author:
+      - ins: A. Kusupati
+      - ins: G. Bhatt
+    date: 2022
+  W3C-DID:
+    title: "Decentralized Identifiers (DIDs) v1.0"
+    target: "https://www.w3.org/TR/did-core/"
+    author:
+      - ins: M. Sporny
+      - ins: D. Longley
+      - ins: M. Sabadello
+      - ins: D. Reed
+      - ins: O. Steele
+      - ins: C. Allen
+    date: 2022
+  AIP-DRAFT:
+    title: "Agent Identity Protocol (AIP): Decentralized Identity and Delegation for AI Agents"
+    target: "https://datatracker.ietf.org/doc/draft-singla-agent-identity-protocol/"
+    author:
+      - ins: A. Singla
+    date: 2025
+  AGENT-ID-FRAMEWORK:
+    title: "Self-Certifying Identity and Capability-Based Delegation for Autonomous AI Agents"
+    target: "https://datatracker.ietf.org/doc/draft-duda-agent-id-framework/"
+    author:
+      - ins: K. Duda
+    date: 2025
+  SCITT:
+    title: "An Architecture for Trustworthy and Transparent Digital Supply Chains"
+    target: "https://datatracker.ietf.org/doc/draft-ietf-scitt-architecture/"
+    author:
+      - ins: H. Birkholz
+      - ins: A. Delignat-Lavaud
+      - ins: C. Fournet
+      - ins: Y. Deshpande
+      - ins: S. Lasker
+    date: 2025
+  AI-PROTOCOLS-FRAMEWORK:
+    title: "Framework, Use Cases and Requirements for AI Agent Protocols"
+    target: "https://datatracker.ietf.org/doc/draft-rosenberg-ai-protocols/"
+    author:
+      - ins: J. Rosenberg
+    date: 2025
+  MCP-OVER-MOQ:
+    title: "Model Context Protocol and Agent Skills over Media over QUIC Transport"
+    target: "https://datatracker.ietf.org/doc/draft-jennings-ai-mcp-over-moq/"
+    author:
+      - ins: C. Jennings
+    date: 2025
+  MCP-SECURITY:
+    title: "Security Considerations for Model Context Protocol (MCP) Implementations in AI Agent Systems"
+    target: "https://datatracker.ietf.org/doc/draft-mohiuddin-mcp-security-considerations/"
+    author:
+      - ins: T. Mohiuddin
+    date: 2025
+  RAGAS:
+    title: "RAGAS: Automated Evaluation of Retrieval Augmented Generation"
+    target: "https://arxiv.org/abs/2309.15217"
+    author:
+      - ins: S. Es
+      - ins: J. James
+      - ins: L. Espinosa-Anke
+      - ins: S. Schockaert
+    date: 2024
+  RGB-BENCHMARK:
+    title: "Benchmarking Large Language Models in Retrieval-Augmented Generation"
+    target: "https://arxiv.org/abs/2309.01431"
+    author:
+      - ins: J. Chen
+      - ins: H. Lin
+      - ins: X. Han
+      - ins: L. Sun
+    date: 2024
+  TULVING-EPISODIC:
+    title: "Episodic and Semantic Memory"
+    author:
+      - ins: E. Tulving
+    date: 1972
+  BADDELEY-WM:
+    title: "Working Memory"
+    author:
+      - ins: A. D. Baddeley
+      - ins: G. Hitch
+    date: 1974
+  BADDELEY-EPISODIC-BUFFER:
+    title: "The Episodic Buffer: A New Component of Working Memory?"
+    target: "https://doi.org/10.1016/S1364-6613(00)01538-2"
+    author:
+      - ins: A. D. Baddeley
+    date: 2000
+  CLS-THEORY:
+    title: "Why There Are Complementary Learning Systems in the Hippocampus and Neocortex"
+    target: "https://doi.org/10.1037/0033-295X.102.3.419"
+    author:
+      - ins: J. L. McClelland
+      - ins: B. L. McNaughton
+      - ins: R. C. O'Reilly
+    date: 1995
+  SQUIRE-MEMORY-SYSTEMS:
+    title: "Memory Systems of the Brain: A Brief History and Current Perspective"
+    target: "https://doi.org/10.1016/j.nlm.2004.06.005"
+    author:
+      - ins: L. R. Squire
+    date: 2004
 --- abstract
 
 Memory in current agentic systems is often fragmented across model-provider features, application databases, session histories, framework-specific stores, unstructured files, and retrieval indexes. This document distinguishes temporary context supplied to an inference request from persistent memory that remains addressable, machine-readable, and governed beyond a single request. It specifies a provider-independent architecture and data model for persistent memory in agentic systems based on Memory Scope isolation, typed and versioned Memory Objects, machine-readable provenance, append-only Event Ledger history, separate lifecycle, availability, retention, and validation state, and isolated Derived Indexes and Embedding Spaces. The architecture separates a transient Compute Plane from an authoritative Persistent State Plane and treats embeddings, lexical indexes, graph projections, generated retrieval summaries, ranking caches, and retrieval caches as non-authoritative derived state. The architecture is independent of model provider, storage engine, and protocol transport while allowing future bindings and multiple independent implementations. It does not claim that related systems or standards do not exist; rather, it defines a common architectural vocabulary and interoperability target for persistent agentic memory.
@@ -852,7 +1073,17 @@ This document has no IANA actions.
 
 # References
 
-Normative and informative references are declared in the document metadata. This -00 draft uses RFC 2119 {{RFC2119}} and RFC 8174 {{RFC8174}} normatively for requirements language. It uses URI syntax {{RFC3986}}, URN syntax {{RFC8141}}, Internet timestamps {{RFC3339}}, JSON {{RFC8259}}, JSON Patch {{RFC6902}}, HTTP semantics {{RFC9110}}, UUIDs {{RFC9562}}, JSON Schema {{JSON-SCHEMA}}, and W3C PROV-DM {{PROV-DM}} informatively for architectural alignment and review. Related work and implementation context include OpenAI session and conversation-state documentation {{OPENAI-AGENTS-SESSIONS}} {{OPENAI-CONVERSATION-STATE}}, Anthropic multi-agent engineering material {{ANTHROPIC-MULTIAGENT}}, LangGraph memory documentation {{LANGGRAPH-MEMORY}}, Letta memory documentation {{LETTA-MEMORY}}, MemGPT research {{MEMGPT-PAPER}}, Mem0 documentation {{MEM0-DOCS}}, event-sourcing literature {{FOWLER-EVENT-SOURCING}}, and Agent Communication Gateway material {{AGENT-COMMUNICATION-GATEWAY}}.
+Normative and informative references are declared in the document metadata. This draft uses RFC 2119 {{RFC2119}} and RFC 8174 {{RFC8174}} normatively for requirements language. It uses URI syntax {{RFC3986}}, URN syntax {{RFC8141}}, Internet timestamps {{RFC3339}}, JSON {{RFC8259}}, JSON Patch {{RFC6902}}, HTTP semantics {{RFC9110}}, UUIDs {{RFC9562}}, JSON Schema {{JSON-SCHEMA}}, and W3C PROV-DM {{PROV-DM}} informatively for architectural alignment and review.
+
+Related implementation context includes OpenAI session and conversation-state documentation {{OPENAI-AGENTS-SESSIONS}} {{OPENAI-CONVERSATION-STATE}}, Anthropic multi-agent engineering material {{ANTHROPIC-MULTIAGENT}}, LangGraph memory documentation {{LANGGRAPH-MEMORY}}, Letta memory documentation {{LETTA-MEMORY}}, MemGPT research {{MEMGPT-PAPER}}, Mem0 documentation {{MEM0-DOCS}}, event-sourcing literature {{FOWLER-EVENT-SOURCING}}, and Agent Communication Gateway material {{AGENT-COMMUNICATION-GATEWAY}}.
+
+Related academic and industry research on agent memory architectures includes the Cognitive Architectures for Language Agents (CoALA) taxonomy {{COALA}}, the Generative Agents memory-stream-plus-reflection pattern {{GENERATIVE-AGENTS}}, HippoRAG's neurobiologically inspired long-term memory {{HIPPORAG}}, a survey of the memory mechanism of LLM-based agents {{AGENT-MEMORY-SURVEY}}, and the LongMemEval {{LONGMEMEVAL}} and LoCoMo {{LOCOMO}} benchmarks for long-term interactive memory. Multi-agent coordination context includes a survey of LLM-based multi-agent systems {{MAS-LLM-SURVEY}} and MetaGPT {{METAGPT}}.
+
+Provenance context includes Model Cards {{MODEL-CARDS}}, Datasheets for Datasets {{DATASHEETS}}, and PROV-AGENT, a PROV extension for agentic workflows {{PROV-AGENT}}. Embedding-space portability research includes Relative Representations {{RELATIVE-REPRESENTATIONS}} and Matryoshka Representation Learning {{MATRYOSHKA}}.
+
+Agent identity and attestation context includes W3C Decentralized Identifiers {{W3C-DID}}, the Agent Identity Protocol IETF draft {{AIP-DRAFT}}, the Agent-ID Framework IETF draft {{AGENT-ID-FRAMEWORK}}, and the SCITT transparency architecture {{SCITT}}. IETF work adjacent to PAMSPEC includes the AI Agent Protocols framework draft {{AI-PROTOCOLS-FRAMEWORK}}, MCP-over-MoQ {{MCP-OVER-MOQ}}, and MCP security considerations {{MCP-SECURITY}}.
+
+Retrieval evaluation context includes RAGAS {{RAGAS}} and the Retrieval-Augmented Generation Benchmark {{RGB-BENCHMARK}}. Cognitive-science analogues for the PAMSPEC memory-type vocabulary include Tulving's episodic and semantic memory distinction {{TULVING-EPISODIC}}, Baddeley and Hitch's working-memory model {{BADDELEY-WM}}, Baddeley's episodic buffer {{BADDELEY-EPISODIC-BUFFER}}, the Complementary Learning Systems theory {{CLS-THEORY}}, and Squire's overview of the brain's memory systems {{SQUIRE-MEMORY-SYSTEMS}}. These are cited informatively; PAMSPEC does not require or endorse any specific cognitive theory.
 
 --- back
 
@@ -887,6 +1118,18 @@ Extraction-oriented memory systems, including Mem0-style memory add, update, del
 Graph-native memory systems and event-sourced memory databases can provide natural implementations for relationships, immutable transitions, replay, and snapshots. PAMSPEC borrows architectural vocabulary from provenance and event-sourcing practice {{PROV-DM}} {{FOWLER-EVENT-SOURCING}} without mandating a graph database, event store, or replay engine.
 
 Agent Communication Gateway for Semantic Routing and Working Memory, currently `draft-agent-gw-01` and a Work in Progress, focuses on agent communication, semantic routing, protocol adaptation, capability discovery, and active workflow or working context {{AGENT-COMMUNICATION-GATEWAY}}. PAMSPEC focuses on persistent, typed, versioned, scoped, auditable Memory Objects, Relationship Objects, Event Ledger history, and Derived Indexes. The architectures are complementary: an agent gateway can carry references to PAMSPEC Memory Objects, while PAMSPEC does not define agent discovery, semantic routing, capability negotiation, or protocol adaptation.
+
+Cognitive-architecture research on language agents, particularly the Cognitive Architectures for Language Agents (CoALA) taxonomy {{COALA}}, distinguishes working, episodic, semantic, and procedural memory. PAMSPEC's standard object types (`claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `summary`, `tool_invocation`, `tool_result`, `working_memory`) approximate this taxonomy without adopting it as normative: `working_memory` maps to CoALA working memory, `claim` and `entity` to semantic memory, `observation` to episodic memory, and `tool_invocation` and `tool_result` to procedural memory traces. Cognitive-science foundations for the distinctions include Tulving's episodic and semantic memory {{TULVING-EPISODIC}}, Baddeley and Hitch's working-memory model {{BADDELEY-WM}} and the episodic buffer {{BADDELEY-EPISODIC-BUFFER}}, the Complementary Learning Systems theory {{CLS-THEORY}}, and Squire's overview of memory systems of the brain {{SQUIRE-MEMORY-SYSTEMS}}. These are cited informatively; conformance does not require adopting any specific cognitive theory.
+
+Concrete memory architectures inform PAMSPEC's design: Generative Agents' memory-stream-plus-reflection pattern {{GENERATIVE-AGENTS}} inspired the append-only Event Ledger plus generated retrieval summaries as Derived Indexes; HippoRAG {{HIPPORAG}} demonstrates hippocampus-indexing-style retrieval that a PAMSPEC-conformant Derived Index can implement; a survey of memory mechanisms in LLM agents {{AGENT-MEMORY-SURVEY}} maps the design space PAMSPEC positions within. Long-term memory benchmarks LongMemEval {{LONGMEMEVAL}} and LoCoMo {{LOCOMO}} are suitable evaluation targets for PAMSPEC-conformant stores.
+
+Provenance for AI systems has multiple related standards. Model Cards {{MODEL-CARDS}} and Datasheets for Datasets {{DATASHEETS}} document the model and data sides of ML provenance; PAMSPEC provenance objects SHOULD reference these where applicable. PROV-AGENT {{PROV-AGENT}} extends W3C PROV specifically for agentic workflows; PAMSPEC's provenance model is compatible in spirit and cites PROV-DM directly.
+
+Embedding-space portability is an open research area. Relative Representations {{RELATIVE-REPRESENTATIONS}} and Matryoshka Representation Learning {{MATRYOSHKA}} suggest paths toward cross-model comparability. PAMSPEC's Embedding Space identity model reflects the current state of the art: vectors from different spaces MUST NOT be treated as directly comparable, but explicit re-projection or alignment is not forbidden.
+
+Agent identity and attestation is an emerging standards area. The IETF Agent Identity Protocol {{AIP-DRAFT}}, the Agent-ID Framework {{AGENT-ID-FRAMEWORK}}, W3C DIDs {{W3C-DID}}, and the SCITT transparency architecture {{SCITT}} provide the identity, delegation, and provenance-anchoring substrate that a PAMSPEC actor attestation block can reference. PAMSPEC deliberately does not mandate any specific identity mechanism; the `attestation` block is designed to carry the identifiers and signatures produced by whichever mechanism an implementation chooses.
+
+Adjacent IETF work on AI agent protocols includes a framework document {{AI-PROTOCOLS-FRAMEWORK}}, MCP-over-MoQ transport {{MCP-OVER-MOQ}}, and MCP security considerations {{MCP-SECURITY}}. PAMSPEC's transport-neutral core plus its reference MCP binding (see Protocol Bindings) are intended to be compatible with all of them.
 
 
 # Acknowledgements
