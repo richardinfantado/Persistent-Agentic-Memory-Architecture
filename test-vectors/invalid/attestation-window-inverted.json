@@ -1,0 +1,39 @@
+{
+  "semanticRule": "attestation_window_inverted",
+  "expected_failure": "policy_denied",
+  "instance": {
+    "spec_version": "0.1.0-draft",
+    "object_id": "mem:decision:att-inv:001",
+    "version_id": "ver:decision:att-inv:001:1",
+    "scope_id": "workspace:example",
+    "object_type": "decision",
+    "canonical_content": {"summary": "Decision authored under an inverted attestation window."},
+    "lifecycle_state": "active",
+    "availability_state": "available",
+    "retention_state": "retained",
+    "validation_state": "corroborated",
+    "committed_at": "2026-07-17T00:00:00.000000Z",
+    "recorded_at": "2026-07-17T00:00:00.000001Z",
+    "sequence": 1,
+    "actor": {
+      "actor_id": "actor:agent:deployer-99",
+      "actor_kind": "agent",
+      "attestation": {
+        "agent_manifest_ref": "https://example.com/manifests/deployer-agent/9.9/manifest.json",
+        "attestation_authority": "urn:auth:example-ci",
+        "attestation_method": "sigstore",
+        "signature": "MEUCIQD...redacted",
+        "signature_algorithm": "ES256",
+        "issued_at": "2026-07-16T00:00:00Z",
+        "not_before": "2026-07-25T00:00:00Z",
+        "not_after": "2026-07-20T00:00:00Z"
+      }
+    },
+    "provenance": {
+      "provenance_id": "prov:decision:att-inv:001",
+      "actor": {"actor_id": "actor:agent:deployer-99", "actor_kind": "agent"},
+      "activity": "created",
+      "recorded_at": "2026-07-17T00:00:00.000001Z"
+    }
+  }
+}

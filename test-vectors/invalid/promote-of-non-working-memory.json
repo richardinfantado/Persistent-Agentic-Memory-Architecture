@@ -1,0 +1,19 @@
+{
+  "semanticRule": "promote_source_must_be_working_memory",
+  "expected_failure": "invalid_request",
+  "instance": {
+    "operation_id": "op:promote:bad:001",
+    "scope_id": "workspace:example",
+    "source_object_id": "mem:claim:already-a-claim",
+    "expected_version_id": "ver:claim:already-a-claim:1",
+    "target_object_type": "decision",
+    "target_canonical_content": {"summary": "Attempted to promote a claim as if it were working memory."},
+    "actor": {"actor_id": "actor:agent:consolidator", "actor_kind": "agent"},
+    "provenance": {
+      "provenance_id": "prov:op:promote:bad:001",
+      "actor": {"actor_id": "actor:agent:consolidator", "actor_kind": "agent"},
+      "activity": "attempted_promote",
+      "recorded_at": "2026-07-17T00:00:00.000000Z"
+    }
+  }
+}

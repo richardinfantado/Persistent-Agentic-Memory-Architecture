@@ -1,0 +1,8 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "working-memory-content.schema.json",
+  "instance": {
+    "purpose": "plan",
+    "content": {"steps": ["do a thing"]}
+  }
+}

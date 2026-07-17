@@ -1,0 +1,14 @@
+{
+  "expected_failure": "invalid_request",
+  "schema": "subscription.schema.json",
+  "instance": {
+    "subscription_id": "sub:bad-bp:001",
+    "scope_id": "workspace:example",
+    "actor": {"actor_id": "actor:agent:observer", "actor_kind": "agent"},
+    "filter": {"event_classes": ["object_created"]},
+    "start_sequence": 0,
+    "delivery": {
+      "backpressure_policy": "ignore_and_hope"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "semanticRule": "evaluation_snapshot_membership_frozen",
+  "expected_failure": "invalid_state_transition",
+  "instance": {
+    "snapshot_id": "snap:eval:run-mutated",
+    "scope_id": "workspace:example",
+    "sealed": true,
+    "created_at": "2026-07-17T00:00:00.000000Z",
+    "ledger_sequence_high_watermark": 4218,
+    "included_object_ids": [
+      "mem:claim:001",
+      "mem:decision:001",
+      "mem:claim:added-after-seal"
+    ],
+    "evaluation_run_id": "eval:run:2026-07-17-mutated"
+  }
+}
