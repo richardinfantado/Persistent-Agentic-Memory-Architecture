@@ -2,11 +2,15 @@
 
 ## Status
 
-Accepted for `-01` enhancement cycle.
+**Superseded by ADR-0029 (§3.5) and executed by R4a.** The `resource_usage` block introduced by this ADR was removed from `memory-event.schema.json` because the fields it carried (input/output tokens, cached tokens, wall-clock and compute ms, cost amount/currency/unit, region_ref) are billing and observability telemetry, not persistent-memory semantics — they fail gate 1 of the anti-drift rule ("persistent-memory boundary"). Two fields (`model_ref`, `provider_ref`) were also removed from the observability-oriented block; their possible role as optional provenance-generation context is an R5 decision and MUST NOT be revived in a `resource_usage`-shaped block. This ADR is retained as historical record; it does not describe current repository state.
 
-## Date
+## Original date
 
 2026-07-17
+
+## Superseded on
+
+2026-07-18
 
 ## Context
 

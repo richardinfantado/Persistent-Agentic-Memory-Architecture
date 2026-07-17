@@ -37,6 +37,6 @@ Semantic rules currently recognized: `version_id_reuse`, `silent_overwrite`, `li
 
 ## Coverage
 
-Positive coverage spans every standard object type (`claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `summary`, `tool_invocation`, `tool_result`, `working_memory`), Relationship Objects, Event Ledger entries (including `resource_usage`), Delegation Objects, Subscription descriptors (semantic), and Evaluation Snapshots.
+Positive coverage spans every standard object type (`claim`, `decision`, `task`, `artifact`, `observation`, `entity`, `summary`, `tool_invocation`, `tool_result`, `working_memory`), Relationship Objects, Event Ledger entries, Delegation Objects, Subscription descriptors (semantic), and Evaluation Snapshots.
 
 Negative coverage spans each state dimension's forbidden transitions, cross-scope policy failures, missing required fields, out-of-range quality signals, inverted delegation/attestation windows, promotion of a non-working-memory source, mutated sealed snapshots, and every top-level schema's principal required-field violations.
