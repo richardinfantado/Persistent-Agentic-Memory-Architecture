@@ -13,7 +13,7 @@ Hi,
 I'm developing PAMSPEC — the Persistent Agentic Memory Architecture Specification — as a public, pre-submission work in progress. Its subject is the correctness of authoritative agent memory: identity, versioning, provenance, scope, deletion, and the distinction between authoritative and derived state.
 
 I ran a small evidence sprint against Mem0 OSS 2.0.12 to check whether PAMSPEC's proposed requirements describe real problems agents actually encounter. The report is at:
-https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/<COMMIT-SHA>/validation/reports/real-framework-validation-report.md  <!-- replace <COMMIT-SHA> with the V08.1 commit or wait until merged to main -->
+https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/6ae806bbeb591c82c91236a191514b1775f24dbf/validation/reports/real-framework-validation-report.md  <!-- replace 6ae806bbeb591c82c91236a191514b1775f24dbf with the V08.1 commit or wait until merged to main -->
 
 The report cites a LangGraph-related issue class: `langgraph dev` ignoring the configured persistent checkpointer and silently substituting an in-memory runtime, causing all agent state to disappear on restart. PAMSPEC's *architectural* language (Compute Plane vs Persistent State Plane) describes this failure, but PAMSPEC's *normative* contract does not currently detect or prevent it — a memory-data-model spec can't force a runtime to wire up the right backing store. Honest limit.
 

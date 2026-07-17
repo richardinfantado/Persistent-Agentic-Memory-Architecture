@@ -15,7 +15,7 @@ Hi,
 I'm developing PAMSPEC — the Persistent Agentic Memory Architecture Specification — as a public, pre-submission work in progress. I ran a small validation sprint against **unmodified Mem0 OSS 2.0.12** using the public Python API, and I independently reproduced the scope-mutation behavior your issue **#6277** describes.
 
 **Evidence (permalink at the commit that produced these results):**
-`https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/<COMMIT-SHA>/validation/reports/real-framework-validation-report.md`
+`https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/6ae806bbeb591c82c91236a191514b1775f24dbf/validation/reports/real-framework-validation-report.md`
 
 The reproduction:
 
@@ -49,7 +49,7 @@ Regards,
 
 - Verify who the current active maintainer/contributor is at the time of sending on `mem0ai/mem0`. Do not assume long-lived roles.
 - Prefer a comment on issue **#6277** or PR **#6278** over an unsolicited personal message.
-- **Replace `<COMMIT-SHA>` with the exact V08.1 commit SHA on branch `validation/08-real-framework-proof`, OR wait until the branch is merged to `main` and use `main` — do not link to `main` before the merge lands.**
+- **Replace `6ae806bbeb591c82c91236a191514b1775f24dbf` with the exact V08.1 commit SHA on branch `validation/08-real-framework-proof`, OR wait until the branch is merged to `main` and use `main` — do not link to `main` before the merge lands.**
 - Do not fabricate issue numbers. If #6277/#6278/#6342 have moved or closed by send time, verify the current state and either link the successor or drop the reference.
 - Do not paste the evidence report body into the outreach — link only.
 - Do NOT mention the (retracted) derived-vector claim as a live finding. It is included in the "transparency" block only so the recipient can see the retraction — do not resurrect it as a probe.

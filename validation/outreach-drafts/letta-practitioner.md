@@ -13,7 +13,7 @@ Hi,
 I'm developing PAMSPEC — the Persistent Agentic Memory Architecture Specification — as a public, pre-submission work in progress. It targets the correctness of authoritative agent memory across create/update/history/delete operations, particularly the properties that matter when memory has to *migrate* between stores or versions.
 
 I ran a small evidence sprint against Mem0 OSS 2.0.12 to check whether PAMSPEC's proposed requirements describe problems that actually happen. The report is at:
-https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/<COMMIT-SHA>/validation/reports/real-framework-validation-report.md  <!-- replace <COMMIT-SHA> with the V08.1 commit or wait until merged to main -->
+https://github.com/richardinfantado/Persistent-Agentic-Memory-Architecture/blob/6ae806bbeb591c82c91236a191514b1775f24dbf/validation/reports/real-framework-validation-report.md  <!-- replace 6ae806bbeb591c82c91236a191514b1775f24dbf with the V08.1 commit or wait until merged to main -->
 
 Letta is on my short list of frameworks to run the same eight scenarios against, but I haven't done that work yet. Before I do, I'd genuinely value your view on **whether the memory-model migration pain-class we've mapped to Letta issue #2117 matches your experience.**
 
