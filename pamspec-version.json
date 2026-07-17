@@ -1,7 +1,7 @@
 {
   "project": "PAMSPEC",
   "internet_draft_subject": "draft-infantado-agent-memory-architecture",
-  "frozen_internet_draft_revision": "00",
+  "frozen_internet_draft_revision": "01",
   "active_development_docname": "draft-infantado-agent-memory-architecture-latest",
   "architecture_profile": "0.1.0-draft",
   "schema_profile": "0.1-draft",

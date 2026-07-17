@@ -33,9 +33,10 @@ PAMSPEC defines a provider-independent architecture and data model for persisten
 ## Repository Contents
 
 - Editable Internet-Draft source: [`draft-infantado-agent-memory-architecture.md`](draft-infantado-agent-memory-architecture.md)
-- Generated RFCXML: [`draft-infantado-agent-memory-architecture-00.xml`](draft-infantado-agent-memory-architecture-00.xml)
-- Generated text: [`draft-infantado-agent-memory-architecture-00.txt`](draft-infantado-agent-memory-architecture-00.txt)
-- Generated HTML: [`draft-infantado-agent-memory-architecture-00.html`](draft-infantado-agent-memory-architecture-00.html)
+- Generated `-01` RFCXML: [`draft-infantado-agent-memory-architecture-01.xml`](draft-infantado-agent-memory-architecture-01.xml)
+- Generated `-01` text: [`draft-infantado-agent-memory-architecture-01.txt`](draft-infantado-agent-memory-architecture-01.txt)
+- Generated `-01` HTML: [`draft-infantado-agent-memory-architecture-01.html`](draft-infantado-agent-memory-architecture-01.html)
+- Frozen `-00` baseline artifacts remain at `draft-infantado-agent-memory-architecture-00.{xml,txt,html}` for reproducibility.
 - JSON Schemas (16): [`schemas/0.1-draft/`](schemas/0.1-draft/)
 - Examples: [`examples/`](examples/)
 - Test vectors (positive + negative): [`test-vectors/`](test-vectors/)
