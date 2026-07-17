@@ -1,0 +1,29 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "memory-object.schema.json",
+  "instance": {
+    "spec_version": "0.1.0-draft",
+    "object_id": "mem:claim:oor",
+    "version_id": "ver:claim:oor:1",
+    "scope_id": "workspace:example",
+    "object_type": "claim",
+    "canonical_content": {"statement": "out-of-range signal test."},
+    "lifecycle_state": "active",
+    "availability_state": "available",
+    "retention_state": "retained",
+    "validation_state": "corroborated",
+    "committed_at": "2026-07-17T00:00:00.000000Z",
+    "recorded_at": "2026-07-17T00:00:00.000001Z",
+    "sequence": 1,
+    "actor": {"actor_id": "actor:editor:001", "actor_kind": "human"},
+    "provenance": {
+      "provenance_id": "prov:claim:oor",
+      "actor": {"actor_id": "actor:editor:001", "actor_kind": "human"},
+      "activity": "created",
+      "recorded_at": "2026-07-17T00:00:00.000001Z"
+    },
+    "quality_signals": {
+      "assessed_confidence": 1.5
+    }
+  }
+}

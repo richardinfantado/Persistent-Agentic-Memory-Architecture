@@ -1,0 +1,9 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "tool-result-content.schema.json",
+  "instance": {
+    "outcome": "success",
+    "result": {"hits": 3},
+    "completed_at": "2026-07-17T00:00:00.850000Z"
+  }
+}

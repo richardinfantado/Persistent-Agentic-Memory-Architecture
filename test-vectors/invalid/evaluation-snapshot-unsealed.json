@@ -1,0 +1,11 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "evaluation-snapshot.schema.json",
+  "instance": {
+    "snapshot_id": "snap:unsealed:001",
+    "scope_id": "workspace:example",
+    "sealed": false,
+    "created_at": "2026-07-17T00:00:00.000000Z",
+    "ledger_sequence_high_watermark": 100
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "tool-invocation-content.schema.json",
+  "instance": {
+    "arguments": {"query": "PAMSPEC agentic memory"},
+    "invocation_reason": "gather background on prior work"
+  }
+}

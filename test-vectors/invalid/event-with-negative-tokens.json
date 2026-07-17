@@ -1,0 +1,19 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "memory-event.schema.json",
+  "instance": {
+    "event_id": "evt:bad:001",
+    "operation_id": "op:bad:001",
+    "scope_id": "workspace:example",
+    "object_id": "mem:claim:001",
+    "version_id": "ver:claim:001:1",
+    "event_type": "object_created",
+    "recorded_at": "2026-07-17T00:00:00.000000Z",
+    "sequence": 1,
+    "actor": {"actor_id": "actor:agent:test", "actor_kind": "agent"},
+    "resource_usage": {
+      "input_tokens": -5,
+      "output_tokens": 100
+    }
+  }
+}

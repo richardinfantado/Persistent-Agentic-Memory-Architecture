@@ -1,0 +1,30 @@
+{
+  "expected_failure": "invalid_object",
+  "schema": "delegation.schema.json",
+  "instance": {
+    "spec_version": "0.1.0-draft",
+    "delegation_id": "del:bad-op:001",
+    "version_id": "delver:bad-op:001:1",
+    "scope_id": "workspace:example",
+    "granting_actor": {"actor_id": "actor:agent:supervisor", "actor_kind": "agent"},
+    "delegated_actor": {"actor_id": "actor:agent:worker-01", "actor_kind": "agent"},
+    "granted_operations": ["read", "obliterate_universe"],
+    "policy_basis": "policy:multi-agent-handoff-v1",
+    "not_before": "2026-07-17T00:00:00.000000Z",
+    "not_after": "2026-07-17T01:00:00.000000Z",
+    "lifecycle_state": "active",
+    "availability_state": "available",
+    "retention_state": "retained",
+    "validation_state": "corroborated",
+    "committed_at": "2026-07-17T00:00:00.000010Z",
+    "recorded_at": "2026-07-17T00:00:00.000020Z",
+    "sequence": 1,
+    "actor": {"actor_id": "actor:agent:supervisor", "actor_kind": "agent"},
+    "provenance": {
+      "provenance_id": "prov:del:bad-op:001",
+      "actor": {"actor_id": "actor:agent:supervisor", "actor_kind": "agent"},
+      "activity": "granted_delegation",
+      "recorded_at": "2026-07-17T00:00:00.000020Z"
+    }
+  }
+}

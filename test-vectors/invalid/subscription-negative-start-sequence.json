@@ -1,0 +1,13 @@
+{
+  "expected_failure": "invalid_request",
+  "schema": "subscription.schema.json",
+  "instance": {
+    "subscription_id": "sub:bad:001",
+    "scope_id": "workspace:example",
+    "actor": {"actor_id": "actor:agent:observer", "actor_kind": "agent"},
+    "filter": {
+      "event_classes": ["object_created", "object_updated"]
+    },
+    "start_sequence": -1
+  }
+}

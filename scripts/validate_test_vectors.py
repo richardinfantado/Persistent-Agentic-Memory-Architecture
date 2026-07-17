@@ -61,6 +61,10 @@ semantic_rules = {
     "cross_scope_policy_required",
     "embedding_space_required",
     "embedding_space_comparison",
+    "delegation_window_inverted",
+    "attestation_window_inverted",
+    "promote_source_must_be_working_memory",
+    "evaluation_snapshot_membership_frozen",
 }
 
 for path in (ROOT / "test-vectors" / "invalid").glob("*.json"):
