@@ -5,6 +5,41 @@
   "active_development_docname": "draft-infantado-agent-memory-architecture-latest",
   "architecture_profile": "0.1.0-draft",
   "schema_profile": "0.1-draft",
-  "test_vector_suite": "0.1.0"
+  "test_vector_suite": "0.1.0",
+  "enhancement_cycle": "-01",
+  "conformance_profiles": [
+    "PAMSPEC-Lite",
+    "PAMSPEC-Core",
+    "PAMSPEC-Versioning",
+    "PAMSPEC-Ledger",
+    "PAMSPEC-Structured-Query",
+    "PAMSPEC-Semantic-Query",
+    "PAMSPEC-Relationship",
+    "PAMSPEC-Protocol-Binding",
+    "PAMSPEC-Evaluation"
+  ],
+  "schemas": [
+    "schemas/0.1-draft/actor.schema.json",
+    "schemas/0.1-draft/common.schema.json",
+    "schemas/0.1-draft/delegation.schema.json",
+    "schemas/0.1-draft/embedding-space.schema.json",
+    "schemas/0.1-draft/error.schema.json",
+    "schemas/0.1-draft/evaluation-snapshot.schema.json",
+    "schemas/0.1-draft/memory-event.schema.json",
+    "schemas/0.1-draft/memory-object.schema.json",
+    "schemas/0.1-draft/memory-scope.schema.json",
+    "schemas/0.1-draft/provenance.schema.json",
+    "schemas/0.1-draft/query.schema.json",
+    "schemas/0.1-draft/relationship.schema.json",
+    "schemas/0.1-draft/subscription.schema.json",
+    "schemas/0.1-draft/tool-invocation-content.schema.json",
+    "schemas/0.1-draft/tool-result-content.schema.json",
+    "schemas/0.1-draft/working-memory-content.schema.json"
+  ],
+  "bindings": [
+    "bindings/mcp/"
+  ],
+  "reference_implementations": [
+    "implementations/reference-python/"
+  ]
 }
-
