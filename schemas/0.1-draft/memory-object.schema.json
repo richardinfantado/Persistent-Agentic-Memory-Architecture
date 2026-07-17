@@ -51,7 +51,8 @@
       "type": "array",
       "items": {"$ref": "common.schema.json#/$defs/id"}
     },
-    "integrity": {"$ref": "common.schema.json#/$defs/integrity"}
+    "integrity": {"$ref": "common.schema.json#/$defs/integrity"},
+    "quality_signals": {"$ref": "common.schema.json#/$defs/quality_signals"}
   },
   "allOf": [
     {
