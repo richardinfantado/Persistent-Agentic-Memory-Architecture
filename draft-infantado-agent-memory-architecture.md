@@ -633,6 +633,8 @@ This document does not standardize a mandatory transport. Every future binding p
 
 An embedded library binding can expose operations as local function calls. An HTTP binding can map operations to resources and methods. An MCP binding can map operations to tools or resources. A gRPC binding can map operations to services and messages. Event bus or message bus bindings can expose ledger streams, asynchronous commands, or index rebuild events. None of these bindings is mandatory.
 
+A non-normative reference MCP binding is published under `bindings/mcp/`. It maps every PAMSPEC operation to a stable tool name (`pamspec.<operation>`), maps Memory Scopes to MCP resources (`pamspec://scope/{scope_id}/...`), preserves the PAMSPEC error envelope end-to-end rather than collapsing errors into MCP protocol errors, and defines a discovery manifest that advertises supported profiles and operations. Servers that implement the reference binding become usable by any MCP-aware client without per-client integration work.
+
 Bindings do not weaken scope enforcement or convert denied cross-scope access into successful partial disclosure. Bindings preserve explainable denial without exposing protected Memory Object content. Bindings document how idempotency keys, operation identifiers, pagination cursors, and snapshot identifiers are represented.
 
 # Error Model
