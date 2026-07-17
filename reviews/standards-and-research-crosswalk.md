@@ -25,7 +25,7 @@ The initial version of this document contained several inaccuracies and analytic
 Further review identified precision issues in five places. These are applied in place; §6 is more extensively rewritten and readers should treat §6.1 as the authoritative current AIMEM disposition.
 
 - **Executive summary §1(5)** no longer describes the Independent Submission Stream as a fallback if the IESG does not sponsor. It is now described as a separate publication path selected deliberately.
-- **§6 AIMEM disposition** has been restructured. "Adopt AIMEM" and "profile AIMEM" are no longer ranked as currently preferred options. The current disposition is the singular position in §6.1 (coordinate but remain separate; no PAMSPEC bundle; no normative AIMEM dependency; reopening the adoption or profiling options requires *both* an agreed extension mechanism AND resolution of the expected-version conflict incompatibility). §6.2 records the adoption and profiling options as formally out of scope pending those unlocking conditions.
+- **§6 AIMEM disposition** has been restructured and — in a follow-up pass — softened to match the wording in ADR-0030. "Adopt AIMEM" and "profile AIMEM" are no longer ranked as currently preferred options. The disposition is now: PAMSPEC and AIMEM remain separate; coordination with the AIMEM author will be pursued (not yet an accomplished state); no PAMSPEC bundle; no normative AIMEM dependency; no AIMEM profile yet. The expected-version-behavior difference is characterized as an unresolved semantic mismatch rather than an incompatibility in principle. §6.2 lists example reconsideration triggers (new AIMEM revision, author clarification, PAMSPEC scope change, evidence that operational conflict semantics do not belong in a bundle binding, another interchange format, implementation-mapping evidence) — reopening requires material new evidence and a superseding ADR, not any pre-defined AND-gated set of conditions.
 - **MCP source-list label (Sources § R2-A)** now reads: "Model Context Protocol, release candidate for the planned 2026-07-28 specification, announced 2026-05-21."
 - **"no WG has jurisdiction today"** removed. Replaced with: "This review did not identify an existing IETF Working Group whose current charter clearly covers persistent agent-memory data models." Applied to both §1(5) and §4.
 - **`agents@ietf.org`** is described as a candidate discussion venue whose current suitability and activity must be verified — not asserted as an active list.
@@ -205,23 +205,28 @@ Critically, none of the following are IETF rules: "you must have a TypeScript re
 
 ## 6. AIMEM disposition
 
-### 6.1 Current disposition (locked)
+### 6.1 Current disposition
 
-**PAMSPEC and AIMEM remain separate but coordinated.** Specifically, at this stage:
+**PAMSPEC and AIMEM remain separate. Coordination with the AIMEM author will be pursued.** Specifically, at this stage:
 
-- **Coordinate but remain separate.** Cite AIMEM (`draft-vu-aimem-bundle-00`) explicitly in `-00` and enumerate the concept-by-concept relationship using this document's cross-cutting matrix (§2.1) and the field-and-behavior mapping in Appendix A.
-- **No PAMSPEC bundle.** PAMSPEC MUST NOT define its own memory-bundle format at this stage. The interoperability problem that would justify one is currently addressed by AIMEM.
-- **No normative AIMEM dependency.** PAMSPEC MUST NOT declare a normative dependency on AIMEM, and MUST NOT specify AIMEM as PAMSPEC's exchange binding, at this stage. Doing so would inherit AIMEM's currently-incompatible expected-version conflict semantics (Appendix A.2) and its currently-not-representable core concepts (distinct version identity, version sequence, event history, Lifecycle State, Validation State, tombstone semantics — Appendix A).
-- **Reopening the adoption or profiling options** requires *both* (a) an agreed extension mechanism between PAMSPEC and AIMEM authors (there is no reserved `x-*` extension prefix in AIMEM `-00`), *and* (b) resolution of the expected-version conflict incompatibility (AIMEM permits consumer discretion; PAMSPEC mandates rejection of stale expected versions). Either of those unresolved gaps is sufficient on its own to block adoption or profiling.
+- **Coordinate but remain separate.** Cite AIMEM (`draft-vu-aimem-bundle-00`) explicitly in `-00` and enumerate the concept-by-concept relationship using this document's cross-cutting matrix (§2.1) and the field-and-behavior mapping in Appendix A. Author-to-author coordination is a work track (planned R6), not an accomplished state.
+- **No PAMSPEC bundle.** PAMSPEC does not define its own memory-bundle format at this time. The interoperability problem that would justify one is currently occupied by AIMEM.
+- **No normative AIMEM dependency, and no AIMEM profile yet.** Publishing a PAMSPEC profile of AIMEM is deferred until author coordination and implementation mapping produce sufficient evidence. Two gaps are load-bearing today: (a) AIMEM `-00` does not define or reserve an extension mechanism; and (b) AIMEM does not currently guarantee PAMSPEC's strict expected-version rejection semantics — an unresolved semantic mismatch that a future AIMEM revision, a co-designed compatible profile, or a PAMSPEC scope change may address.
 
-Context. AIMEM already defines memory-bundle exchange semantics, including envelope with `format`/`version`/`producer`/`tenant_id`/`scope`, ChunkRecord + edges + entities, URN identifier scheme, embedding metadata with declared model identifier, SHA-256 integrity and optional COSE_Sign1, DNA-class chunk invariants, and Producer/Consumer/Bidirectional conformance levels. That work occupies the memory-bundle interchange space; PAMSPEC's contribution lies elsewhere (see §1 and the differentiators noted there). This disposition is not a ranking of options — it is the singular current position, and the two named unlocking conditions above are the *only* triggers for revisiting it.
+Context. AIMEM already defines memory-bundle exchange semantics, including envelope with `format`/`version`/`producer`/`tenant_id`/`scope`, ChunkRecord + edges + entities, URN identifier scheme, embedding metadata with declared model identifier, SHA-256 integrity and optional COSE_Sign1, DNA-class chunk invariants, and Producer/Consumer/Bidirectional conformance levels. That work occupies the memory-bundle interchange space; PAMSPEC's contribution lies elsewhere (see §1 and the differentiators noted there).
 
-### 6.2 Options that remain formally *out of scope* until unlocking conditions are met
+### 6.2 Reconsideration triggers
 
-Documented here so future revisions do not treat them as re-openable without the unlocking conditions above being satisfied:
+An ADR records the best decision based on current evidence. This disposition MAY be superseded by a later ADR when material new evidence changes the picture. Examples of such evidence:
 
-- **Adopt AIMEM as PAMSPEC's exchange binding** — out of scope pending an agreed extension mechanism AND resolution of the expected-version conflict incompatibility. Adoption at this stage would inherit both problems and would silently drop core PAMSPEC concepts on round-trip.
-- **Profile AIMEM** — out of scope pending the same two conditions.
+- A new AIMEM revision that closes one or both of the gaps in §6.1.
+- Clarification from the AIMEM author (e.g., an agreed extension mechanism, or a compatible profile PAMSPEC could adopt without loss).
+- A PAMSPEC scope change that removes concepts AIMEM cannot carry.
+- Argument (with evidence) that operational conflict semantics do not belong in a bundle binding, so the expected-version mismatch is not blocking.
+- Emergence of another industry interchange format worth mapping to.
+- Implementation-mapping evidence showing a viable AIMEM-based binding for the PAMSPEC concept set.
+
+Reopening does not require any pre-defined AND-gated set of conditions to be satisfied in advance. It requires material new evidence and a follow-up ADR that supersedes this one.
 
 Under this disposition, PAMSPEC's first `-00` MUST include a "Relationship to prior art" section naming AIMEM, SAIHM, FAF/FAFM, and Portable Agent Memory, and MUST reference this disposition rather than restating it.
 
@@ -282,7 +287,7 @@ A defensible near-term plan:
 | `provenance` block (actor, activity, evidence_refs, source_ref, recorded_at, integrity_ref) | AIMEM producer + timestamps + SHA-256 checksum + optional COSE_Sign1 (§2, §5) | Lossy | AIMEM carries a subset (who produced it, when, with what integrity). Activity, evidence refs, and source refs are not present. Extension required for full provenance. |
 | Event history (append-only ledger of state changes) | AIMEM idempotent chunk re-ingest rules (§2); no equivalent full ledger | Not representable | AIMEM does not carry a change-event stream. A PAMSPEC ledger must be exported as a side artifact or in a namespaced extension. |
 | Idempotency key on operations | AIMEM idempotent re-import is chunk-based, not operation-key-based | Lossy | Semantics differ: AIMEM idempotency is content-address style; PAMSPEC idempotency is operation-key style. Not a clean mapping. |
-| Expected-version conflict semantics | AIMEM: newer update may be rejected or accepted at consumer discretion (§2) | Incompatible | AIMEM explicitly allows consumer discretion in resolving conflicts. PAMSPEC's `version_conflict` mandates rejection of stale expected versions. The two conflict models are not compatible as-is. |
+| Expected-version conflict semantics | AIMEM: newer update may be rejected or accepted at consumer discretion (§2) | Lossy — unresolved semantic mismatch | AIMEM does not currently guarantee PAMSPEC's strict expected-version rejection semantics: AIMEM permits consumer discretion in resolving updates, while PAMSPEC's `version_conflict` mandates rejection of stale expected versions. AIMEM is primarily an exchange-bundle proposal, so a future AIMEM profile could carry PAMSPEC version metadata and impose stricter consumer behavior without AIMEM's default changing. The mismatch is a serious blocker for adoption today, but characterizing it as "fundamentally incompatible" is stronger than the evidence warrants. |
 
 ### A.3 State dimensions and governance
 
@@ -321,19 +326,18 @@ A defensible near-term plan:
 
 - **Lossless:** embedding vector storage, incompatible-space rejection semantics, SHA-256 integrity, COSE_Sign1 signatures.
 - **Lossless with extension:** `object_id` mapping (with namespaced round-trip field), Canonical Content (with extension for `object_type`/`schema_id`).
-- **Lossy:** `scope_id` (workspace granularity), `actor`, `provenance`, idempotency-key semantics, Availability, Retention, Relationship Object identity, Embedding Space descriptor.
+- **Lossy:** `scope_id` (workspace granularity), `actor`, `provenance`, idempotency-key semantics, Availability, Retention, Relationship Object identity, Embedding Space descriptor, **expected-version conflict semantics (unresolved semantic mismatch — see A.2)**.
 - **Not representable:** `version_id` as distinct addressable identity, `version_sequence`, event history, Lifecycle State, Validation State, tombstone semantics.
-- **Incompatible:** expected-version conflict semantics (AIMEM permits consumer discretion; PAMSPEC mandates rejection of stale expected versions).
+- **Incompatible:** none identified with confidence at present. The expected-version conflict semantics were formerly listed here; on further reading the mismatch is better described as unresolved rather than fundamentally incompatible (see A.2 note).
 
 ### A.8 Consequence for the disposition decision
 
-Given the mapping above, none of the three preferred dispositions in §6 are ready to be adopted as-is:
+Given the mapping above, the disposition at this stage is the singular position in §6.1 (PAMSPEC and AIMEM remain separate; coordination will be pursued; no PAMSPEC bundle; no normative AIMEM dependency; no AIMEM profile yet). Neither "adopt AIMEM as PAMSPEC's exchange binding" nor "profile AIMEM" is a currently-ranked option:
 
-- **"Adopt AIMEM as PAMSPEC's exchange binding" is not currently viable** because expected-version conflict semantics are incompatible and multiple core PAMSPEC concepts (version identity, sequence, event history, lifecycle, validation, tombstones) are not representable without extensions.
-- **"Profile AIMEM" is possible only if a namespaced extension mechanism is agreed with AIMEM's author** (there is no reserved `x-*` extension prefix in AIMEM `-00`) AND if the version-conflict incompatibility can be resolved in a compatible profile.
-- **"Coordinate but remain separate" is the honest current disposition**, with the mapping above as the concrete basis for that coordination when it happens.
+- **"Adopt AIMEM as PAMSPEC's exchange binding" is not currently viable** because AIMEM does not currently guarantee PAMSPEC's strict expected-version rejection semantics (an unresolved semantic mismatch, not necessarily an incompatibility in principle) and multiple core PAMSPEC concepts (version identity, sequence, event history, lifecycle, validation, tombstones) are not representable without extensions that AIMEM `-00` does not define.
+- **"Profile AIMEM" is not attempted here** because a namespaced extension mechanism would need to be agreed with the AIMEM author, and the expected-version mismatch would need to be resolved by a compatible profile, an AIMEM revision, or a PAMSPEC scope change.
 
-Confirmed rule: R2 leaves the current recommendation as "coordinate but remain separate; do not create a PAMSPEC bundle at this time." Reopening the adopt / profile options requires the mapping in this appendix to be revisited jointly with the AIMEM author, or after AIMEM revises to close the identified gaps.
+Reconsideration is governed by ADR-0030's reconsideration triggers, not by any pre-defined AND-gated set of conditions: material new evidence and a superseding ADR are sufficient. Author coordination (planned R6) and continuing to maintain this mapping are the primary work tracks that can produce that evidence.
 
 ## Sources
 

@@ -34,4 +34,9 @@ This index tracks design choices and unresolved matters for PAMSPEC.
 - [Evaluation Snapshot sub-profile](0027-evaluation-snapshot-profile.md)
 - [Portable conformance harness](0028-portable-conformance-harness.md)
 
+## Scope-narrowing pass (decision-only)
+
+- [Scope boundary and anti-drift rule](0029-scope-boundary-and-anti-drift-rule.md) — proposed; establishes the four-part test that gates every future addition and classifies every current concept as core / profile / experimental / remove. No files moved.
+- [PAMSPEC ↔ AIMEM disposition (locked)](0030-aimem-disposition.md) — accepted; PAMSPEC and AIMEM remain separate but coordinated; no PAMSPEC bundle; no normative AIMEM dependency; adoption or profiling reopens only after both an agreed extension mechanism AND resolution of the expected-version conflict incompatibility.
+
 New ADRs use [`template.md`](template.md) as the starting shape.
