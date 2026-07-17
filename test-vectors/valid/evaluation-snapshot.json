@@ -1,0 +1,26 @@
+{
+  "snapshot_id": "snap:eval:run-2026-07-17-abc",
+  "scope_id": "workspace:example",
+  "sealed": true,
+  "created_at": "2026-07-17T00:00:00.000000Z",
+  "created_by_actor_id": "actor:eval-harness:001",
+  "ledger_sequence_high_watermark": 4218,
+  "included_object_ids": [
+    "mem:claim:001",
+    "mem:decision:001",
+    "mem:artifact:001"
+  ],
+  "included_embedding_space_ids": [
+    "espace:openai-text-embedding-3-large-v1"
+  ],
+  "deterministic_clock": {
+    "clock_ref": "clock:eval:frozen-2026-07-17",
+    "start_at": "2026-07-17T00:00:00.000000Z",
+    "tick_ms": 1
+  },
+  "deterministic_rng_seed": 1729,
+  "evaluation_run_id": "eval:run:2026-07-17-abc",
+  "digest": "sha256:...redacted",
+  "digest_algorithm": "sha-256",
+  "canonicalization_profile": "none"
+}

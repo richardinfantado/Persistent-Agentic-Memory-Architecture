@@ -830,6 +830,18 @@ Requires independently identified and versioned Relationship Objects, cross-scop
 
 Requires preservation of operation semantics, stable error-code mapping, authorization outcomes, idempotency, version preconditions, query parameters, Event Ledger behavior, redaction, and deletion semantics without mandating a transport.
 
+## PAMSPEC-Evaluation
+
+Sub-profile for deterministic agent evaluation. A Conforming Implementation of PAMSPEC-Evaluation MUST support:
+
+- **Sealed Snapshots**: immutable Snapshot descriptors conforming to `evaluation-snapshot.schema.json`, with a fixed `ledger_sequence_high_watermark` and explicit or implicit object and Embedding Space membership. Once sealed, a snapshot's authoritative membership and derived-index identity MUST NOT change; a new snapshot MUST be created for any change.
+- **Deterministic clock injection**: when a snapshot declares `deterministic_clock`, evaluation-time operations conducted against the snapshot MUST use the declared clock as the source for any authoritative timestamp that would otherwise be wall-clock derived, so replays yield identical timestamps.
+- **Deterministic RNG seeding**: when a snapshot declares `deterministic_rng_seed`, evaluation-time operations MUST seed randomness (retrieval tie-break jitter, sampling) with the declared seed.
+- **Evaluation-run propagation**: when a snapshot declares `evaluation_run_id`, that identifier MUST be propagated into the `provenance` of every Memory Version and Event Ledger entry produced during evaluation-time operations, so evaluation-authored memory is distinguishable from production-authored memory.
+- **Snapshot comparison**: implementations MUST support inspecting two sealed snapshots and reporting authoritative differences (added or removed objects, version deltas, state transition deltas) using the same query surface as Inspect History, so regression comparison between evaluation runs is expressible.
+
+PAMSPEC-Evaluation composes with other profiles. It does not by itself require Semantic Query or Relationship support. Evaluation-time operations MUST NOT modify state outside the evaluation scope unless policy explicitly permits it.
+
 ## Implementation Reports
 
 Implementation reports MUST document supported profile names and versions. They SHOULD document storage choices, authorization model, index behavior, export behavior, deletion behavior, test-vector results, and known deviations.

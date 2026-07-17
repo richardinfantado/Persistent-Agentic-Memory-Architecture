@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/evaluation-snapshot.schema.json",
+  "title": "PAMSPEC Evaluation Snapshot 0.1-draft",
+  "$comment": "A sealed Snapshot descriptor used by the PAMSPEC-Evaluation sub-profile. Sealed snapshots are immutable, cryptographically identified (when digest is present), and pin authoritative state and Derived Index identity for deterministic replay of agent evaluation runs.",
+  "type": "object",
+  "required": [
+    "snapshot_id",
+    "scope_id",
+    "sealed",
+    "created_at",
+    "ledger_sequence_high_watermark"
+  ],
+  "properties": {
+    "snapshot_id": {"$ref": "common.schema.json#/$defs/id"},
+    "scope_id": {"$ref": "common.schema.json#/$defs/id"},
+    "sealed": {
+      "type": "boolean",
+      "const": true,
+      "$comment": "Evaluation snapshots MUST be sealed. Unsealed snapshots use a different descriptor."
+    },
+    "created_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "created_by_actor_id": {"$ref": "common.schema.json#/$defs/id"},
+    "ledger_sequence_high_watermark": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "Highest Event Ledger sequence included in this snapshot. Events with higher sequence are not visible through the snapshot."
+    },
+    "included_object_ids": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/id"},
+      "$comment": "Optional explicit set of objects captured. Absent means every object in scope at the high watermark."
+    },
+    "included_embedding_space_ids": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/id"}
+    },
+    "deterministic_clock": {
+      "type": "object",
+      "$comment": "Optional deterministic clock injection for evaluation replay. When present, evaluation-time operations should use this clock rather than wall time.",
+      "required": ["clock_ref", "start_at"],
+      "properties": {
+        "clock_ref": {"type": "string"},
+        "start_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "tick_ms": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "deterministic_rng_seed": {
+      "type": "integer",
+      "$comment": "Optional RNG seed for deterministic evaluation."
+    },
+    "evaluation_run_id": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "Optional identifier for the evaluation run this snapshot is sealed for. Propagated into provenance of evaluation-time operations."
+    },
+    "digest": {"type": "string"},
+    "digest_algorithm": {"type": "string"},
+    "canonicalization_profile": {"type": "string"}
+  },
+  "additionalProperties": false
+}
