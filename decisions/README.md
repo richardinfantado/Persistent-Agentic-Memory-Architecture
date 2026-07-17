@@ -32,5 +32,6 @@ This index tracks design choices and unresolved matters for PAMSPEC.
 - [Quality signals block](0025-quality-signals.md)
 - [Actor attestation](0026-actor-attestation.md)
 - [Evaluation Snapshot sub-profile](0027-evaluation-snapshot-profile.md)
+- [Portable conformance harness](0028-portable-conformance-harness.md)
 
 New ADRs use [`template.md`](template.md) as the starting shape.

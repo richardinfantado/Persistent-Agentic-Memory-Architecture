@@ -38,6 +38,9 @@ jobs:
       - name: Run MCP adapter tests
         run: PYTHONPATH=implementations/reference-python:bindings/mcp/server-python python -m pytest bindings/mcp/server-python/tests -q
 
+      - name: Run portable conformance suite against reference adapter
+        run: PYTHONPATH=.:implementations/reference-python python -m pytest conformance/tests -q
+
       - name: Build latest (XML/TXT/HTML)
         run: python scripts/build_draft.py all
 

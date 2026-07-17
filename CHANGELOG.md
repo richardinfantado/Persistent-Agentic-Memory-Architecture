@@ -1,5 +1,35 @@
 # Changelog
 
+## PAMSPEC -01 C11 — Portable conformance harness (2026-07-17)
+
+Response to external review pointing out that the -01 test-vector
+coverage validated documents against schemas but did not give
+third-party implementations a portable way to prove behavior.
+
+- `conformance/harness/adapter.py`: abstract `Adapter` interface
+  covering PAMSPEC-Lite (7 methods) + Delegation (3 methods) +
+  Subscribe (3 methods), plus `PamspecErrorLike` and `expect_error`
+  helper for behavioral assertions.
+- `conformance/harness/runner.py`: discovers `case_*` functions in
+  a profile's suite module, executes them against a fresh Adapter
+  produced by a factory, returns a `ConformanceReport`.
+- `conformance/suite/`: 25 portable behavioral cases across three
+  profiles that MUST NOT touch implementation internals.
+- `conformance/adapters/reference_python.py`: reference adapter
+  translating `pamspec_ref.PamspecError` into `PamspecErrorLike`
+  and dispatching to `MemoryService`.
+- `conformance/tests/test_conformance_reference.py`: pytest wiring
+  that proves the harness works end-to-end (all 25 cases pass).
+- CI: extended `.github/workflows/build-internet-draft.yml` to run
+  the conformance suite on every push.
+- `reviews/implementation-report-reference-python.md`: worked
+  implementation report using the harness output.
+- ADR-0028 documents the design and the review it responds to.
+
+Adopting implementations now have a two-step path to a checkable
+conformance claim: write an adapter, run the suite. No PAMSPEC
+internals need to be understood.
+
 ## PAMSPEC -01 Consolidation Cycle (C1-C10)
 
 Ten consolidation branches targeting IETF-review readiness, each
