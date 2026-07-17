@@ -1,0 +1,33 @@
+{
+  "spec_version": "0.1.0-draft",
+  "object_id": "mem:wm:001",
+  "version_id": "ver:wm:001:1",
+  "scope_id": "workspace:example",
+  "object_type": "working_memory",
+  "canonical_content": {
+    "task_ref": "task:planning:2026-07-17",
+    "purpose": "plan",
+    "content": {"steps": ["gather sources", "draft outline", "review"]},
+    "ttl_hint_seconds": 3600,
+    "producer_actor_id": "actor:agent:planner",
+    "promotion_hint": {
+      "target_object_type": "task",
+      "confidence": 0.7,
+      "rationale": "candidate task plan pending review"
+    }
+  },
+  "lifecycle_state": "scratch",
+  "availability_state": "available",
+  "retention_state": "retained",
+  "validation_state": "unverified",
+  "committed_at": "2026-07-17T00:00:00.000000Z",
+  "recorded_at": "2026-07-17T00:00:00.000001Z",
+  "sequence": 1,
+  "actor": {"actor_id": "actor:agent:planner", "actor_kind": "agent"},
+  "provenance": {
+    "provenance_id": "prov:wm:001",
+    "actor": {"actor_id": "actor:agent:planner", "actor_kind": "agent"},
+    "activity": "wrote_working_memory",
+    "recorded_at": "2026-07-17T00:00:00.000001Z"
+  }
+}

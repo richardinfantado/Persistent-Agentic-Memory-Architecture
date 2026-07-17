@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/schemas/0.1-draft/working-memory-content.schema.json",
+  "title": "PAMSPEC working_memory canonical_content 0.1-draft",
+  "$comment": "Canonical content shape for object_type = 'working_memory'. Persistent so it survives process crashes and can be resumed, but distinct from consolidated long-term memory. Promote via a Promote operation to convert into a canonical Memory Object (typically claim, decision, task, or summary).",
+  "type": "object",
+  "required": ["task_ref", "content"],
+  "properties": {
+    "task_ref": {
+      "$ref": "common.schema.json#/$defs/id",
+      "$comment": "Identifier of the task or session this working memory belongs to."
+    },
+    "purpose": {
+      "type": "string",
+      "$comment": "Free-form label such as 'plan', 'scratchpad', 'intermediate_result', 'critic_note'."
+    },
+    "content": {"$comment": "Any JSON value."},
+    "ttl_hint_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "Advisory retention hint. Not authoritative; retention_state governs disposal."
+    },
+    "producer_actor_id": {"$ref": "common.schema.json#/$defs/id"},
+    "supersedes_object_id": {"$ref": "common.schema.json#/$defs/id"},
+    "promotion_hint": {
+      "type": "object",
+      "$comment": "Optional hint to a consolidation pass about the object_type this working memory would become if promoted.",
+      "properties": {
+        "target_object_type": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
