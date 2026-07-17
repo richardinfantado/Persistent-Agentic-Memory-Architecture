@@ -17,7 +17,7 @@ Schema IDs use the provisional public namespace:
 | `relationship.schema.json` | Independently identified, versioned Relationship Objects |
 | `provenance.schema.json` | Provenance record (informatively aligned with W3C PROV) |
 | `actor.schema.json` | Actor with optional `on_behalf_of_actor_id`, `delegation_id`, `attestation` |
-| `memory-event.schema.json` | Event Ledger entry with optional `resource_usage` accounting |
+| `memory-event.schema.json` | Event Ledger entry |
 | `memory-scope.schema.json` | Memory Scope descriptor |
 | `embedding-space.schema.json` | Embedding Space identity descriptor |
 | `query.schema.json` | Structured / semantic / hybrid query descriptor |

@@ -324,12 +324,16 @@ Scope isolation is retained in core as an engineering (security) requirement (R2
 
 Retention and legal-hold governance move to an optional Governance Profile (§3.3). Any implementation that needs those guarantees adopts that profile; Lite implementations are not silently exposed to a governance regime they cannot implement.
 
+## Execution notes
+
+- **R4a executed 2026-07-18.** The `resource_usage` block was removed from `schemas/0.1-draft/memory-event.schema.json` and all normative references, per §3.5. Two test vectors that referenced it (`event-with-resource-usage.json`, `event-with-negative-tokens.json`) were deleted. ADR-0022 marked superseded.
+- **Pending R5 decision — model_ref and provider_ref.** `model_ref` and `provider_ref` were removed from the observability-oriented `resource_usage` block by R4a. Their possible role as optional provenance-generation context will be decided in R5. Their removal from `resource_usage` does not imply that model-generation provenance is rejected as a concept. R5 will decide whether they belong inside `provenance` for specific `object_type` values (e.g., `claim`, `summary`), under a separate `generation_context` block, or in a distinct experimental subtree. Until R5, they exist nowhere normative.
+
 ## Unresolved questions
 
-1. `model_ref` and `provider_ref` relocation destination: R5 will decide whether these belong inside `provenance` for `object_type = "claim" | "summary"`, under a separate `generation_context` block, or in a distinct experimental subtree.
-2. Standard-object-type enum handling for experimental types: when R4b moves `working_memory`, `tool_invocation`, `tool_result` to `experimental/`, should their names remain in the `standard_object_type` enum in Lite (as reserved) or be removed? R5 owns this.
-3. Conformance harness treatment of the retired Delegation/Subscribe profile cases: R7 built cases against the current harness. When R4b moves these to `experimental/`, do the cases move to `conformance/experimental/` or retire? Recommend the former to preserve the harness's ability to test experimental behavior when someone opts in.
-4. Whether Event Ledger architectural context in the first `-00` needs a normative reference to the future `PAMSPEC-Ledger` profile, or whether that reference can be added when the profile lands.
+1. Standard-object-type enum handling for experimental types: when R4b moves `working_memory`, `tool_invocation`, `tool_result` to `experimental/`, should their names remain in the `standard_object_type` enum in Lite (as reserved) or be removed? R5 owns this.
+2. Conformance harness treatment of the retired Delegation/Subscribe profile cases: R7 built cases against the current harness. When R4b moves these to `experimental/`, do the cases move to `conformance/experimental/` or retire? Recommend the former to preserve the harness's ability to test experimental behavior when someone opts in.
+3. Whether Event Ledger architectural context in the first `-00` needs a normative reference to the future `PAMSPEC-Ledger` profile, or whether that reference can be added when the profile lands.
 
 ## References
 
