@@ -409,7 +409,7 @@ A canonical envelope represents one immutable logical Memory Version. Derived re
 : Optional. Contains hashes, signatures, ledger references, or other tamper-evidence metadata. It is bound to the version or event material it covers and can expose correlation or verification metadata.
 
 `quality_signals`:
-: Optional machine-readable quality signals produced by automated processes: `confidence`, `contradiction_score`, `staleness_score`, `evidence_strength`, `source_diversity`, `last_verified_at`, `last_verified_by_actor_id`, `verification_method_id`, `assessed_at`, and `assessed_by_actor_id`. These signals are non-authoritative and MUST NOT be used to override Validation State; retrieval ranking and default filters MAY use them, and profiles MAY define standard thresholds for their use.
+: Optional machine-readable quality signals produced by automated processes: `assessed_confidence`, `contradiction_score`, `staleness_score`, `evidence_strength`, `source_diversity`, `last_verified_at`, `last_verified_by_actor_id`, `verification_method_id`, `assessed_at`, and `assessed_by_actor_id`. These signals are non-authoritative and MUST NOT be used to override Validation State; retrieval ranking and default filters MAY use them, and profiles MAY define standard thresholds for their use. `assessed_confidence` is the system's or assessor's confidence in the claim after review, distinct from `provenance.source_confidence`, which is the original source's own asserted confidence in what they reported.
 
 ## Type System
 
@@ -443,7 +443,7 @@ A Relationship Object change creates a new Relationship Version and Event Ledger
 
 ## Provenance
 
-Provenance records `provenance_id`, source reference, actor, generation activity, evidence references, observed time, recorded time, transformation parent, confidence assertion, and optional signature or integrity reference. Provenance is authoritative metadata. A provenance modification creates a new Memory Version and Event Ledger entry. Provenance cannot be silently removed. Provenance visibility may be restricted independently from Canonical Content, and a provenance reference does not grant access to its source. The entity, activity, and agent concepts align informatively with W3C PROV {{PROV-DM}} without requiring PROV-O.
+Provenance records `provenance_id`, source reference, actor, generation activity, evidence references, observed time, recorded time, transformation parent, `source_confidence` (the source's own confidence in what they reported), and optional signature or integrity reference. `source_confidence` is distinct from `quality_signals.assessed_confidence`, which records the system's or reviewer's confidence in the resulting claim. Provenance is authoritative metadata. A provenance modification creates a new Memory Version and Event Ledger entry. Provenance cannot be silently removed. Provenance visibility may be restricted independently from Canonical Content, and a provenance reference does not grant access to its source. The entity, activity, and agent concepts align informatively with W3C PROV {{PROV-DM}} without requiring PROV-O.
 
 ## Integrity Metadata
 

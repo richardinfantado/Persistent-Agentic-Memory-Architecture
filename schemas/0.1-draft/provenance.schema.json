@@ -17,7 +17,7 @@
     "observed_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "recorded_at": {"$ref": "common.schema.json#/$defs/timestamp"},
     "transformation_parent": {"type": "string"},
-    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "source_confidence": {"type": "number", "minimum": 0, "maximum": 1, "$comment": "Source or observer's own asserted confidence in what they reported. Distinct from quality_signals.assessed_confidence, which is the system's assessment of the resulting claim. Renamed from 'confidence' in 0.1-draft."},
     "integrity_ref": {"type": "string"}
   },
   "additionalProperties": false
