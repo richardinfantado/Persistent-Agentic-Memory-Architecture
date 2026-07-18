@@ -7,7 +7,9 @@ these against any Adapter.
 
 from __future__ import annotations
 
-from conformance.harness.adapter import Adapter, expect_error
+import json
+
+from conformance.harness.adapter import Adapter, PamspecErrorLike, expect_error
 
 
 ACTOR = {"actor_id": "actor:test:conformance", "actor_kind": "human"}
@@ -186,4 +188,73 @@ def case_unknown_extension_fields_preserved_on_read(a: Adapter) -> None:
     assert "x-experimental-ext" in cc, f"unknown extension key was stripped; got keys {list(cc)}"
     assert cc["x-experimental-ext"] == {"nested": [1, 2, 3]}, (
         f"unknown extension value corrupted; got {cc['x-experimental-ext']!r}"
+    )
+
+
+def case_scope_mutation_rejected(a: Adapter) -> None:
+    """CR-2: scope MUST NOT change after creation.
+
+    A valid update in the correct scope MUST preserve the scope field
+    in the stored envelope. An update addressed to a different scope
+    MUST NOT succeed — scope isolation guarantees the object is
+    invisible outside its assigned scope, so the error MUST be either
+    object_not_found (object invisible in the other scope) or
+    scope_immutable (explicit scope-mutation detection).
+    """
+    r1 = _mk(a)
+    r2 = a.update(
+        scope_id=SCOPE, object_id=r1["object_id"],
+        expected_version_id=r1["version_id"],
+        canonical_content={"statement": "v2"},
+        actor=ACTOR, provenance=PROV,
+    )
+    # scope must be unchanged in the stored envelope after a valid update
+    env = a.read(scope_id=SCOPE, object_id=r1["object_id"])
+    assert env["scope_id"] == SCOPE, (
+        f"scope changed after update; expected {SCOPE!r}, got {env['scope_id']!r}"
+    )
+    # cross-scope update MUST be rejected
+    try:
+        a.update(
+            scope_id="workspace:other-scope",
+            object_id=r1["object_id"],
+            expected_version_id=r2["version_id"],
+            canonical_content={"statement": "v3"},
+            actor=ACTOR, provenance=PROV,
+        )
+        raise AssertionError(
+            "cross-scope update must be rejected; no error was raised"
+        )
+    except PamspecErrorLike as exc:
+        assert exc.code in ("object_not_found", "scope_immutable"), (
+            f"cross-scope update raised unexpected error code {exc.code!r}; "
+            f"expected object_not_found or scope_immutable"
+        )
+
+
+def case_bundle_output_is_deterministic(a: Adapter) -> None:
+    """CR-7 (provisional): serializing the same object set MUST produce
+    identical normalized output on repeated calls.
+
+    Tested by: creating N objects, querying twice, sorting both result
+    sets by object_id, and asserting the normalized JSON representations
+    are byte-for-byte identical. Non-deterministic fields (e.g. timestamps)
+    that vary between calls would cause this assertion to fail.
+    """
+    for i in range(3):
+        _mk(a, canonical_content={"item": i}, validation_state="corroborated")
+
+    def _normalize(results: list) -> str:
+        return json.dumps(
+            sorted(results, key=lambda r: r["object_id"]),
+            sort_keys=True,
+            ensure_ascii=True,
+        )
+
+    run1 = _normalize(a.query(scope_id=SCOPE))
+    run2 = _normalize(a.query(scope_id=SCOPE))
+    assert run1 == run2, (
+        "repeated query+sort+serialize produced different output; "
+        "implementation must not introduce non-deterministic fields "
+        "such as per-call timestamps in query results"
     )

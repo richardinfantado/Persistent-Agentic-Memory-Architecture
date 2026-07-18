@@ -94,6 +94,16 @@ REFERENCE_PYTHON_LITE_REGISTRY: dict[str, CaseAssessment] = {
     "case_unknown_extension_fields_preserved_on_read": _native_or_gap(
         "PAMSPEC-Lite.OBJECT.UNKNOWN_EXTENSIONS_PRESERVED",
     ),
+    "case_scope_mutation_rejected": _native_or_gap(
+        "PAMSPEC-Lite.SCOPE.MUTATION_REJECTED",
+    ),
+    "case_bundle_output_is_deterministic": _native_or_gap(
+        "PAMSPEC-Lite.PORTABILITY.QUERY_OUTPUT_DETERMINISTIC",
+        extra_limitations=[
+            "Tests determinism at the query+sort layer. A dedicated export_bundle "
+            "conformance path is deferred to post-R9 MCP stabilization milestone."
+        ],
+    ),
 }
 
 
