@@ -78,6 +78,12 @@ class CaseResult:
     # Values: 'passed' | 'assertion_failure' | 'missing_feature' |
     #         'execution_error'
     outcome_kind: str = "passed"
+    # R6.2d: per-case runtime evidence identity. The runner captures
+    # this by calling adapter.evidence_identity() on each case's
+    # freshly-constructed adapter. The R6 emitter compares against the
+    # probe identity; a mismatch (drift across factory calls) rejects
+    # native evidence. Non-serialized in to_dict().
+    adapter_identity: dict | None = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -213,6 +219,18 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
         if not name.startswith("case_"):
             continue
         adapter = factory()
+        # R6.2d: capture per-case runtime identity BEFORE running the
+        # test function so identity drift across factory calls is
+        # detected even when the case itself fails.
+        case_identity: dict | None = None
+        identity_getter = getattr(adapter, "evidence_identity", None)
+        if callable(identity_getter):
+            try:
+                candidate = identity_getter()
+                if isinstance(candidate, dict) and candidate:
+                    case_identity = dict(candidate)
+            except Exception:
+                case_identity = None
         started = time.perf_counter()
         error: str | None = None
         outcome_kind = "passed"
@@ -240,6 +258,7 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
         report.cases.append(CaseResult(
             name=name, passed=passed, duration_ms=elapsed_ms,
             error=error, outcome_kind=outcome_kind,
+            adapter_identity=case_identity,
         ))
 
     report.finished_at = _iso_utc_now()

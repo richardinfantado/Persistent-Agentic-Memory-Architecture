@@ -241,10 +241,13 @@ class ExecutionSession:
     Public constructor exists (Python cannot prevent import), but the
     supported public API for native emission is run_and_emit only.
 
-    R6.2c: source_state carries the repository provenance
-    (`{head, clean, modified_files}`) captured at run time. The
-    emitter refuses native emission when the source is dirty in the
-    files that shape evidence semantics.
+    R6.2d: source_state_before and source_state_after capture the
+    PAMSPEC repository state immediately before and immediately after
+    the suite runs. The emitter refuses native emission unless both
+    are clean AND their HEADs match each other AND match
+    report.suite_commit. case_adapter_identities carries the
+    per-case runtime identity so probe/case identity drift can be
+    detected.
     """
     report_dict: dict
     report_bytes: bytes
@@ -257,7 +260,9 @@ class ExecutionSession:
     profile: str
     started_at: str
     finished_at: str
-    source_state: dict = field(default_factory=dict)
+    source_state_before: dict = field(default_factory=dict)
+    source_state_after: dict = field(default_factory=dict)
+    case_adapter_identities: dict[str, dict] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- #
@@ -331,8 +336,11 @@ def _verify_environment_manifest(manifest: dict, artifact_root: Path) -> None:
 
 def _canonical_semantic_projection(session: ExecutionSession) -> dict:
     """Semantic projection independent of wall-clock and error-text
-    noise. Uses structured outcome_kind rather than the raw error
-    string so dynamic tracebacks do not change the semantic hash."""
+    noise. R6.2d: identity is now sourced from the ONE resolved
+    runtime identity (subprocess OR evidence_identity), so the
+    semantic hash changes when adapter or implementation version
+    changes regardless of which identity path the adapter uses.
+    """
     d = session.report_dict
     cases = []
     for c in d.get("cases", []):
@@ -343,17 +351,23 @@ def _canonical_semantic_projection(session: ExecutionSession) -> dict:
             "outcome_kind": session.outcome_kinds.get(name, "unknown"),
         })
     ai = d.get("adapter_info") or {}
+    # Best-effort resolve; if identity is missing this projection is
+    # still stable (all null identity), but native emission will reject
+    # separately in _bind_context_to_session.
+    identity = {k: None for k in IDENTITY_FIELDS}
+    try:
+        _source, resolved = _resolved_runtime_identity(ai)
+        identity = resolved
+    except EvidenceEmissionError:
+        pass
     sub = ai.get("subprocess") if isinstance(ai, dict) else None
     return {
         "profile": d.get("profile"),
         "adapter_class": d.get("adapter_class"),
         "totals": d.get("totals"),
         "cases": cases,
-        "adapter_identity": {
-            "adapter_name": (sub or {}).get("adapter_name") if isinstance(sub, dict) else None,
-            "adapter_version": (sub or {}).get("adapter_version") if isinstance(sub, dict) else None,
-            "implementation_name": (sub or {}).get("implementation_name") if isinstance(sub, dict) else None,
-            "implementation_version": (sub or {}).get("implementation_version") if isinstance(sub, dict) else None,
+        "runtime_identity": identity,
+        "subprocess_extras": {
             "spec_commit": (sub or {}).get("spec_commit") if isinstance(sub, dict) else None,
             "protocol_version": (sub or {}).get("protocol_version") if isinstance(sub, dict) else None,
         },
@@ -481,25 +495,61 @@ def _atomic_write(chain_path: Path, existing_bytes: bytes, new_records: list[dic
 # Provenance binding
 # --------------------------------------------------------------------------- #
 
+IDENTITY_FIELDS = ("adapter_name", "adapter_version", "implementation_name", "implementation_version")
+
+
+def _resolved_runtime_identity(adapter_info: dict) -> tuple[str, dict]:
+    """Return (source, identity) where source is 'subprocess' or
+    'evidence_identity'. Requires ALL four fields present and
+    non-empty. Raises EvidenceEmissionError otherwise.
+
+    R6.2d: partial identity is rejected. Missing or empty
+    adapter_version or implementation_version no longer silently
+    passes. Consumed by both binding and semantic-projection paths.
+    """
+    if not isinstance(adapter_info, dict):
+        raise EvidenceEmissionError("adapter_info missing")
+    sub = adapter_info.get("subprocess")
+    if isinstance(sub, dict) and all(
+        isinstance(sub.get(k), str) and sub.get(k) for k in IDENTITY_FIELDS
+    ):
+        return "subprocess", {k: sub[k] for k in IDENTITY_FIELDS}
+    identity = adapter_info.get("evidence_identity")
+    if isinstance(identity, dict) and all(
+        isinstance(identity.get(k), str) and identity.get(k) for k in IDENTITY_FIELDS
+    ):
+        return "evidence_identity", {k: identity[k] for k in IDENTITY_FIELDS}
+    # Diagnose which fields are missing/empty to help the caller
+    partial = {}
+    if isinstance(sub, dict):
+        partial["subprocess"] = {k: sub.get(k) for k in IDENTITY_FIELDS}
+    if isinstance(identity, dict):
+        partial["evidence_identity"] = {k: identity.get(k) for k in IDENTITY_FIELDS}
+    raise EvidenceEmissionError(
+        "native emission requires a complete runtime identity: all four of "
+        f"{IDENTITY_FIELDS} must be present and non-empty in either "
+        f"adapter_info.subprocess or adapter_info.evidence_identity. "
+        f"Got partial: {partial or 'no identity source at all'}"
+    )
+
+
 def _bind_context_to_session(session: ExecutionSession, context: EmissionContext) -> None:
     """Fail-closed provenance checks. Every check raises
     EvidenceEmissionError BEFORE any write occurs.
 
-    R6.2c additions:
-      * spec_commit is now bound: context.spec_commit MUST equal
-        context.harness_commit MUST equal context.evidence_commit
-        MUST equal report.suite_commit. All four are the same repo
-        revision because the spec, schema, harness, and requirement
-        registry all live at that single SHA.
-      * subprocess-reported spec_commit (if present) MUST equal
-        context.spec_commit.
-      * In-process adapters MUST supply structured evidence_identity;
-        the emitter binds subject.name/version and adapter.name/version
-        against it. If neither subprocess metadata NOR
-        evidence_identity is available, native emission is refused.
-      * Source state MUST be clean: the emitter refuses when any
-        native-source path (see NATIVE_SOURCE_PATHS in
-        capture_source_state) is dirty.
+    R6.2d additions:
+      * Whole-repository cleanliness required BOTH before AND after
+        the suite runs; their HEADs MUST equal each other AND equal
+        report.suite_commit (rejects time-of-check gap).
+      * Complete runtime identity: all four fields present and
+        non-empty (via _resolved_runtime_identity).
+      * subject.kind MUST equal "implementation" for native emission.
+      * Every case's per-case adapter_identity MUST match the probe
+        identity — factory drift rejected.
+
+    R6.2c items retained: spec/harness/evidence commit equality;
+    subprocess spec_commit binding; env manifest bytes verification;
+    RFC 3339 finished_at.
     """
     if not session.profile:
         raise EvidenceEmissionError("report.profile is missing")
@@ -527,7 +577,6 @@ def _bind_context_to_session(session: ExecutionSession, context: EmissionContext
         )
     ai = session.adapter_info or {}
     sub = ai.get("subprocess") if isinstance(ai, dict) else None
-    identity = ai.get("evidence_identity") if isinstance(ai, dict) else None
     # Subprocess-reported spec_commit binding
     if isinstance(sub, dict) and sub.get("spec_commit"):
         if sub["spec_commit"] != context.spec_commit:
@@ -535,69 +584,78 @@ def _bind_context_to_session(session: ExecutionSession, context: EmissionContext
                 f"subprocess-reported spec_commit ({sub['spec_commit']!r}) does not "
                 f"match context.spec_commit ({context.spec_commit!r})"
             )
-    # Identity binding — subprocess OR evidence_identity is REQUIRED
-    if context.adapter is not None:
-        if isinstance(sub, dict) and sub.get("adapter_name"):
-            reported_adapter_name = sub["adapter_name"]
-            reported_adapter_version = sub.get("adapter_version")
-        elif isinstance(identity, dict) and identity.get("adapter_name"):
-            reported_adapter_name = identity["adapter_name"]
-            reported_adapter_version = identity.get("adapter_version")
-        else:
-            raise EvidenceEmissionError(
-                "native emission requires either subprocess-reported adapter "
-                "identity or an in-process adapter with evidence_identity() "
-                "returning adapter_name/adapter_version — got neither"
-            )
-        if reported_adapter_name != context.adapter["name"]:
-            raise EvidenceEmissionError(
-                f"context.adapter.name ({context.adapter['name']!r}) does not match "
-                f"reported adapter identity ({reported_adapter_name!r})"
-            )
-        if reported_adapter_version and reported_adapter_version != context.adapter["version"]:
-            raise EvidenceEmissionError(
-                f"context.adapter.version ({context.adapter['version']!r}) does not "
-                f"match reported adapter_version ({reported_adapter_version!r})"
-            )
-    # Subject identity binding — subprocess OR evidence_identity is REQUIRED
-    if isinstance(sub, dict) and sub.get("implementation_name"):
-        impl_name = sub["implementation_name"]
-        impl_version = sub.get("implementation_version")
-    elif isinstance(identity, dict) and identity.get("implementation_name"):
-        impl_name = identity["implementation_name"]
-        impl_version = identity.get("implementation_version")
-    else:
+    # R6.2d: subject.kind MUST be "implementation" for native emission.
+    if context.subject.get("kind") != "implementation":
         raise EvidenceEmissionError(
-            "native emission requires either subprocess-reported implementation "
-            "identity or an in-process adapter with evidence_identity() returning "
-            "implementation_name/implementation_version — got neither"
+            f"native emission requires subject.kind == 'implementation'; got "
+            f"{context.subject.get('kind')!r}. Framework subjects use the "
+            f"retrospective constructor (build_retrospective_record)."
         )
-    if context.subject.get("name") != impl_name:
+    # R6.2d: resolve the ONE runtime identity (subprocess or evidence_identity).
+    #        All four fields required and non-empty; partial identity rejected.
+    _source, resolved = _resolved_runtime_identity(ai)
+    if context.adapter is None:
+        raise EvidenceEmissionError("native emission requires context.adapter")
+    if resolved["adapter_name"] != context.adapter["name"]:
+        raise EvidenceEmissionError(
+            f"context.adapter.name ({context.adapter['name']!r}) does not match "
+            f"resolved runtime adapter_name ({resolved['adapter_name']!r})"
+        )
+    if resolved["adapter_version"] != context.adapter["version"]:
+        raise EvidenceEmissionError(
+            f"context.adapter.version ({context.adapter['version']!r}) does not match "
+            f"resolved runtime adapter_version ({resolved['adapter_version']!r})"
+        )
+    if context.subject.get("name") != resolved["implementation_name"]:
         raise EvidenceEmissionError(
             f"context.subject.name ({context.subject['name']!r}) does not match "
-            f"reported implementation_name ({impl_name!r})"
+            f"resolved runtime implementation_name ({resolved['implementation_name']!r})"
         )
-    if impl_version and context.subject.get("version") != impl_version:
+    if context.subject.get("version") != resolved["implementation_version"]:
         raise EvidenceEmissionError(
             f"context.subject.version ({context.subject['version']!r}) does not match "
-            f"reported implementation_version ({impl_version!r})"
+            f"resolved runtime implementation_version ({resolved['implementation_version']!r})"
         )
+    # R6.2d: per-case adapter identity MUST equal the probe identity.
+    for case_name, case_identity in (session.case_adapter_identities or {}).items():
+        if case_identity is None:
+            continue
+        for field_name in IDENTITY_FIELDS:
+            if case_identity.get(field_name) != resolved.get(field_name):
+                raise EvidenceEmissionError(
+                    f"per-case adapter identity drift on case {case_name!r}: "
+                    f"{field_name}={case_identity.get(field_name)!r} but probe "
+                    f"{field_name}={resolved.get(field_name)!r}. A stateful or "
+                    f"faulty factory returned inconsistent identities across "
+                    f"invocations; native evidence attribution is unsafe."
+                )
     # Environment manifest bytes verification
     if context.environment_manifest is not None:
         _verify_environment_manifest(context.environment_manifest, context.artifact_root)
     # Report finished_at is strict RFC 3339 (evidence_observed_at derives from it)
     _validate_rfc3339(session.finished_at, "report.finished_at")
-    # Source-state binding: refuse dirty native-source paths
-    ss = session.source_state or {}
-    if not ss.get("clean", False):
-        modified = ss.get("modified_files") or ["<unknown>"]
-        raise EvidenceEmissionError(
-            "native emission refused: PAMSPEC source tree is not clean in "
-            "native-source paths (%s). Commit or stash changes before emitting "
-            "native evidence. Modified: %s" % (
-                ", ".join(NATIVE_SOURCE_PATHS),
-                "; ".join(modified[:10]),
+    # R6.2d: pre- AND post-run source states MUST both be clean, their HEADs
+    #        MUST equal each other AND equal report.suite_commit.
+    before = session.source_state_before or {}
+    after = session.source_state_after or {}
+    for label, ss in (("source_state_before", before), ("source_state_after", after)):
+        if not ss.get("clean", False):
+            modified = ss.get("modified_files") or ["<unknown>"]
+            raise EvidenceEmissionError(
+                f"native emission refused: {label} is not clean. Commit or "
+                f"stash changes before emitting native evidence. Modified: "
+                f"{'; '.join(modified[:10])}"
             )
+    if before.get("head") != after.get("head"):
+        raise EvidenceEmissionError(
+            f"repository HEAD changed during execution: pre={before.get('head')!r} "
+            f"post={after.get('head')!r}. Native emission requires the repository "
+            f"to remain at one commit throughout the run."
+        )
+    if before.get("head") != session.suite_commit:
+        raise EvidenceEmissionError(
+            f"source_state.head ({before.get('head')!r}) does not match "
+            f"report.suite_commit ({session.suite_commit!r})"
         )
 
 
@@ -804,7 +862,6 @@ def run_and_emit(
     evidence_output_path: Path | None = None,
     context: EmissionContext | None = None,
     case_registry: dict[str, CaseAssessment] | None = None,
-    source_state: dict | None = None,
 ) -> tuple[Any, list[dict] | None]:
     """One harness invocation, optionally producing both artifacts.
 
@@ -817,19 +874,21 @@ def run_and_emit(
     _emit_native_evidence(). origin='native_emission' is only produced
     via this path.
 
-    source_state:
-      When None (default), the emitter captures the PAMSPEC repository
-      state via capture_source_state(REPO_ROOT). The bind step then
-      refuses native emission if native-source paths are dirty.
-      Tests may pass a dict here to inject a specific state without
-      depending on the actual worktree.
+    R6.2d: source state is captured BOTH before and after the suite
+    runs via capture_source_state(ROOT). There is NO public parameter
+    to inject state — the supported public API always performs the
+    real Git inspection. Tests substitute the inspection function via
+    monkeypatch of `conformance.harness.evidence_emitter.capture_source_state`.
     """
     from . import runner
+
+    source_state_before = capture_source_state(ROOT)
     report = runner.run_profile(profile, factory)
 
     report_output_path = Path(report_output_path)
     report_output_path.parent.mkdir(parents=True, exist_ok=True)
     report_output_path.write_text(report.to_json(), encoding="utf-8")
+    source_state_after = capture_source_state(ROOT)
 
     if evidence_output_path is None:
         return report, None
@@ -852,7 +911,11 @@ def run_and_emit(
         profile=report.profile,
         started_at=report.started_at,
         finished_at=report.finished_at,
-        source_state=source_state if source_state is not None else capture_source_state(ROOT),
+        source_state_before=source_state_before,
+        source_state_after=source_state_after,
+        case_adapter_identities={
+            c.name: c.adapter_identity for c in report.cases if c.adapter_identity is not None
+        },
     )
     records = _emit_native_evidence(session, Path(evidence_output_path), context, case_registry)
     return report, records
@@ -901,21 +964,15 @@ def git_head_commit_at_runtime() -> str:
 # R6.2c: source-state capture and clean-source binding
 # --------------------------------------------------------------------------- #
 
-# Tracked paths whose dirty state MUST reject native evidence emission.
-# Anything that changes the semantics of what evidence claims lives here.
-NATIVE_SOURCE_PATHS = (
-    "conformance",
-    "scripts/validate_evidence.py",
-)
-
-
 def capture_source_state(repo_root: Path = ROOT) -> dict:
-    """Snapshot the PAMSPEC repository state at capture time.
+    """Snapshot the WHOLE PAMSPEC repository state at capture time.
 
-    Returns {head, clean, modified_files}. `clean` is True only when
-    every tracked path in NATIVE_SOURCE_PATHS is clean; other paths
-    (unrelated test artifacts, generated reports) are ignored so a
-    fresh evidence JSONL does not itself mark the tree dirty.
+    R6.2d broadens the scope from selected paths to the entire
+    repository. Any modified tracked file OR untracked file marks
+    the state dirty. Callers who don't want scratch files in this
+    check should add them to .gitignore or write outside the repo.
+
+    Returns {head, clean, modified_files}.
     """
     head = ""
     try:
@@ -930,7 +987,7 @@ def capture_source_state(repo_root: Path = ROOT) -> dict:
     modified: list[str] = []
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain=v1", "--", *NATIVE_SOURCE_PATHS],
+            ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
             capture_output=True, text=True, check=True, timeout=5.0,
             cwd=str(repo_root),
         )

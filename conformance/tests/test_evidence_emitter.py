@@ -113,6 +113,19 @@ def _make_context(tmp_path: Path, **overrides) -> EmissionContext:
     return EmissionContext(**kwargs)
 
 
+@pytest.fixture
+def clean_source(monkeypatch):
+    """R6.2d: substitute capture_source_state so tests do not depend
+    on a genuinely clean worktree. The public API has no source_state
+    parameter; only monkeypatch of the module-level function works."""
+    def _clean(root=None):
+        return {"head": SUITE_COMMIT, "clean": True, "modified_files": []}
+    monkeypatch.setattr(
+        "conformance.harness.evidence_emitter.capture_source_state", _clean,
+    )
+    return _clean
+
+
 # ===========================================================================
 # Integrated orchestration
 # ===========================================================================
@@ -127,7 +140,7 @@ def test_run_and_emit_legacy_only_path(tmp_path):
     assert not list(tmp_path.glob("*.jsonl"))
 
 
-def test_run_and_emit_integrated_produces_valid_chain(tmp_path):
+def test_run_and_emit_integrated_produces_valid_chain(tmp_path, clean_source):
     report_path = tmp_path / "r.json"
     evidence_path = tmp_path / "e.jsonl"
     report, records = run_and_emit(
@@ -136,7 +149,6 @@ def test_run_and_emit_integrated_produces_valid_chain(tmp_path):
         evidence_output_path=evidence_path,
         context=_make_context(tmp_path),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     assert records is not None
     assert len(records) == len(report.cases) == 15
@@ -210,7 +222,8 @@ def _harness_bypass_session(tmp_path: Path, cases_with_outcomes: list[dict]) -> 
         profile="PAMSPEC-Lite",
         started_at="2026-07-18T15:00:00Z",
         finished_at="2026-07-18T15:00:10Z",
-        source_state=dict(CLEAN_SOURCE_STATE),
+        source_state_before=dict(CLEAN_SOURCE_STATE),
+        source_state_after=dict(CLEAN_SOURCE_STATE),
     )
 
 
@@ -582,7 +595,7 @@ def test_missing_registry_entry_leaves_chain_unchanged(tmp_path):
 # Semantic determinism (reviewer's test 13 counterpart + regression)
 # ===========================================================================
 
-def test_semantic_hash_stable_across_identical_runs_of_reference(tmp_path):
+def test_semantic_hash_stable_across_identical_runs_of_reference(tmp_path, clean_source):
     root1 = tmp_path / "root1"
     root1.mkdir()
     _, r1 = run_and_emit(
@@ -591,7 +604,6 @@ def test_semantic_hash_stable_across_identical_runs_of_reference(tmp_path):
         evidence_output_path=root1 / "e.jsonl",
         context=_make_context(root1, run_id="r1"),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     time.sleep(1.0)
     root2 = tmp_path / "root2"
@@ -602,7 +614,6 @@ def test_semantic_hash_stable_across_identical_runs_of_reference(tmp_path):
         evidence_output_path=root2 / "e.jsonl",
         context=_make_context(root2, run_id="r2"),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     sem1 = {r["observed_evidence"]["semantic_results_sha256"] for r in r1}
     sem2 = {r["observed_evidence"]["semantic_results_sha256"] for r in r2}
@@ -610,14 +621,13 @@ def test_semantic_hash_stable_across_identical_runs_of_reference(tmp_path):
     assert len(sem1) == 1
 
 
-def test_normalize_does_not_mask_semantic_hash(tmp_path):
+def test_normalize_does_not_mask_semantic_hash(tmp_path, clean_source):
     _, records = run_and_emit(
         "PAMSPEC-Lite", ReferencePythonAdapter,
         report_output_path=tmp_path / "r.json",
         evidence_output_path=tmp_path / "e.jsonl",
         context=_make_context(tmp_path),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     n = normalize_for_determinism(records[0])
     assert n["observed_evidence"]["semantic_results_sha256"] \
@@ -679,14 +689,13 @@ def test_context_rejects_bad_env_manifest_syntax(tmp_path):
 # Default limitation always present
 # ===========================================================================
 
-def test_default_adapter_limitation_always_present(tmp_path):
+def test_default_adapter_limitation_always_present(tmp_path, clean_source):
     _, records = run_and_emit(
         "PAMSPEC-Lite", ReferencePythonAdapter,
         report_output_path=tmp_path / "r.json",
         evidence_output_path=tmp_path / "e.jsonl",
         context=_make_context(tmp_path),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     for r in records:
         assert DEFAULT_ADAPTER_LIMITATION in r["limitations"]
@@ -713,20 +722,334 @@ def test_runner_git_head_uses_repo_root_not_process_cwd(tmp_path, monkeypatch):
 # R6.2c: clean-source provenance
 # ===========================================================================
 
-def test_dirty_source_rejects_native_emission(tmp_path):
+def test_dirty_source_rejects_native_emission(tmp_path, monkeypatch):
+    """R6.2d: monkeypatch (not a public parameter) is the only way to
+    substitute source state. Dirty state MUST reject."""
     dirty = {"head": SUITE_COMMIT, "clean": False,
              "modified_files": [" M conformance/harness/runner.py"]}
+    monkeypatch.setattr(
+        "conformance.harness.evidence_emitter.capture_source_state",
+        lambda root=None: dirty,
+    )
     evidence = tmp_path / "e.jsonl"
-    with pytest.raises(EvidenceEmissionError, match="source tree is not clean"):
+    with pytest.raises(EvidenceEmissionError, match="not clean"):
         run_and_emit(
             "PAMSPEC-Lite", ReferencePythonAdapter,
             report_output_path=tmp_path / "r.json",
             evidence_output_path=evidence,
             context=_make_context(tmp_path),
             case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-            source_state=dirty,
         )
     assert not evidence.exists()
+
+
+# ---------- R6.2d: no public source_state bypass ----------
+
+def test_run_and_emit_has_no_source_state_parameter():
+    """R6.2d: the public API MUST NOT accept a caller-supplied
+    source_state. Only monkeypatch of the module-level function
+    substitutes the inspection."""
+    import inspect
+    sig = inspect.signature(run_and_emit)
+    assert "source_state" not in sig.parameters, \
+        "R6.2d requires removing the public source_state bypass; " \
+        f"got signature: {sig}"
+
+
+# ---------- R6.2d: pre/post source consistency ----------
+
+def test_head_change_during_execution_rejects(tmp_path, monkeypatch):
+    """If HEAD changes between pre-run and post-run capture, native
+    evidence MUST be refused."""
+    states = iter([
+        {"head": SUITE_COMMIT, "clean": True, "modified_files": []},
+        {"head": "0" * 40, "clean": True, "modified_files": []},
+    ])
+    monkeypatch.setattr(
+        "conformance.harness.evidence_emitter.capture_source_state",
+        lambda root=None: next(states),
+    )
+    with pytest.raises(EvidenceEmissionError, match="HEAD changed"):
+        run_and_emit(
+            "PAMSPEC-Lite", ReferencePythonAdapter,
+            report_output_path=tmp_path / "r.json",
+            evidence_output_path=tmp_path / "e.jsonl",
+            context=_make_context(tmp_path),
+            case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+def test_post_run_dirty_rejects(tmp_path, monkeypatch):
+    """If the source becomes dirty during execution, native evidence
+    MUST be refused."""
+    states = iter([
+        {"head": SUITE_COMMIT, "clean": True, "modified_files": []},
+        {"head": SUITE_COMMIT, "clean": False,
+         "modified_files": [" M conformance/harness/runner.py"]},
+    ])
+    monkeypatch.setattr(
+        "conformance.harness.evidence_emitter.capture_source_state",
+        lambda root=None: next(states),
+    )
+    with pytest.raises(EvidenceEmissionError, match="source_state_after"):
+        run_and_emit(
+            "PAMSPEC-Lite", ReferencePythonAdapter,
+            report_output_path=tmp_path / "r.json",
+            evidence_output_path=tmp_path / "e.jsonl",
+            context=_make_context(tmp_path),
+            case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+def test_source_head_mismatched_with_report_suite_commit_rejects(tmp_path, monkeypatch):
+    """source_state.head MUST equal report.suite_commit."""
+    forged = {"head": "1" * 40, "clean": True, "modified_files": []}
+    monkeypatch.setattr(
+        "conformance.harness.evidence_emitter.capture_source_state",
+        lambda root=None: forged,
+    )
+    with pytest.raises(EvidenceEmissionError, match="does not match"):
+        run_and_emit(
+            "PAMSPEC-Lite", ReferencePythonAdapter,
+            report_output_path=tmp_path / "r.json",
+            evidence_output_path=tmp_path / "e.jsonl",
+            context=_make_context(tmp_path),
+            case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+# ---------- R6.2d: whole-repo cleanliness ----------
+
+def test_capture_source_state_uses_untracked_files_normal(monkeypatch):
+    """capture_source_state MUST invoke `git status --porcelain
+    --untracked-files=normal` — whole-repo scope, not path-scoped."""
+    calls = []
+    def _fake_run(cmd, **kw):
+        calls.append(list(cmd))
+        class _R:
+            returncode = 0
+            stdout = "abc\n" if "rev-parse" in cmd else ""
+        return _R()
+    import conformance.harness.evidence_emitter as ee
+    monkeypatch.setattr(ee.subprocess, "run", _fake_run)
+    ee.capture_source_state()
+    status_calls = [c for c in calls if "status" in c]
+    assert status_calls, "capture_source_state must call git status"
+    assert "--untracked-files=normal" in status_calls[0], \
+        "R6.2d requires whole-repo untracked-files=normal scope"
+
+
+# ---------- R6.2d: complete identity fields required ----------
+
+def _partial_identity_session(tmp_path: Path, identity_override: dict) -> ExecutionSession:
+    """A bypass session where the in-process evidence_identity is a
+    partial dict (missing or empty field). Used to prove that partial
+    identity is rejected."""
+    partial_ai = {"class_name": "ReferencePythonAdapter",
+                  "evidence_identity": identity_override}
+    session = _harness_bypass_session(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "outcome_kind": "passed"},
+    ])
+    return ExecutionSession(
+        report_dict=session.report_dict, report_bytes=session.report_bytes,
+        report_path=session.report_path, report_sha256=session.report_sha256,
+        outcome_kinds=session.outcome_kinds, suite_commit=session.suite_commit,
+        adapter_class=session.adapter_class, adapter_info=partial_ai,
+        profile=session.profile, started_at=session.started_at,
+        finished_at=session.finished_at,
+        source_state_before=dict(CLEAN_SOURCE_STATE),
+        source_state_after=dict(CLEAN_SOURCE_STATE),
+    )
+
+
+def test_missing_adapter_version_rejected(tmp_path):
+    session = _partial_identity_session(tmp_path, {
+        "adapter_name": "ReferencePythonAdapter",
+        "implementation_name": "reference-python",
+        "implementation_version": "0.1-draft",
+        # adapter_version missing
+    })
+    with pytest.raises(EvidenceEmissionError, match="complete runtime identity"):
+        _emit_native_evidence(session, tmp_path / "e.jsonl", _make_context(tmp_path),
+                              REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+def test_missing_implementation_version_rejected(tmp_path):
+    session = _partial_identity_session(tmp_path, {
+        "adapter_name": "ReferencePythonAdapter",
+        "adapter_version": "translation-only",
+        "implementation_name": "reference-python",
+        # implementation_version missing
+    })
+    with pytest.raises(EvidenceEmissionError, match="complete runtime identity"):
+        _emit_native_evidence(session, tmp_path / "e.jsonl", _make_context(tmp_path),
+                              REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+def test_empty_adapter_version_rejected(tmp_path):
+    session = _partial_identity_session(tmp_path, {
+        "adapter_name": "ReferencePythonAdapter",
+        "adapter_version": "",
+        "implementation_name": "reference-python",
+        "implementation_version": "0.1-draft",
+    })
+    with pytest.raises(EvidenceEmissionError, match="complete runtime identity"):
+        _emit_native_evidence(session, tmp_path / "e.jsonl", _make_context(tmp_path),
+                              REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+def test_empty_implementation_version_rejected(tmp_path):
+    session = _partial_identity_session(tmp_path, {
+        "adapter_name": "ReferencePythonAdapter",
+        "adapter_version": "translation-only",
+        "implementation_name": "reference-python",
+        "implementation_version": "",
+    })
+    with pytest.raises(EvidenceEmissionError, match="complete runtime identity"):
+        _emit_native_evidence(session, tmp_path / "e.jsonl", _make_context(tmp_path),
+                              REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+def test_mismatched_subject_kind_rejected(tmp_path):
+    """R6.2d: subject.kind MUST be 'implementation' for native emission."""
+    ctx = _make_context(tmp_path, subject={
+        "kind": "framework", "name": "reference-python", "version": "0.1-draft",
+    })
+    session = _harness_bypass_session(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "outcome_kind": "passed"},
+    ])
+    with pytest.raises(EvidenceEmissionError, match="subject.kind"):
+        _emit_native_evidence(session, tmp_path / "e.jsonl", ctx, REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+# ---------- R6.2d: semantic hash includes in-process identity ----------
+
+def test_semantic_hash_changes_with_adapter_version(tmp_path):
+    """Same case outcomes but different adapter_version -> different
+    semantic hashes (R6.2d closes the in-process-identity omission)."""
+    from conformance.harness.evidence_emitter import _semantic_hash_from_session
+    ai_v1 = {"class_name": "X", "evidence_identity": {
+        "adapter_name": "A", "adapter_version": "1",
+        "implementation_name": "I", "implementation_version": "1",
+    }}
+    ai_v2 = {"class_name": "X", "evidence_identity": {
+        "adapter_name": "A", "adapter_version": "2",
+        "implementation_name": "I", "implementation_version": "1",
+    }}
+    s1 = _harness_bypass_session(tmp_path / "a", [
+        {"name": "case_x", "passed": True, "outcome_kind": "passed"},
+    ])
+    s1 = ExecutionSession(
+        report_dict={**s1.report_dict, "adapter_info": ai_v1},
+        report_bytes=s1.report_bytes, report_path=s1.report_path,
+        report_sha256=s1.report_sha256, outcome_kinds=s1.outcome_kinds,
+        suite_commit=s1.suite_commit, adapter_class=s1.adapter_class,
+        adapter_info=ai_v1, profile=s1.profile,
+        started_at=s1.started_at, finished_at=s1.finished_at,
+        source_state_before=s1.source_state_before,
+        source_state_after=s1.source_state_after,
+    )
+    s2 = _harness_bypass_session(tmp_path / "b", [
+        {"name": "case_x", "passed": True, "outcome_kind": "passed"},
+    ])
+    s2 = ExecutionSession(
+        report_dict={**s2.report_dict, "adapter_info": ai_v2},
+        report_bytes=s2.report_bytes, report_path=s2.report_path,
+        report_sha256=s2.report_sha256, outcome_kinds=s2.outcome_kinds,
+        suite_commit=s2.suite_commit, adapter_class=s2.adapter_class,
+        adapter_info=ai_v2, profile=s2.profile,
+        started_at=s2.started_at, finished_at=s2.finished_at,
+        source_state_before=s2.source_state_before,
+        source_state_after=s2.source_state_after,
+    )
+    assert _semantic_hash_from_session(s1) != _semantic_hash_from_session(s2)
+
+
+def test_semantic_hash_changes_with_implementation_version(tmp_path):
+    from conformance.harness.evidence_emitter import _semantic_hash_from_session
+    ai_a = {"class_name": "X", "evidence_identity": {
+        "adapter_name": "A", "adapter_version": "1",
+        "implementation_name": "I", "implementation_version": "1",
+    }}
+    ai_b = {"class_name": "X", "evidence_identity": {
+        "adapter_name": "A", "adapter_version": "1",
+        "implementation_name": "I", "implementation_version": "2",
+    }}
+    def _sess(root, ai):
+        s = _harness_bypass_session(root, [
+            {"name": "case_x", "passed": True, "outcome_kind": "passed"},
+        ])
+        return ExecutionSession(
+            report_dict={**s.report_dict, "adapter_info": ai},
+            report_bytes=s.report_bytes, report_path=s.report_path,
+            report_sha256=s.report_sha256, outcome_kinds=s.outcome_kinds,
+            suite_commit=s.suite_commit, adapter_class=s.adapter_class,
+            adapter_info=ai, profile=s.profile,
+            started_at=s.started_at, finished_at=s.finished_at,
+            source_state_before=s.source_state_before,
+            source_state_after=s.source_state_after,
+        )
+    assert _semantic_hash_from_session(_sess(tmp_path / "a", ai_a)) \
+        != _semantic_hash_from_session(_sess(tmp_path / "b", ai_b))
+
+
+# ---------- R6.2d: per-case adapter identity consistency ----------
+
+def test_per_case_identity_drift_rejected(tmp_path):
+    """If a case adapter's evidence_identity differs from the probe's,
+    native emission MUST refuse."""
+    session = _harness_bypass_session(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "outcome_kind": "passed"},
+        {"name": "case_scope_isolation", "passed": True, "outcome_kind": "passed"},
+    ])
+    # Inject a per-case identity that DIFFERS from the probe.
+    drifted = ExecutionSession(
+        report_dict=session.report_dict, report_bytes=session.report_bytes,
+        report_path=session.report_path, report_sha256=session.report_sha256,
+        outcome_kinds=session.outcome_kinds, suite_commit=session.suite_commit,
+        adapter_class=session.adapter_class, adapter_info=session.adapter_info,
+        profile=session.profile, started_at=session.started_at,
+        finished_at=session.finished_at,
+        source_state_before=session.source_state_before,
+        source_state_after=session.source_state_after,
+        case_adapter_identities={
+            "case_scope_isolation": {
+                "adapter_name": "ReferencePythonAdapter",
+                "adapter_version": "translation-only",
+                "implementation_name": "reference-python",
+                "implementation_version": "999.999",  # drifted
+            },
+        },
+    )
+    with pytest.raises(EvidenceEmissionError, match="per-case adapter identity drift"):
+        _emit_native_evidence(drifted, tmp_path / "e.jsonl",
+                              _make_context(tmp_path), REFERENCE_PYTHON_LITE_REGISTRY)
+
+
+def test_matching_per_case_identity_succeeds(tmp_path):
+    """All cases report the same identity as the probe -> native
+    emission succeeds."""
+    session = _harness_bypass_session(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "outcome_kind": "passed"},
+    ])
+    matching = ExecutionSession(
+        report_dict=session.report_dict, report_bytes=session.report_bytes,
+        report_path=session.report_path, report_sha256=session.report_sha256,
+        outcome_kinds=session.outcome_kinds, suite_commit=session.suite_commit,
+        adapter_class=session.adapter_class, adapter_info=session.adapter_info,
+        profile=session.profile, started_at=session.started_at,
+        finished_at=session.finished_at,
+        source_state_before=session.source_state_before,
+        source_state_after=session.source_state_after,
+        case_adapter_identities={
+            "case_read_returns_current_envelope": dict(
+                REF_PY_ADAPTER_INFO["evidence_identity"]
+            ),
+        },
+    )
+    recs = _emit_native_evidence(matching, tmp_path / "e.jsonl",
+                                 _make_context(tmp_path), REFERENCE_PYTHON_LITE_REGISTRY)
+    assert len(recs) == 1
 
 
 def test_capture_source_state_shape():
@@ -777,7 +1100,8 @@ def test_subprocess_spec_commit_mismatch_rejected(tmp_path):
         adapter_class=session.adapter_class, adapter_info=forged_sub,
         profile=session.profile, started_at=session.started_at,
         finished_at=session.finished_at,
-        source_state=dict(CLEAN_SOURCE_STATE),
+        source_state_before=dict(CLEAN_SOURCE_STATE),
+        source_state_after=dict(CLEAN_SOURCE_STATE),
     )
     with pytest.raises(EvidenceEmissionError, match="subprocess-reported spec_commit"):
         _emit_native_evidence(session2, tmp_path / "e.jsonl", _make_context(tmp_path),
@@ -829,14 +1153,15 @@ def test_missing_runtime_identity_rejects_native_emission(tmp_path):
         adapter_class="SomeAdapter", adapter_info=no_identity_ai,
         profile=session.profile, started_at=session.started_at,
         finished_at=session.finished_at,
-        source_state=dict(CLEAN_SOURCE_STATE),
+        source_state_before=dict(CLEAN_SOURCE_STATE),
+        source_state_after=dict(CLEAN_SOURCE_STATE),
     )
     ctx = _make_context(tmp_path, adapter={"name": "SomeAdapter", "version": "x"})
     with pytest.raises(EvidenceEmissionError, match="evidence_identity"):
         _emit_native_evidence(session2, tmp_path / "e.jsonl", ctx, REFERENCE_PYTHON_LITE_REGISTRY)
 
 
-def test_matching_evidence_identity_succeeds(tmp_path):
+def test_matching_evidence_identity_succeeds(tmp_path, clean_source):
     """The reference in-process adapter's evidence_identity matches the
     reference registry's declared subject/adapter, so integrated
     emission succeeds."""
@@ -846,7 +1171,6 @@ def test_matching_evidence_identity_succeeds(tmp_path):
         evidence_output_path=tmp_path / "e.jsonl",
         context=_make_context(tmp_path),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
-        source_state=CLEAN_SOURCE_STATE,
     )
     assert records is not None and len(records) == 15
 
