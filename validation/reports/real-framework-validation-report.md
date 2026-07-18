@@ -7,9 +7,9 @@
 **Test date:** 2026-07-18.
 **Machine-readable evidence:** `mem0_scenario_results.jsonl` (this directory).
 **Environment manifest:** `../environment-manifest.json` (Python, OS, package versions, model reference, file hashes).
-**Pinned dependency lock:** `../requirements-lock.txt` (exact resolved versions of the whole transitive tree at test time).
+**Dependency lock:** `../requirements-lock.txt` — package-exact resolved versions of the whole transitive tree at V08.1 test time. **Reproduction scope:** package-exact only; the embedding-model revision (`sentence-transformers/all-MiniLM-L6-v2`) is **NOT pinned** to a HuggingFace snapshot commit and resolves to the HuggingFace default at fetch time. `validation/requirements.txt` contains the human-readable set (an exact pin for `mem0ai==2.0.12` and `>=`/`<` ranges for `chromadb` and `sentence-transformers`) — the exact package snapshot is in `requirements-lock.txt`, not `requirements.txt`.
 
-Each of the eight scenarios required by R8 was probed through Mem0's **public Python API** with no monkey-patching of Mem0 internals. Classification per scenario (or sub-requirement) is one of `native`, `emulated`, `gap`, `questionable`, `not-testable`. **All eight scenarios executed successfully; a high pass count was never the objective** — the objective was discovering which PAMSPEC semantics are real and portable.
+All mutations and retrieval operations across the eight scenarios required by R8 used **Mem0's public Python API** with no monkey-patching of Mem0 internals. **Scenario 7 additionally performed read-only inspection of the configured Chroma backend** (via `mem.vector_store.collection.get(ids=..., include=["embeddings"])`) to verify whether the stored embedding changed after `update(text=...)` — that inspection is a backend probe, not a public-API call, and it is disclosed as such. Classification per scenario (or sub-requirement) is one of `native`, `emulated`, `gap`, `questionable`, `not-testable`. **All eight scenarios executed successfully; a high pass count was never the objective** — the objective was discovering which PAMSPEC semantics are real and portable.
 
 ## Correction notice — reversal of the V08 headline finding
 
@@ -18,7 +18,7 @@ V08 (the prior revision of this report) stated that Mem0 exhibits stale derived-
 V08.1 redesigned scenario 7 with (a) five distinctive control memories, (b) maximally unrelated old and new target phrases, (c) rank AND score capture before/after update for both queries, and (d) a direct fetch of the target's stored embedding through the underlying Chroma collection before and after the update.
 
 **Under the corrected experiment, Mem0 refreshes the stored embedding on `update(text=...)`.**
-Observed on 2026-07-18: embedding bytes changed; L2 delta ≈ 1.374 (unit-norm embedding space); old-query rank moved from 0 to 6; new-query rank moved from absent-from-top-10 to 1 with score 1.0. Scenario 7 is therefore classified **native**, not `gap`, and the V08 headline claim is retracted.
+Observed on 2026-07-18: embedding bytes changed; L2 delta ≈ 1.374 (unit-norm embedding space); old-query rank moved from 0 to 7; new-query rank moved from absent-from-top-10 to 2 with score 1.0. All rank/score numbers match `mem0_scenario_results.jsonl` exactly (zero-based enumeration). Scenario 7 is therefore classified **native**, not `gap`, and the V08 headline claim is retracted.
 
 The architectural argument that PAMSPEC's authoritative-vs-derived distinction has value remains intact conceptually, but it is **no longer supported by this Mem0 evidence** and this report will not cite Mem0 as its proof. See the `## What we now think differently` section for the revised strongest finding.
 
@@ -32,7 +32,7 @@ The architectural argument that PAMSPEC's authoritative-vs-derived distinction h
 | 4 | Idempotency-key semantics | **GAP** | `Memory.add` has no `idempotency_key` parameter. Repeated identical `add` returns a NEW memory id each call. |
 | 5 | Delete / tombstone / stale-reference (split into sub-requirements) | **EMULATED (mixed)** | Split into five sub-requirements: (a) delete recorded in history — **native**; (b) `get` after delete returns no active object — **native**; (c) `update` using deleted id is rejected — **native** (`ValueError: Memory with id ... not found`); (d) same-id recreation prohibited — **not-testable** (Mem0 auto-assigns UUIDs; public API exposes no way to request a specific id, so a differing recreated id cannot distinguish "identity reserved" from "random UUID happened to differ"); (e) standards-grade persistent tombstone as a first-class object — **emulated** (an adapter would layer this on top of the `DELETE` history event). |
 | 6 | Provenance preservation | **EMULATED** | Scope tuple (`user_id`, `agent_id`, `run_id`) is native and preserved across `update`. `created_at`/`updated_at` timestamps are native. `metadata` is opaque, so PAMSPEC-shaped provenance fields survive as long as an adapter stores them under metadata. Mem0 records only coarse `event: ADD/UPDATE/DELETE` in `history`; activity kind must be layered on. |
-| 7 | Derived state (vector index) refreshed on authoritative update | **NATIVE** *(corrected — see reversal notice above)* | Direct Chroma collection fetch before and after `update(text=new_content)` showed stored-embedding bytes changed with L2 delta ≈ 1.374 across five-control experiment. Rank/score signals corroborate: old-query rank 0→6, new-query rank absent→1 (score 1.0). Mem0 does refresh the derived vector on update. |
+| 7 | Derived state (vector index) refreshed on authoritative update | **NATIVE** *(corrected — see reversal notice above)* | Direct Chroma collection fetch before and after `update(text=new_content)` showed stored-embedding bytes changed with L2 delta ≈ 1.374 across five-control experiment. Rank/score signals corroborate: old-query rank 0→7, new-query rank absent→2 (score 1.0). Zero-based ranks; matches `mem0_scenario_results.jsonl` exactly. Mem0 does refresh the derived vector on update. |
 | 8 | Unknown extension fields survive round-trip | **EMULATED** | Scalar unknown metadata keys pass through cleanly across add → get → update → get. Nested-dict values are rejected at `add` time by Chroma (`ValueError: Expected metadata value to be a str, int, float, bool, SparseVector, list, or None`). An adapter must JSON-encode nested shapes. |
 
 ## Bucket rollup (V08.1)
@@ -82,15 +82,16 @@ See `amp-comparison-note.md`. V08.1 correction: PAMSPEC's distinct contribution,
 ## Reproducing this report
 
 ```bash
+# Human-readable install (accepts version ranges for chromadb, sentence-transformers):
 python -m pip install -r validation/requirements.txt
-# Optional exact reproduction:
+# Package-exact reproduction (whole transitive tree pinned to V08.1 test time):
 python -m pip install -r validation/requirements-lock.txt
 PYTHONPATH=. python -m pytest validation/tests -q
 cat validation/reports/mem0_scenario_results.jsonl
 cat validation/environment-manifest.json
 ```
 
-Runtime: ~130 seconds on a laptop (dominated by SentenceTransformer inference across scenario 7's control set + Chroma persistence). First run downloads the ~90 MB embedding model into the HuggingFace cache.
+Runtime: ~130 seconds on a laptop (dominated by SentenceTransformer inference across scenario 7's control set + Chroma persistence). First run downloads the ~90 MB embedding model into the HuggingFace cache. **Reproduction caveat:** package versions are pinned exactly via the lock file, but the embedding-model HuggingFace snapshot revision is NOT pinned in this sprint; a future revision of the model could shift retrieval rank/score numbers slightly without invalidating the qualitative conclusion (the direct-embedding-bytes-changed signal is the primary evidence, and it does not depend on the retrieval ranking).
 
 ## What was NOT done
 

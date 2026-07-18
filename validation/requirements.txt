@@ -1,5 +1,8 @@
-# Pinned dependencies for the PAMSPEC-vs-Mem0 validation sprint.
-# Do NOT modify these versions without recording the change in
+# Human-readable dependency set for the PAMSPEC-vs-Mem0 validation sprint.
+# mem0ai is exact-pinned; chromadb and sentence-transformers use ranges.
+# For a package-exact reproduction of V08.1 test time, use
+# validation/requirements-lock.txt instead.
+# Do NOT modify the mem0ai pin without recording the change in
 # reports/real-framework-validation-report.md — a version bump could
 # change which PAMSPEC requirements Mem0 satisfies natively.
 mem0ai==2.0.12
