@@ -32,7 +32,10 @@ One classification difference from the V08.1 prose report: scenarios 5, 6, and 8
 
 All three carry `adapter_feasibility=feasible` to indicate that a PAMSPEC adapter could close the gap without modifying Mem0 source.
 
-Scenario 2 (identity/history) uses a sub-requirement `history_entries_are_immutable_versions` classified as `emulated` — this is a sub-requirement classification (not a top-level classification), describing that the history-entry ids conceptually function as an emulated version identity. This is valid because sub-requirement `classification` fields are not constrained by the adapter conditional.
+**R6.3a correction:** Schema permissiveness over sub-requirement fields (the adapter conditional applies only to the top-level `classification`) does not override the evidence taxonomy. Two sub-requirements also use the corrected rule:
+
+- Scenario 2, `history_entries_are_immutable_versions`: `questionable` (not `emulated`). Mem0 has history-entry IDs, but their equivalence to immutable PAMSPEC versions is only a partial analogue; no adapter was tested, so `emulated` is unsupported.
+- Scenario 5, `standards_grade_persistent_tombstone_exists`: `gap` (not `emulated`). No standards-grade tombstone was demonstrated and no adapter supplied one during V08.
 
 ## How R6 records supplement rather than replace the original JSONL
 

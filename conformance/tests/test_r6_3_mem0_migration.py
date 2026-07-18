@@ -245,3 +245,47 @@ def test_v08_1_env_manifest_not_modified_by_r63():
     head_hash = _git_tracked_hash_at_head(path)
     assert head_hash == base_hash, \
         "R6.3 modified the git-tracked V08.1 environment-manifest.json"
+
+
+# ---------- R6.3a: corrective-pass checks ----------
+
+V08_1_OBSERVED = "2026-07-18T04:18:54+08:00"
+
+
+def test_scenario1_observation_time_is_v08_1_not_v08():
+    """Scenario 1 uses the Alice/Bob visibility evidence added in V08.1,
+    so its evidence_observed_at MUST be the V08.1 time, not the
+    earlier V08 sprint time."""
+    records = _load_chain()
+    s1 = next(r for r in records if r["record_id"] == "v08.s1.scope-immutability.probe")
+    assert s1["evidence_observed_at"] == V08_1_OBSERVED, (
+        f"Scenario 1 evidence_observed_at is {s1['evidence_observed_at']!r}; "
+        f"must be {V08_1_OBSERVED!r} (V08.1 time) because the Alice/Bob "
+        f"visibility probe was added in V08.1, not V08"
+    )
+
+
+def test_no_emulated_without_adapter_anywhere_in_chain():
+    """No record or sub-requirement may use 'emulated' unless the record
+    has adapter non-null and evidence_source contains 'adapter'.
+    The schema enforces this at the top-level classification; this test
+    also enforces it at the sub-requirement level (schema permissiveness
+    does not override the evidence taxonomy)."""
+    records = _load_chain()
+    for rec in records:
+        adapter_present = isinstance(rec.get("adapter"), dict)
+        adapter_in_sources = "adapter" in (rec.get("evidence_source") or [])
+
+        # Top-level
+        if rec["classification"] == "emulated":
+            assert adapter_present and adapter_in_sources, (
+                f"{rec['record_id']}: top-level classification=emulated but "
+                f"adapter={rec.get('adapter')!r}, evidence_source={rec.get('evidence_source')!r}"
+            )
+        # Sub-requirements
+        for sr in rec.get("sub_requirements") or []:
+            if sr.get("classification") == "emulated":
+                assert adapter_present and adapter_in_sources, (
+                    f"{rec['record_id']} sub-req {sr.get('sub_requirement_id')!r}: "
+                    f"classification=emulated but no adapter in this probe record"
+                )
