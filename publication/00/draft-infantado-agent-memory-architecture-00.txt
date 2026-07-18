@@ -1,0 +1,2856 @@
+
+
+
+
+Network Working Group                               R. M. Infantado, Ed.
+Internet-Draft                                               Independent
+Intended status: Informational                              11 July 2026
+Expires: 12 January 2027
+
+
+  Architecture and Data Model for Persistent Memory in Agentic Systems
+              draft-infantado-agent-memory-architecture-00
+
+Abstract
+
+   Memory in current agentic systems is often fragmented across model-
+   provider features, application databases, session histories,
+   framework-specific stores, unstructured files, and retrieval indexes.
+   This document distinguishes temporary context supplied to an
+   inference request from persistent memory that remains addressable,
+   machine-readable, and governed beyond a single request.  It specifies
+   a provider-independent architecture and data model for persistent
+   memory in agentic systems based on Memory Scope isolation, typed and
+   versioned Memory Objects, machine-readable provenance, append-only
+   Event Ledger history, separate lifecycle, availability, retention,
+   and validation state, and isolated Derived Indexes and Embedding
+   Spaces.  The architecture separates a transient Compute Plane from an
+   authoritative Persistent State Plane and treats embeddings, lexical
+   indexes, graph projections, generated retrieval summaries, ranking
+   caches, and retrieval caches as non-authoritative derived state.  The
+   architecture is independent of model provider, storage engine, and
+   protocol transport while allowing future bindings and multiple
+   independent implementations.  It does not claim that related systems
+   or standards do not exist; rather, it defines a common architectural
+   vocabulary and interoperability target for persistent agentic memory.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 12 January 2027.
+
+
+
+Infantado                Expires 12 January 2027                [Page 1]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   4
+     1.1.  Motivation  . . . . . . . . . . . . . . . . . . . . . . .   5
+     1.2.  Scope . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     1.3.  Document Organization . . . . . . . . . . . . . . . . . .   5
+   2.  Requirements Language . . . . . . . . . . . . . . . . . . . .   6
+   3.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   6
+   4.  Problem Statement . . . . . . . . . . . . . . . . . . . . . .   8
+     4.1.  Provider-Siloed State . . . . . . . . . . . . . . . . . .   9
+     4.2.  Context-Window Dependence . . . . . . . . . . . . . . . .   9
+     4.3.  Framework-Specific Persistence  . . . . . . . . . . . . .   9
+     4.4.  Missing Version and Provenance Semantics  . . . . . . . .   9
+     4.5.  Scope Leakage . . . . . . . . . . . . . . . . . . . . . .   9
+     4.6.  Derived-Index Incompatibility . . . . . . . . . . . . . .  10
+   5.  Design Goals  . . . . . . . . . . . . . . . . . . . . . . . .  10
+   6.  Non-Goals . . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   7.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .  10
+     7.1.  Architectural Overview  . . . . . . . . . . . . . . . . .  10
+     7.2.  Memory Client . . . . . . . . . . . . . . . . . . . . . .  11
+     7.3.  Memory Service  . . . . . . . . . . . . . . . . . . . . .  12
+     7.4.  Persistent State Plane  . . . . . . . . . . . . . . . . .  12
+     7.5.  Scope and Isolation Boundary  . . . . . . . . . . . . . .  12
+     7.6.  Canonical and Derived State . . . . . . . . . . . . . . .  12
+     7.7.  Event Ledger  . . . . . . . . . . . . . . . . . . . . . .  13
+     7.8.  Derived Indexes . . . . . . . . . . . . . . . . . . . . .  13
+   8.  Memory Object Model . . . . . . . . . . . . . . . . . . . . .  14
+     8.1.  Canonical Envelope  . . . . . . . . . . . . . . . . . . .  14
+     8.2.  Type System . . . . . . . . . . . . . . . . . . . . . . .  17
+     8.3.  Object Identity . . . . . . . . . . . . . . . . . . . . .  18
+     8.4.  Versioning  . . . . . . . . . . . . . . . . . . . . . . .  18
+     8.5.  Relationships . . . . . . . . . . . . . . . . . . . . . .  18
+     8.6.  Provenance  . . . . . . . . . . . . . . . . . . . . . . .  19
+     8.7.  Integrity Metadata  . . . . . . . . . . . . . . . . . . .  19
+
+
+
+Infantado                Expires 12 January 2027                [Page 2]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   9.  Lifecycle, Availability, Retention, and Validation  . . . . .  19
+     9.1.  Lifecycle State . . . . . . . . . . . . . . . . . . . . .  20
+     9.2.  Validation State  . . . . . . . . . . . . . . . . . . . .  20
+     9.3.  Availability State  . . . . . . . . . . . . . . . . . . .  21
+     9.4.  Retention State . . . . . . . . . . . . . . . . . . . . .  21
+     9.5.  State Transitions . . . . . . . . . . . . . . . . . . . .  22
+     9.6.  Expiration, Redaction, and Deletion . . . . . . . . . . .  25
+   10. Operation Semantics . . . . . . . . . . . . . . . . . . . . .  25
+     10.1.  Create . . . . . . . . . . . . . . . . . . . . . . . . .  25
+     10.2.  Read . . . . . . . . . . . . . . . . . . . . . . . . . .  25
+     10.3.  Update . . . . . . . . . . . . . . . . . . . . . . . . .  26
+     10.4.  Transition . . . . . . . . . . . . . . . . . . . . . . .  26
+     10.5.  Relate . . . . . . . . . . . . . . . . . . . . . . . . .  26
+     10.6.  Query  . . . . . . . . . . . . . . . . . . . . . . . . .  26
+     10.7.  Inspect History  . . . . . . . . . . . . . . . . . . . .  27
+     10.8.  Subscribe  . . . . . . . . . . . . . . . . . . . . . . .  27
+     10.9.  Redact . . . . . . . . . . . . . . . . . . . . . . . . .  28
+     10.10. Promote  . . . . . . . . . . . . . . . . . . . . . . . .  28
+     10.11. Delete . . . . . . . . . . . . . . . . . . . . . . . . .  29
+   11. Query and Retrieval Model . . . . . . . . . . . . . . . . . .  29
+   12. Consistency and Concurrency . . . . . . . . . . . . . . . . .  30
+   13. Protocol Bindings . . . . . . . . . . . . . . . . . . . . . .  31
+   14. Error Model . . . . . . . . . . . . . . . . . . . . . . . . .  31
+   15. Security Considerations . . . . . . . . . . . . . . . . . . .  33
+     15.1.  Threat Model . . . . . . . . . . . . . . . . . . . . . .  34
+     15.2.  Scope Enforcement  . . . . . . . . . . . . . . . . . . .  34
+     15.3.  Authorization  . . . . . . . . . . . . . . . . . . . . .  34
+     15.4.  Confused-Deputy Risks  . . . . . . . . . . . . . . . . .  34
+     15.5.  Injection and Memory Poisoning . . . . . . . . . . . . .  35
+     15.6.  Integrity and Tamper Evidence  . . . . . . . . . . . . .  35
+     15.7.  Cross-Scope Relationships  . . . . . . . . . . . . . . .  35
+     15.8.  Derived-Index Leakage  . . . . . . . . . . . . . . . . .  35
+   16. Privacy Considerations  . . . . . . . . . . . . . . . . . . .  35
+     16.1.  Data Minimization  . . . . . . . . . . . . . . . . . . .  35
+     16.2.  Retention  . . . . . . . . . . . . . . . . . . . . . . .  36
+     16.3.  Erasure  . . . . . . . . . . . . . . . . . . . . . . . .  36
+     16.4.  Sensitive Inferences . . . . . . . . . . . . . . . . . .  36
+     16.5.  Provenance and Personal Data . . . . . . . . . . . . . .  36
+     16.6.  Embedding Privacy  . . . . . . . . . . . . . . . . . . .  36
+   17. Operational Considerations  . . . . . . . . . . . . . . . . .  36
+     17.1.  Backup and Recovery  . . . . . . . . . . . . . . . . . .  36
+     17.2.  Migration  . . . . . . . . . . . . . . . . . . . . . . .  36
+     17.3.  Index Rebuilding . . . . . . . . . . . . . . . . . . . .  37
+     17.4.  Clock and Time Handling  . . . . . . . . . . . . . . . .  37
+     17.5.  Observability  . . . . . . . . . . . . . . . . . . . . .  37
+     17.6.  Capacity and Retention Planning  . . . . . . . . . . . .  37
+   18. Interoperability and Conformance  . . . . . . . . . . . . . .  37
+     18.1.  PAMSPEC-Lite . . . . . . . . . . . . . . . . . . . . . .  37
+
+
+
+Infantado                Expires 12 January 2027                [Page 3]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+     18.2.  PAMSPEC-Delegation . . . . . . . . . . . . . . . . . . .  38
+     18.3.  PAMSPEC-Subscribe  . . . . . . . . . . . . . . . . . . .  39
+     18.4.  PAMSPEC-Core . . . . . . . . . . . . . . . . . . . . . .  39
+     18.5.  PAMSPEC-Versioning . . . . . . . . . . . . . . . . . . .  40
+     18.6.  PAMSPEC-Ledger . . . . . . . . . . . . . . . . . . . . .  40
+     18.7.  PAMSPEC-Structured-Query . . . . . . . . . . . . . . . .  40
+     18.8.  PAMSPEC-Semantic-Query . . . . . . . . . . . . . . . . .  40
+     18.9.  PAMSPEC-Relationship . . . . . . . . . . . . . . . . . .  40
+     18.10. PAMSPEC-Protocol-Binding . . . . . . . . . . . . . . . .  40
+     18.11. PAMSPEC-Evaluation . . . . . . . . . . . . . . . . . . .  40
+     18.12. Implementation Reports . . . . . . . . . . . . . . . . .  41
+   19. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  41
+   20. References  . . . . . . . . . . . . . . . . . . . . . . . . .  42
+   21. References  . . . . . . . . . . . . . . . . . . . . . . . . .  43
+     21.1.  Normative References . . . . . . . . . . . . . . . . . .  43
+     21.2.  Informative References . . . . . . . . . . . . . . . . .  43
+   Appendix A.  Canonical JSON Schemas . . . . . . . . . . . . . . .  48
+   Appendix B.  State Transition Tables  . . . . . . . . . . . . . .  48
+   Appendix C.  Example Interactions . . . . . . . . . . . . . . . .  48
+   Appendix D.  Design Rationale . . . . . . . . . . . . . . . . . .  48
+   Appendix E.  Comparison with Related Architectures  . . . . . . .  48
+   Appendix F.  Acknowledgements . . . . . . . . . . . . . . . . . .  51
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  51
+
+1.  Introduction
+
+   Agentic systems increasingly perform work across long-running tasks,
+   multiple tools, multiple applications, and multiple execution
+   environments.  These systems often need memory that persists beyond
+   an individual inference request or chat session.  In this document,
+   memory is persistent, addressable, machine-readable state retained
+   beyond an individual inference request and made available for future
+   agent operations under explicit scope, lifecycle, provenance, and
+   policy controls.
+
+   A model context window is not the authoritative memory record.  It is
+   a temporary context projection assembled for a particular operation.
+   The projection may include selected Memory Objects, summaries,
+   retrieved passages, tool results, policy facts, and task state, but
+   the context window is transient and may be truncated, reordered,
+   transformed, or discarded.
+
+   PAMSPEC is the project shorthand for the Persistent Agentic Memory
+   Architecture Specification.  The architecture defined by the project
+   is the Persistent Agentic Memory Architecture.  PAMSPEC is not an
+   IETF standard, working group, or published RFC.
+
+
+
+
+
+Infantado                Expires 12 January 2027                [Page 4]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   The Persistent Agentic Memory Architecture separates transient
+   computation from authoritative state.  The Compute Plane performs
+   model inference, planning, orchestration, transformation, tool
+   execution, and context assembly.  The Persistent State Plane stores
+   authoritative Memory Objects, Relationship Objects, versions,
+   provenance, lifecycle, availability, retention, and validation state,
+   scope and policy metadata, Event Ledger entries, snapshots, and
+   Derived Index descriptors.
+
+1.1.  Motivation
+
+   Existing agentic memory practices are useful, but they are commonly
+   tied to a provider feature, an application schema, a framework-
+   specific persistence mechanism, a vector store layout, a session
+   transcript, or an unstructured file convention.  These approaches can
+   make memory difficult to audit, export, replay, migrate, delete,
+   validate, or compare across implementations.
+
+   The motivation for this document is to define a common architecture
+   that preserves implementation freedom while making key memory
+   semantics explicit: scope, identity, versioning, provenance,
+   lifecycle, validation, event history, and derived-index identity.
+
+1.2.  Scope
+
+   This document defines architectural semantics and a review-oriented
+   data model.  It is model-independent, provider-independent, runtime-
+   independent, framework-independent, storage-neutral, transport-
+   neutral, and implementation-neutral.
+
+   This architecture does not define agent discovery, semantic message
+   routing, capability negotiation, or agent-to-agent protocol
+   adaptation.  Communication systems may reference or retrieve Memory
+   Objects conforming to this specification.
+
+1.3.  Document Organization
+
+   Sections 2 and 3 define requirements language and terminology.
+   Sections 4 through 7 define the problem statement, goals, non-goals,
+   and architecture.  Sections 8 through 14 define the candidate object,
+   state, operation, query, consistency, protocol-binding, and error
+   models.  Sections 15 and 16 provide security and privacy
+   considerations.  Section 17 defines operational considerations.
+   Section 18 defines testable conformance profiles.  Section 19 records
+   IANA considerations.  Appendices summarize schemas, state
+   transitions, examples, rationale, and related architectures.
+
+
+
+
+
+Infantado                Expires 12 January 2027                [Page 5]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+2.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+   Uppercase normative terms are used only for behavior that is testable
+   and required for interoperability, security, or consistent
+   conformance.  A Conforming Implementation that violates a capitalized
+   requirement is not conformant to the relevant requirement class
+   described in this document.  Lowercase terms are descriptive and do
+   not create conformance requirements.
+
+3.  Terminology
+
+   Agent:  An automated or semi-automated software participant that uses
+      models, tools, policies, and state to perform tasks or assist a
+      user.
+
+   Agent Runtime:  The execution environment that hosts agent logic,
+      invokes models and tools, assembles context, and coordinates
+      operations.  An Agent Runtime may be local, hosted, embedded,
+      distributed, or framework-based.
+
+   Compute Plane:  The transient execution plane that performs model
+      inference, planning, orchestration, transformation, tool
+      execution, and context assembly.  The Compute Plane does not
+      itself define the authoritative memory record.
+
+   Persistent State Plane:  The authoritative state plane that stores
+      Memory Objects, object versions, relationships, provenance,
+      lifecycle state, validation state, scope and policy metadata,
+      Event Ledger entries, snapshots, and derived-index descriptors.
+
+   Memory Client:  A component used by an Agent Runtime or application
+      to invoke canonical memory operations.  A Memory Client may be a
+      library, protocol adapter, command, or embedded component.
+
+   Memory Service:  The logical service boundary that exposes canonical
+      memory operations.  A Memory Service can be implemented in many
+      ways and is not required to be a network server.
+
+   Memory Scope:  The administrative, security, retention, policy, and
+      query boundary within which Memory Objects and operations are
+      evaluated.
+
+
+
+
+Infantado                Expires 12 January 2027                [Page 6]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Workspace:  The recommended initial top-level Memory Scope profile
+      for project, tenant, user, organization, or task-family isolation.
+
+   Memory Object:  A persistent, addressable, machine-readable unit of
+      memory with stable identity, typed Canonical Content,
+      authoritative metadata, provenance, lifecycle, availability,
+      retention, and validation state, and version history.
+
+   Memory Version:  An immutable logical revision of a Memory Object.
+      Every authoritative state change creates a new Memory Version and
+      a corresponding Event Ledger entry.
+
+   Canonical Content:  The authoritative typed content of a Memory
+      Object, excluding derived representations such as embeddings,
+      caches, or retrieval summaries.
+
+   Authoritative State:  Canonical Content and authoritative metadata
+      stored in the Persistent State Plane, including scope, identity,
+      version, provenance, lifecycle, availability, retention,
+      validation, relationship references, temporal fields, and
+      integrity information.
+
+   Context Projection:  A temporary representation assembled from
+      persistent memory and other sources for a specific inference,
+      planning, tool, or review operation.
+
+   Derived Index:  A non-authoritative and regenerable structure derived
+      from authoritative state, such as an embedding, lexical index,
+      graph projection, generated retrieval summary, ranking cache, or
+      retrieval cache.
+
+   Embedding Space:  A named descriptor for vectors that identifies the
+      embedding provider, model, model revision, vector dimensions,
+      distance metric, normalization, preprocessing profile, and
+      embedding kind needed to interpret comparability.
+
+   Event Ledger:  An append-only logical history of memory operations
+      and state changes.  It is broader than per-object revision history
+      and can include indexing, access denial, deletion, redaction, and
+      administrative events.
+
+   Provenance:  Machine-readable information describing an entity or
+      source reference, actor or agent, generation activity, evidence,
+      observation and recording time, confidence assertion,
+      transformation parent, and optional integrity reference.
+
+   Lifecycle State:  Authoritative maturity and operational-use state:
+      scratch, candidate, active, superseded, deprecated, or archived.
+
+
+
+Infantado                Expires 12 January 2027                [Page 7]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Availability State:  Authoritative state describing whether Canonical
+      Content is available, partially_redacted, redacted, or deleted.
+
+   Retention State:  Authoritative policy state describing whether an
+      object is retained, expired, pending_deletion, or subject to
+      legal_hold.
+
+   Validation State:  Authoritative review state: unverified,
+      corroborated, disputed, or rejected. corroborated means that
+      supporting evidence or an authorized validation process exists; it
+      does not guarantee objective truth.
+
+   Relationship Object:  An independently identified, typed, versioned,
+      scope-bound authoritative object that links a source Memory Object
+      to a target Memory Object.  Relationship projections embedded in
+      query results are non-authoritative.
+
+   Tombstone:  A terminal Memory Version that retains only policy-
+      permitted metadata after redaction or deletion.
+
+   Snapshot:  A stable, inspectable representation of selected
+      authoritative memory state at a logical time, version boundary,
+      event sequence, or export boundary.
+
+   Protocol Binding:  A mapping from the core semantics in this document
+      to a specific transport, library interface, message-bus format,
+      file format, or protocol environment.
+
+   Conforming Implementation:  An implementation that satisfies the
+      applicable conformance requirements for the selected profile while
+      preserving the architectural separation of authoritative and
+      derived state.
+
+4.  Problem Statement
+
+   Agentic memory is emerging in multiple valuable forms.  However,
+   interoperability is limited when memory semantics are implicit,
+   provider-specific, framework-specific, or embedded in retrieval
+   infrastructure.  The following problem areas motivate a common
+   architecture.
+
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027                [Page 8]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+4.1.  Provider-Siloed State
+
+   Model-provider memory features can improve user experience, but they
+   can also make memory non-portable when identity, scope, provenance,
+   lifecycle, validation, and export semantics are not exposed in a
+   common form.  A user or organization may need to move memory across
+   providers or use multiple providers concurrently without losing
+   auditability.
+
+4.2.  Context-Window Dependence
+
+   Session history and context-window replay are insufficient as
+   authoritative memory.  Context windows are bounded, transient,
+   transformed, and optimized for a current inference request.  Treating
+   a context window as durable memory weakens deterministic replay,
+   makes deletion and redaction ambiguous, and obscures the difference
+   between canonical facts and prompt-time representations.
+
+4.3.  Framework-Specific Persistence
+
+   Agent frameworks often define useful persistence formats, but those
+   formats may be tightly coupled to orchestration, tool schemas,
+   runtime metadata, or application-specific storage.  Unstructured file
+   memory and application-specific databases can preserve information,
+   but they commonly lack explicit versioning, provenance, lifecycle,
+   validation, and scope semantics.
+
+4.4.  Missing Version and Provenance Semantics
+
+   Silent overwrite makes it difficult to determine what changed, who or
+   what changed it, what evidence supported the change, and whether a
+   later operation depended on a prior version.  Missing immutable
+   version history and provenance reduce auditability, reproducibility,
+   accountability, and safe rollback.
+
+4.5.  Scope Leakage
+
+   Agentic systems may operate across users, projects, tenants, clients,
+   tasks, legal contexts, and authorization domains.  Cross-scope
+   leakage can occur through unscoped global semantic search, shared
+   embedding indexes, derived caches, backups, exported files, or cross-
+   object relationships.  Cross-scope references do not themselves grant
+   access.
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027                [Page 9]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+4.6.  Derived-Index Incompatibility
+
+   Embeddings, lexical indexes, graph projections, generated summaries,
+   ranking caches, and retrieval caches are derived from authoritative
+   memory.  They are valuable for retrieval, but they are not canonical
+   memory.  Vectors from incompatible Embedding Spaces are not directly
+   comparable.  Failure to identify embedding spaces can produce non-
+   portable retrieval behavior and weak deterministic evaluation.
+
+5.  Design Goals
+
+   The design goals are: provider independence; runtime independence;
+   framework independence; storage neutrality; transport neutrality;
+   explicit scope isolation; typed memory objects; stable object
+   identity; immutable logical revisions; append-only event history;
+   machine-readable provenance; lifecycle governance; separate
+   validation state; embedding-space identity; deterministic evaluation
+   support; interoperable export and import; auditable operations;
+   extensible type system; multiple independent implementations; and
+   protocol-binding independence.
+
+6.  Non-Goals
+
+   This document does not define or require private chain-of-thought or
+   hidden chain-of-thought storage or disclosure, model reasoning
+   behavior, prompt engineering, agent orchestration, agent discovery,
+   semantic message routing, model selection, vector-database internals,
+   graph-database internals, storage-engine internals, user-interface
+   behavior, a universal truth engine, guaranteed memory extraction
+   quality, a mandatory MCP interface, a mandatory HTTP interface, a
+   mandatory authorization mechanism, a mandatory embedding model, or a
+   mandatory vector database.
+
+7.  Architecture
+
+7.1.  Architectural Overview
+
+   The architecture separates transient computation from authoritative
+   persistent state.
+
+
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 10]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Agent Runtime
+   |
+   +-- Compute Plane
+   |   +-- Model inference
+   |   +-- Planning
+   |   +-- Orchestration
+   |   +-- Tool execution
+   |   +-- Context assembly
+   |
+   +-- Memory Client
+   |
+   | Canonical memory operations
+   v
+   Memory Service
+   |
+   +-- Persistent State Plane
+   +-- Canonical Memory Objects
+   +-- Immutable logical versions
+   +-- Relationships
+   +-- Provenance
+   +-- Lifecycle State
+   +-- Validation State
+   +-- Scope and policy metadata
+   +-- Event Ledger
+   +-- Snapshots
+   +-- Derived Indexes
+   +-- Lexical indexes
+   +-- Embedding Spaces
+   +-- Graph projections
+   +-- Retrieval caches
+
+   The Compute Plane performs transient computation.  The Memory Client
+   invokes canonical memory operations.  The Memory Service exposes
+   those operations.  The Persistent State Plane is authoritative.  A
+   context window is temporary.  A Context Projection is derived from
+   persistent memory.  Derived Indexes are non-authoritative.  Protocol
+   bindings are separate from core semantics.
+
+7.2.  Memory Client
+
+   A Memory Client is the logical component used by an Agent Runtime or
+   application to create, read, update, transition, relate, query,
+   inspect, delete, or redact memory.  A client can be embedded in-
+   process, invoked through a file interface, mapped to HTTP, mapped to
+   MCP, or implemented over a message bus.  The client boundary is
+   semantic, not a requirement for a specific SDK.
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 11]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+7.3.  Memory Service
+
+   A Memory Service exposes canonical memory operations and enforces
+   scope, lifecycle, validation, versioning, event, provenance, and
+   authorization semantics.  It may be implemented as a process,
+   library, local store, hosted service, database-backed component, or
+   protocol adapter.  This document does not define a mandatory server.
+
+7.4.  Persistent State Plane
+
+   The Persistent State Plane stores authoritative Memory Objects,
+   object versions, relationships, provenance, lifecycle state,
+   validation state, scope and policy metadata, Event Ledger entries,
+   snapshots, and derived-index descriptors.  It is independent from any
+   specific model provider, context-window implementation, agent
+   framework, storage engine, or protocol transport.
+
+7.5.  Scope and Isolation Boundary
+
+   A Memory Scope is the administrative boundary, security boundary,
+   retention boundary, policy boundary, and query boundary for memory.
+   Workspace is the recommended initial top-level scope profile.
+
+   Every Memory Object MUST resolve to exactly one authoritative Memory
+   Scope.  Every operation that reads, writes, queries, transitions,
+   relates, exports, imports, deletes, redacts, or indexes memory MUST
+   be evaluated within a Memory Scope.  Unscoped global semantic search
+   MUST NOT be the default behavior of a Conforming Implementation.
+   Cross-scope references MUST NOT grant access by themselves.  Cross-
+   scope access MUST require explicit policy and authorization.  Derived
+   Indexes MUST preserve scope boundaries.  Exports MUST preserve scope
+   identity or explicitly remap it.
+
+   This document does not mandate role-based access control.
+   Implementations may use RBAC, ABAC, capability-based access, policy
+   engines, or equivalent authorization models.
+
+7.6.  Canonical and Derived State
+
+   Canonical state consists of Memory Objects, versions, authoritative
+   metadata, relationships, provenance, lifecycle state, validation
+   state, integrity information, snapshots, and Event Ledger entries.
+   Derived Indexes include embeddings, lexical indexes, graph
+   projections, generated summaries used only for retrieval, ranking
+   caches, and retrieval caches.
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 12]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Derived Indexes are non-authoritative and regenerable.  Rebuilding a
+   Derived Index does not itself create a new canonical version.
+   Deleting an embedding does not delete Canonical Content.
+
+7.7.  Event Ledger
+
+   The Event Ledger is distinct from object revision history.  Object
+   revision history describes the evolution of a Memory Object.  The
+   Event Ledger records broader operations and state changes, including
+   object_created, object_updated, lifecycle_transitioned,
+   availability_transitioned, retention_transitioned,
+   validation_transitioned, relationship_created, relationship_updated,
+   provenance_updated, embedding_generated, index_rebuilt,
+   access_denied, object_redacted, and object_deleted.
+
+   State-changing operations MUST produce Event Ledger entries.  Ledger
+   events MUST NOT be silently rewritten.  Event ordering MUST be
+   preserved within an object history.  Implementations may support
+   cryptographic continuity.  Append-only history does not require
+   permanent retention of prohibited content.  Redaction or erasure may
+   retain a content-free tombstone when policy permits.  Derived-index
+   deletion must propagate independently from canonical object deletion
+   rules.
+
+7.8.  Derived Indexes
+
+   A Memory Object may have no embedding, one embedding, or multiple
+   embeddings in different spaces.  Every vector MUST reference an
+   Embedding Space.  Vectors from incompatible spaces MUST NOT be
+   treated as directly comparable.  Semantic-query results MUST identify
+   the Embedding Space used.  Embeddings may be regenerated
+   independently.
+
+   An Embedding Space descriptor identifies embedding_space_id,
+   provider, model, model revision, dimensions, distance metric,
+   normalization, preprocessing profile, embedding kind, and
+   canonicalization rules, plus optional creation metadata.
+   embedding_space_id is authoritative for identity.  Compatibility MUST
+   NOT be inferred solely from equal dimensions, provider, model name,
+   or distance metric.  Exported vectors MUST include or reference
+   enough descriptor information to interpret the space.  An identifier
+   MAY later be derived from a canonical descriptor hash, but this
+   revision does not define canonical serialization or require hashing.
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 13]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+8.  Memory Object Model
+
+   This section defines a transport-neutral candidate interoperability
+   model for Memory Objects.  It is intended to make object identity,
+   version identity, scope, authoritative content, lifecycle,
+   validation, provenance, relationships, and integrity semantics
+   testable while preserving the document's Informational architecture
+   status.  The model does not prescribe a storage engine, database
+   schema, wire format, SDK, or protocol transport.
+
+   A Conforming Implementation for this candidate profile preserves the
+   semantic distinctions in this section when storing, exporting,
+   importing, validating, or exposing Memory Objects through any
+   binding.  Required fields are required for the candidate profile.
+   Optional fields are omitted only when the semantics they represent
+   are not used for that object or profile.
+
+8.1.  Canonical Envelope
+
+   A canonical envelope represents one immutable logical Memory Version.
+   Derived representations and Event Ledger entries are not embedded
+   Canonical Content, although the envelope can reference them.  The
+   candidate profile defines these fields:
+
+   spec_version:  Required.  Identifies the PAMSPEC object model
+      revision used by the envelope.  It is set when a version is
+      created; migration to a different model creates a new version or
+      migration event.  It can reveal implementation age or migration
+      status.
+
+   object_id:  Required.  Provides stable identity for the logical
+      Memory Object across versions.  It is immutable after create;
+      reuse for unrelated memory is non-conforming.  It can enable
+      correlation across exports.
+
+   version_id:  Required.  Provides immutable identity for this logical
+      version or equivalent state-transition result.  New Canonical
+      Content or authoritative state creates a new identifier.  Version
+      history can reveal edit frequency.
+
+   scope_id:  Required.  Identifies the authoritative Memory Scope for
+      the object.  It is immutable for a version; cross-scope movement
+      requires export/import, remapping, or policy-governed transition.
+      It can reveal tenant, workspace, project, or legal context.
+
+   object_type:  Required.  Declares the typed content family.  Standard
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 14]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+      object types are claim, decision, task, artifact, observation,
+      entity, and summary.  Relationship Objects are represented
+      separately (see the Relationships subsection) and are not a Memory
+      Object type.  It is immutable for a version; type conversion
+      creates a new version or new object with provenance.  It can
+      reveal sensitive purpose or classification.
+
+   schema_id:  Optional.  Identifies the schema or profile used to
+      interpret canonical_content.  It is immutable for a version;
+      schema migration creates a new version or migration event.  It can
+      reveal application domain.
+
+   canonical_content:  Required.  Contains authoritative typed content
+      of the version.  Changes create a new logical version.  Silent in-
+      place overwrite is non-conforming.  It can contain personal,
+      confidential, or regulated information.
+
+   lifecycle_state:  Required.  Records maturity and operational-use
+      posture.  Changes create a new Memory Version and Event Ledger
+      entry.
+
+   availability_state:  Required.  Records whether Canonical Content is
+      available, partially redacted, redacted, or deleted.  Changes
+      create a new Memory Version and Event Ledger entry.
+
+   retention_state:  Required.  Records retained, expired, pending-
+      deletion, or legal-hold policy.  Changes create a new Memory
+      Version and Event Ledger entry.
+
+   validation_state:  Required.  Records authoritative review and
+      confidence posture.  Changes create a new Memory Version and Event
+      Ledger entry. corroborated does not guarantee objective truth.
+
+   observed_at, asserted_at, valid_from, and valid_until:  Optional
+      client- or source-supplied temporal assertions.  They do not
+      establish Event Ledger order and may require validation.  A
+      valid_until value in the past is a client-asserted validity
+      boundary and does not by itself change Retention State, Lifecycle
+      State, or any other authoritative dimension; any lifecycle,
+      retention, or availability effect requires an explicit Transition
+      operation.  Implementations MAY use these fields as inputs to
+      temporal queries or scheduled policy evaluation but MUST NOT treat
+      them as authoritative state changes.
+
+   committed_at and recorded_at:  Required service-assigned timestamps
+      for the Memory Version and Event Ledger record.  They are not the
+      sole ordering mechanism.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 15]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   sequence:  Required service-assigned logical ordering value within
+      the authoritative object history.  Sequence values within a single
+      object's version history MUST be strictly increasing.  Sequence
+      values MUST NOT be reused within an object history and are not
+      required to be globally unique across objects or scopes.
+
+   actor:  Required.  Identifies the actor responsible for the operation
+      that produced this version.  It is immutable for a version and can
+      contain personal data.  The actor MAY declare
+      on_behalf_of_actor_id when acting for another principal,
+      delegation_id when the operation was authorized by a Delegation
+      Object, and an optional attestation block containing a verifiable
+      identity attestation for the actor (agent manifest reference and
+      digest, attestation authority and method, signature, validity
+      window, and declared capabilities).  Attestation is non-
+      authoritative in the base profile; a future profile MAY require
+      attestation for specific actor_kind values (for example, agent) or
+      in specific scopes.
+
+   provenance:  Required.  Records machine-readable origin, source,
+      evidence, method, and transformation information.  Corrections or
+      additions create a new version or provenance event.  It can
+      contain personal or source-sensitive data.
+
+   relationship_refs:  Optional non-authoritative projection of
+      Relationship Object identifiers.  Updating a Relationship Object
+      does not create new versions of its source or target objects.
+
+   integrity:  Optional.  Contains hashes, signatures, ledger
+      references, or other tamper-evidence metadata.  It is bound to the
+      version or event material it covers and can expose correlation or
+      verification metadata.
+
+   quality_signals:  Optional machine-readable quality signals produced
+      by automated processes: assessed_confidence, contradiction_score,
+      staleness_score, evidence_strength, source_diversity,
+      last_verified_at, last_verified_by_actor_id,
+      verification_method_id, assessed_at, and assessed_by_actor_id.
+      These signals are non-authoritative and MUST NOT be used to
+      override Validation State; retrieval ranking and default filters
+      MAY use them, and profiles MAY define standard thresholds for
+      their use. assessed_confidence is the system's or assessor's
+      confidence in the claim after review, distinct from
+      provenance.source_confidence, which is the original source's own
+      asserted confidence in what they reported.
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 16]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+8.2.  Type System
+
+   The standard Memory Object types are claim, decision, task, artifact,
+   observation, entity, summary, tool_invocation, and tool_result.
+   Relationships between Memory Objects are represented as independently
+   identified Relationship Objects and do not appear in this
+   enumeration; see the Relationships subsection.  Extension types use a
+   collision-resistant reverse-domain name or absolute URI and include
+   schema_id.  Implementations MUST preserve unknown extension types
+   during export and import.  Implementations MAY reject unsupported
+   extension types during creation.  A reader SHOULD return the
+   canonical envelope even when it cannot interpret extension content,
+   subject to policy.
+
+   A tool_invocation object records that an agent, tool, or user
+   requested execution of a named tool with specified arguments.  Its
+   canonical content conforms to tool-invocation-content.schema.json.  A
+   tool_result object records the outcome of a corresponding invocation
+   and references the invocation via invocation_object_id; its canonical
+   content conforms to tool-result-content.schema.json.  Together they
+   make an agent's tool-call history first-class, versioned, and
+   provenanced memory rather than transcript ephemera.  Relationship
+   Objects MAY link a decision or claim to the tool_result that informed
+   it (informed_by) and a tool_result to its tool_invocation
+   (produced_by).
+
+   A working_memory object holds persistent per-task scratchpad state
+   that survives process restarts but is distinct from consolidated
+   long-term memory.  Its canonical content conforms to working-memory-
+   content.schema.json.  Working memory objects are created with
+   lifecycle_state scratch by default, are excluded from default trusted
+   retrieval, and are expected to be either promoted (via the Promote
+   operation) to a canonical Memory Object type such as claim, decision,
+   task, or summary, or archived once the associated task is complete.
+   Working memory is how PAMSPEC distinguishes "state the agent needs to
+   resume" from "beliefs the agent has committed to."
+
+   Canonical Content MAY be any JSON value. schema_id defines type-
+   specific validation.  An extension type MUST include schema_id.
+
+   A summary object is an externally representable abstraction of
+   conclusions, evidence, assumptions, constraints, progress, and
+   unresolved questions.  It is not private chain-of-thought and does
+   not require disclosure of hidden model reasoning.
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 17]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+8.3.  Object Identity
+
+   object_id identifies the logical Memory Object. version_id identifies
+   an immutable Memory Version.  Implementations must not reuse a
+   version_id for different content or state, and must not replace the
+   content associated with an existing version_id.
+
+8.4.  Versioning
+
+   Every change to Authoritative State MUST create a new immutable
+   Memory Version and MUST create a corresponding Event Ledger entry.
+   Authoritative State includes Canonical Content, authoritative
+   metadata, Lifecycle State, Availability State, Retention State,
+   Validation State, authoritative provenance, authoritative
+   relationship references, and integrity metadata that represents
+   authoritative content.  A modification using an obsolete expected
+   version MUST fail with version_conflict and MUST NOT overwrite a
+   newer version.
+
+   Non-authoritative operational events, including embedding_generated,
+   index_rebuilt, and access_denied, create Event Ledger entries but do
+   not create Memory Versions.  Retrieval-cache refresh does not create
+   a Memory Version.
+
+8.5.  Relationships
+
+   A Relationship Object is independently identified, typed, versioned,
+   and scope-bound.  It contains relationship_id, version_id, scope_id,
+   relationship_type, source and target object identifiers,
+   directionality, Canonical Content or attributes, provenance,
+   Lifecycle State, Validation State, Availability State, Retention
+   State, temporal fields, and integrity metadata.
+
+   A Relationship Object change creates a new Relationship Version and
+   Event Ledger entry.  It does not automatically create new versions of
+   source or target objects.  Deleting an object does not silently
+   delete related Relationship Objects.  Cross-scope relationships
+   require explicit policy.  A relationship reference does not grant
+   access, and traversal applies scope and authorization checks at every
+   step.
+
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 18]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   relationship_type values SHOULD use either a short, well-known label
+   from an implementation- or profile-defined vocabulary (for example,
+   supports, contradicts, derives_from, references, supersedes,
+   part_of), or a collision-resistant identifier following the same
+   conventions as extension object_type values (reverse-domain name or
+   absolute URI).  A future revision may define a registry of well-known
+   relationship types.  Implementations MUST preserve unknown
+   relationship_type values during export and import.
+
+8.6.  Provenance
+
+   Provenance records provenance_id, source reference, actor, generation
+   activity, evidence references, observed time, recorded time,
+   transformation parent, source_confidence (the source's own confidence
+   in what they reported), and optional signature or integrity
+   reference. source_confidence is distinct from
+   quality_signals.assessed_confidence, which records the system's or
+   reviewer's confidence in the resulting claim.  Provenance is
+   authoritative metadata.  A provenance modification creates a new
+   Memory Version and Event Ledger entry.  Provenance cannot be silently
+   removed.  Provenance visibility may be restricted independently from
+   Canonical Content, and a provenance reference does not grant access
+   to its source.  The entity, activity, and agent concepts align
+   informatively with W3C PROV [PROV-DM] without requiring PROV-O.
+
+8.7.  Integrity Metadata
+
+   Integrity metadata can include content digests, version digests,
+   ledger references, signatures, or chain hashes.  This -00 candidate
+   profile does not mandate a cryptographic algorithm.  If integrity
+   metadata is present, it identifies what material is covered and what
+   verification method is used.
+
+9.  Lifecycle, Availability, Retention, and Validation
+
+   Lifecycle State, Availability State, Retention State, and Validation
+   State are separate authoritative dimensions.  Lifecycle governs
+   maturity and operational use.  Availability governs access to
+   Canonical Content.  Retention governs preservation and disposal
+   policy.  Validation governs evidence and authorized review.  A
+   transition in one dimension does not imply a transition in another.
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 19]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+9.1.  Lifecycle State
+
+   +============+========================+=============================+
+   | State      | Meaning                | Retrieval Default           |
+   +============+========================+=============================+
+   | scratch    | Persistent working     | Excluded unless             |
+   |            | state not yet suitable | explicitly                  |
+   |            | for normal retrieval.  | requested.                  |
+   +------------+------------------------+-----------------------------+
+   | candidate  | Proposed memory        | Excluded from               |
+   |            | pending review or      | default trusted             |
+   |            | promotion.             | retrieval; included         |
+   |            |                        | in review workflows.        |
+   +------------+------------------------+-----------------------------+
+   | active     | Current memory         | Included by default         |
+   |            | eligible for normal    | when validation             |
+   |            | retrieval.             | policy permits.             |
+   +------------+------------------------+-----------------------------+
+   | superseded | Replaced by a newer    | Excluded unless             |
+   |            | object or version but  | history or temporal         |
+   |            | retained for history.  | evaluation requests         |
+   |            |                        | it.                         |
+   +------------+------------------------+-----------------------------+
+   | deprecated | Discouraged for new    | Excluded unless             |
+   |            | use but not            | policy includes             |
+   |            | necessarily replaced.  | deprecated state.           |
+   +------------+------------------------+-----------------------------+
+   | archived   | Retained for audit,    | Excluded except             |
+   |            | legal, historical, or  | audit, export, and          |
+   |            | low-frequency use.     | history operations.         |
+   +------------+------------------------+-----------------------------+
+
+                                  Table 1
+
+   Not every Memory Object type is required to support every lifecycle
+   state.  Supported states are declared by the implementation or
+   profile.
+
+9.2.  Validation State
+
+      +==============+=======================+======================+
+      | State        | Meaning               | Retrieval Default    |
+      +==============+=======================+======================+
+      | unverified   | Content has not been  | Included only when   |
+      |              | corroborated.         | caller accepts       |
+      |              |                       | unverified content.  |
+      +--------------+-----------------------+----------------------+
+      | corroborated | Content has           | Eligible for default |
+
+
+
+Infantado                Expires 12 January 2027               [Page 20]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+      |              | supporting evidence   | retrieval when       |
+      |              | or review.            | lifecycle permits.   |
+      +--------------+-----------------------+----------------------+
+      | disputed     | Content is challenged | Excluded unless      |
+      |              | or has conflicting    | disputes are         |
+      |              | evidence.             | requested.           |
+      +--------------+-----------------------+----------------------+
+      | rejected     | Content failed        | Excluded except      |
+      |              | validation or is no   | audit and history.   |
+      |              | longer accepted.      |                      |
+      +--------------+-----------------------+----------------------+
+
+                                  Table 2
+
+9.3.  Availability State
+
+     +====================+=======================+=================+
+     | State              | Meaning               | Retrieval       |
+     |                    |                       | Default         |
+     +====================+=======================+=================+
+     | available          | Canonical Content is  | Eligible when   |
+     |                    | available subject to  | other filters   |
+     |                    | normal authorization. | permit.         |
+     +--------------------+-----------------------+-----------------+
+     | partially_redacted | A policy-permitted    | Returns only    |
+     |                    | subset of Canonical   | the permitted   |
+     |                    | Content is available. | projection.     |
+     +--------------------+-----------------------+-----------------+
+     | redacted           | Canonical Content is  | Excluded except |
+     |                    | unavailable; a        | history and     |
+     |                    | Tombstone remains.    | policy review.  |
+     +--------------------+-----------------------+-----------------+
+     | deleted            | The object is         | Excluded except |
+     |                    | represented only by a | authorized      |
+     |                    | terminal Tombstone.   | history.        |
+     +--------------------+-----------------------+-----------------+
+
+                                 Table 3
+
+9.4.  Retention State
+
+   +==================+========================+=======================+
+   | State            | Meaning                | Disposal Behavior     |
+   +==================+========================+=======================+
+   | retained         | Normal retention       | No disposal is        |
+   |                  | policy applies.        | pending.              |
+   +------------------+------------------------+-----------------------+
+   | expired          | Retention time         | Policy evaluates      |
+
+
+
+Infantado                Expires 12 January 2027               [Page 21]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   |                  | has elapsed.           | deletion or archival. |
+   +------------------+------------------------+-----------------------+
+   | pending_deletion | Deletion is            | New retrieval is      |
+   |                  | authorized and         | policy-restricted.    |
+   |                  | awaits completion      |                       |
+   |                  | or propagation.        |                       |
+   +------------------+------------------------+-----------------------+
+   | legal_hold       | Disposal is            | Delete and            |
+   |                  | suspended by           | incompatible          |
+   |                  | explicit policy.       | redaction operations  |
+   |                  |                        | fail with legal_hold. |
+   +------------------+------------------------+-----------------------+
+
+                                  Table 4
+
+9.5.  State Transitions
+
+   Transitions require an actor and policy basis.  Every successful
+   transition creates a new Memory Version and Event Ledger entry.
+   Invalid transitions fail with invalid_state_transition.
+
+       +============+======================+=======================+
+       | From       | Allowed To           | Forbidden Without     |
+       |            |                      | Policy Override       |
+       +============+======================+=======================+
+       | scratch    | candidate, archived  | active, superseded,   |
+       |            |                      | deprecated            |
+       +------------+----------------------+-----------------------+
+       | candidate  | active, deprecated,  | superseded without    |
+       |            | archived             | replacement reference |
+       +------------+----------------------+-----------------------+
+       | active     | superseded,          | scratch               |
+       |            | deprecated, archived |                       |
+       +------------+----------------------+-----------------------+
+       | superseded | archived, deprecated | active without review |
+       |            |                      | policy                |
+       +------------+----------------------+-----------------------+
+       | deprecated | archived, active     | scratch               |
+       |            | with review policy   |                       |
+       +------------+----------------------+-----------------------+
+       | archived   | active with policy   | scratch, candidate    |
+       |            | override, deprecated |                       |
+       +------------+----------------------+-----------------------+
+
+                                  Table 5
+
+   Validation transitions are independent from lifecycle transitions.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 22]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   +==============+================================+===================+
+   | From         | Allowed To                     | Forbidden Without |
+   |              |                                | Policy Override   |
+   +==============+================================+===================+
+   | unverified   | corroborated,                  | none              |
+   |              | disputed, rejected             |                   |
+   +--------------+--------------------------------+-------------------+
+   | corroborated | disputed, rejected,            | none              |
+   |              | unverified with                |                   |
+   |              | provenance correction          |                   |
+   +--------------+--------------------------------+-------------------+
+   | disputed     | corroborated,                  | none              |
+   |              | rejected                       |                   |
+   +--------------+--------------------------------+-------------------+
+   | rejected     | disputed,                      | unverified        |
+   |              | corroborated with              |                   |
+   |              | review policy                  |                   |
+   +--------------+--------------------------------+-------------------+
+
+                                  Table 6
+
+   Availability transitions are:
+
+    +====================+============================================+
+    | From               | Allowed To                                 |
+    +====================+============================================+
+    | available          | partially_redacted, redacted, deleted      |
+    +--------------------+--------------------------------------------+
+    | partially_redacted | available, redacted, deleted               |
+    +--------------------+--------------------------------------------+
+    | redacted           | available with restoration policy, deleted |
+    +--------------------+--------------------------------------------+
+    | deleted            | none                                       |
+    +--------------------+--------------------------------------------+
+
+                                  Table 7
+
+   Retention transitions are:
+
+
+
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 23]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+       +==================+========================================+
+       | From             | Allowed To                             |
+       +==================+========================================+
+       | retained         | expired, pending_deletion, legal_hold  |
+       +------------------+----------------------------------------+
+       | expired          | retained, pending_deletion, legal_hold |
+       +------------------+----------------------------------------+
+       | pending_deletion | retained, legal_hold                   |
+       +------------------+----------------------------------------+
+       | legal_hold       | retained, expired, pending_deletion    |
+       |                  | after hold release                     |
+       +------------------+----------------------------------------+
+
+                                  Table 8
+
+   Machine-readable candidate transition table:
+
+   {
+     "lifecycle": {
+       "scratch": ["candidate", "archived"],
+       "candidate": ["active", "deprecated", "archived"],
+       "active": ["superseded", "deprecated", "archived"],
+       "superseded": ["archived", "deprecated"],
+       "deprecated": ["archived", "active"],
+       "archived": ["active", "deprecated"]
+     },
+     "validation": {
+       "unverified": ["corroborated", "disputed", "rejected"],
+       "corroborated": ["disputed", "rejected", "unverified"],
+       "disputed": ["corroborated", "rejected"],
+       "rejected": ["disputed", "corroborated"]
+     },
+     "availability": {
+       "available": ["partially_redacted", "redacted", "deleted"],
+       "partially_redacted": ["available", "redacted", "deleted"],
+       "redacted": ["available", "deleted"],
+       "deleted": []
+     },
+     "retention": {
+       "retained": ["expired", "pending_deletion", "legal_hold"],
+       "expired": ["retained", "pending_deletion", "legal_hold"],
+       "pending_deletion": ["retained", "legal_hold"],
+       "legal_hold": ["retained", "expired", "pending_deletion"]
+     }
+   }
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 24]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+9.6.  Expiration, Redaction, and Deletion
+
+   Expiration changes Retention State to expired; it does not change
+   Lifecycle State by itself.  Redaction creates a new terminal or non-
+   terminal Memory Version with Availability State partially_redacted or
+   redacted and a corresponding Event Ledger entry.  Deletion creates a
+   final immutable Tombstone Memory Version with Availability State
+   deleted and a corresponding Event Ledger entry.  A legal hold is
+   represented only by Retention State legal_hold.
+
+10.  Operation Semantics
+
+   All operations are evaluated within a Memory Scope and against
+   authorization policy.  Bindings can expose different wire forms, but
+   the semantic inputs, preconditions, results, version effects, Event
+   Ledger effects, Derived Index effects, retry behavior, and error
+   codes in this section are preserved.
+
+10.1.  Create
+
+   Purpose: create a new Memory Object.  Required inputs are an
+   operation identifier or idempotency key, scope identifier, object
+   type, Canonical Content, Lifecycle State, Availability State,
+   Retention State, Validation State, actor, provenance, and schema_id
+   when required by the type.  Optional inputs include object
+   identifier, temporal assertions, integrity metadata, expected-absence
+   precondition, and Derived Index request.  Create evaluates scope and
+   authorization before commit.  A successful Create returns object
+   identity, version identity, scope, committed envelope, and ledger
+   event identity.  It produces object_created.  A repeated Create with
+   the same idempotency key and identical request content returns the
+   original result.  The same key with different request content fails
+   with duplicate_operation.
+
+10.2.  Read
+
+   Purpose: retrieve authoritative object state.  Required inputs:
+   operation identifier, scope identifier, and object identifier.
+   Optional inputs: version identifier, snapshot identifier, requested
+   fields, and history hint.  Read evaluates scope and authorization.  A
+   successful Read returns the requested authoritative version or a
+   scope-safe redacted/deleted result.  Read does not create a new
+   object version.  It may create access or denial events if policy
+   requires audit.  Possible errors include object_not_found,
+   scope_not_found, access_denied, object_redacted, object_deleted,
+   snapshot_not_found, service_unavailable, and internal_error.
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 25]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+10.3.  Update
+
+   Purpose: create a new logical version of Canonical Content or
+   authoritative metadata.  Required inputs: operation identifier, scope
+   identifier, object identifier, expected version, actor, provenance,
+   and update content.  Optional inputs: schema identifier,
+   relationships, integrity metadata, and idempotency key.  Update uses
+   expected-version semantics unless a future profile defines conflict-
+   free merge semantics.  A stale expected version fails with
+   version_conflict.  A successful Update returns the new version and
+   produces object_updated plus related events.  Derived Indexes become
+   stale until rebuilt.  Possible errors include invalid_request,
+   invalid_object, version_conflict, object_not_found, access_denied,
+   policy_denied, retention_restriction, object_deleted,
+   service_unavailable, and internal_error.
+
+10.4.  Transition
+
+   Purpose: change Lifecycle State, Availability State, Retention State,
+   or Validation State.  Required inputs are operation identifier, scope
+   identifier, object identifier, expected version, transition
+   dimension, target state, actor, and policy basis.  A successful
+   Transition always returns a new Memory Version and produces the
+   dimension-specific Event Ledger entry.  Derived Index filters may
+   need refresh.  Possible errors include invalid_state_transition,
+   version_conflict, policy_denied, access_denied, legal_hold,
+   object_not_found, and retention_restriction.
+
+10.5.  Relate
+
+   Purpose: create or update a Relationship Object.  Required inputs are
+   operation identifier, scope identifier, source object, target object,
+   relationship type, directionality, actor, provenance, and the four
+   state dimensions.  Updating requires relationship identifier and
+   expected Relationship Version.  Cross-scope relationships require
+   explicit policy and authorization.  A successful Relate returns the
+   new Relationship Version and produces relationship_created or
+   relationship_updated.  It does not change source or target object
+   versions.
+
+10.6.  Query
+
+   Purpose: retrieve sets of Memory Objects, Relationship Objects, or
+   versions using structured, semantic, hybrid, temporal, or snapshot
+   criteria.  Required inputs are operation identifier, scope
+   identifier, query expression, pagination parameters, and actor.
+   Optional inputs include Lifecycle State, Availability State,
+   Retention State, Validation State, provenance, object type, temporal,
+
+
+
+Infantado                Expires 12 January 2027               [Page 26]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   and relationship filters; Embedding Space; snapshot identifier;
+   ordering profile; and ranking explanation request.  Query defaults to
+   scope-bound evaluation and does not default to unscoped global
+   semantic search.
+
+10.7.  Inspect History
+
+   Purpose: inspect object versions, transitions, relationships, and
+   Event Ledger entries.  Required inputs: operation identifier, scope
+   identifier, object identifier or event range, and actor.  Optional
+   inputs: version range, event classes, snapshot boundary, and
+   redaction policy.  A successful result returns scope-safe history.
+   Redacted content can appear as tombstone metadata rather than
+   content.
+
+10.8.  Subscribe
+
+   Purpose: open a durable stream of Event Ledger entries that match a
+   filter within a scope, so that agents and integrators react to memory
+   changes instead of polling.  Required inputs are operation
+   identifier, scope identifier, actor, and a filter expression.
+   Optional inputs include object type, event class list, object
+   identifier, after_sequence (a starting point in the ledger for at-
+   least-once catch-up), and delivery preferences (batching, keepalive
+   interval, backpressure policy).
+
+   A successful Subscribe returns a subscription_id, the resolved
+   filter, the ledger sequence at which delivery starts, and a delivery
+   channel identifier appropriate to the binding (for example, a
+   WebSocket URL, an MCP notification stream, or a message-bus topic).
+   While the subscription is open, the Memory Service MUST deliver every
+   event that (a) satisfies the filter, (b) occurs within an authorized
+   scope, and (c) has a ledger sequence greater than the last
+   acknowledged sequence for that subscription.  Ordering within a
+   single scope MUST be preserved.
+
+   Delivery guarantees are at-least-once.  Subscribers are responsible
+   for idempotent processing keyed by event_id.  Subscriptions MAY be
+   closed by the caller (Unsubscribe, referencing subscription_id) or by
+   the service on authorization revocation, scope deletion, prolonged
+   unacknowledged backpressure, or shutdown.  On service-initiated
+   close, a terminal close event identifies the last delivered
+   ledger_sequence so the subscriber can resume against a new
+   subscription with after_sequence set appropriately.
+
+   Subscribe does not create Memory Versions.  Subscribe creates a
+   subscription_opened Event Ledger entry when the subscription starts
+   and a subscription_closed entry when it ends.  Filter evaluation and
+
+
+
+Infantado                Expires 12 January 2027               [Page 27]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   authorization MUST be applied per event, not only at subscription
+   time, so that events an actor loses authorization for during the
+   subscription lifetime are excluded from further delivery.  Possible
+   errors include invalid_request, scope_not_found, access_denied,
+   policy_denied, service_unavailable, and internal_error.
+
+10.9.  Redact
+
+   Purpose: remove or suppress protected content while preserving
+   permitted audit information.  Required inputs are operation
+   identifier, scope identifier, object identifier, expected version,
+   actor, policy basis, and redaction target.  A successful Redact
+   creates a new Tombstone or partially redacted Memory Version, changes
+   Availability State, and produces object_redacted.  Derived Index
+   deletion is triggered or recorded independently.  Redaction blocked
+   by policy returns retention_restriction or legal_hold.
+
+10.10.  Promote
+
+   Purpose: convert a working_memory object into a canonical Memory
+   Object of a target type such as claim, decision, task, or summary,
+   preserving provenance and creating an explicit link.  Required inputs
+   are operation identifier, scope identifier, source working_memory
+   object identifier, expected version, target object_type, target
+   canonical_content (which MUST conform to the target type's content
+   schema when one is defined), actor, and provenance.  Optional inputs
+   include target object_id, target Lifecycle State, target Validation
+   State, and idempotency key.
+
+   A successful Promote creates a new canonical Memory Object with
+   provenance.transformation_parent set to the source working_memory
+   version identifier, and transitions the source working_memory
+   object's Lifecycle State to superseded in a paired ledger event.
+   Both new versions and their events commit atomically.  The Promote
+   operation produces object_created for the new object,
+   lifecycle_transitioned for the source, and a working_memory_promoted
+   Event Ledger entry that links the two.  Possible errors include
+   invalid_request, object_not_found, version_conflict, access_denied,
+   policy_denied, and invalid_state_transition.
+
+   Promote does not require deletion of the source; consolidation
+   history remains inspectable through inspect_history and via the
+   Relationship Object that Promote creates (derived_from, directed from
+   the new object to the source working_memory).
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 28]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+10.11.  Delete
+
+   Purpose: remove active availability of an object according to policy.
+   Required inputs are operation identifier, scope identifier, object
+   identifier, expected version, actor, and policy basis.  A successful
+   Delete creates the final Tombstone Memory Version with Availability
+   State deleted and produces object_deleted.  Existing Relationship
+   Objects remain independently governed.  Delete does not imply
+   immediate removal from backups unless policy says so.  Deletion
+   blocked by legal hold returns legal_hold.
+
+11.  Query and Retrieval Model
+
+   Structured retrieval evaluates deterministic filters over
+   authoritative fields, including Memory Scope, object type, Lifecycle
+   State, Availability State, Retention State, Validation State, schema
+   identifier, provenance, actor, observation time, validity interval,
+   commit time, record time, sequence, version, Relationship Object, and
+   integrity metadata.  When evaluated against the same authoritative
+   snapshot and ordering profile, structured retrieval is repeatable.
+
+   Semantic retrieval evaluates approximate similarity through a Derived
+   Index.  A semantic result should identify the Embedding Space, index
+   or snapshot identity where available, semantic score, reranking score
+   where applicable, applied filters, and stable tie-break information.
+   Semantic retrieval is approximate unless evaluated against a named
+   stable index snapshot with declared ordering behavior.
+
+   Hybrid retrieval combines structured filters with semantic ranking or
+   reranking.  Structured filters are evaluated within scope before
+   protected content is disclosed.  Relationship traversal evaluates
+   authorization for each target object.  Cross-scope traversal requires
+   explicit policy.
+
+   Temporal evaluation explicitly selects observation time, assertion
+   time, validity interval, commit time, record time, logical sequence,
+   or snapshot.  Client-supplied times do not control conflict
+   resolution or Event Ledger ordering.  Snapshot-based evaluation
+   provides repeatable retrieval within a named snapshot.  If no stable
+   index snapshot exists, semantic retrieval is best-effort and
+   identifies that no stable index snapshot was used.
+
+   Pagination includes a stable cursor or ordering basis when
+   repeatability is claimed.  Stable ordering uses deterministic keys
+   such as snapshot identifier, primary score, secondary score, update
+   time, object identifier, and version identifier.  Tie-breaking is
+   documented for any profile that claims repeatable retrieval.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 29]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   The content of each Memory Object envelope returned by query or read
+   operations MUST be stable across repeated calls against the same
+   committed version.  Implementations MUST NOT introduce fields that
+   vary per call — such as per-request timestamps, processing
+   identifiers, or random nonces — into the envelope representation of a
+   committed version.  When evaluated against identical filter and
+   ordering parameters over the same authoritative state, serialization
+   of the result set MUST be byte-identical across repeated calls.
+
+   Default retrieval is conservative: Lifecycle State active,
+   Availability State available, Retention State retained, and
+   Validation State corroborated form the normal trusted retrieval
+   target.  Other states require explicit query policy or filters unless
+   a profile declares different defaults.
+
+12.  Consistency and Concurrency
+
+   The candidate profile uses optimistic concurrency.  Update,
+   Transition, Redact, Delete, and Relationship Object operations use
+   expected-version semantics.  An operation with an obsolete expected
+   version fails with version_conflict and returns the current version
+   identifier when policy permits.
+
+   Idempotency keys identify duplicate requests.  A duplicate request
+   with the same idempotency key and identical request content returns
+   the original successful result or original stable error.  A duplicate
+   request with the same idempotency key and different content fails
+   with duplicate_operation.  The idempotency record MUST be durable: it
+   MUST survive the Memory Service process restarting with the same
+   persistent store.  An implementation that stores idempotency state
+   only in memory does not conform to this requirement.  Cross-process
+   concurrent idempotency atomicity is a deployment quality concern;
+   this document does not require any specific guarantee beyond restart
+   durability.
+
+   A committed Memory Version and its required Event Ledger entry are
+   atomic from the perspective of Inspect History.  If either cannot be
+   committed, the state-changing operation fails.  Implementations can
+   use different physical mechanisms to provide this logical atomicity.
+
+   Read-after-write behavior applies to authoritative state: after a
+   successful state-changing operation, a scoped Read by an authorized
+   actor observes the committed authoritative state.  Derived Indexes
+   can be eventually consistent.  Query responses using derived state
+   expose index identity, freshness, or staleness where available.
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 30]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Snapshots provide a consistent read boundary over Authoritative State
+   and, when declared, over Derived Index state.  The Memory Service
+   assigns commit time, record time, and logical sequence.  Wall-clock
+   time alone never establishes authoritative ordering.  Client-supplied
+   future timestamps, clock skew, forged observation times, and
+   ambiguous time zones are treated as untrusted temporal assertions.
+
+13.  Protocol Bindings
+
+   This document does not standardize a mandatory transport.  Every
+   future binding preserves object identity, Memory Scope, authorization
+   outcome, version preconditions, idempotency behavior, operation
+   semantics, stable error codes, Event Ledger behavior, query
+   parameters, deletion semantics, and redaction semantics.
+
+   An embedded library binding can expose operations as local function
+   calls.  An HTTP binding can map operations to resources and methods.
+   An MCP binding can map operations to tools or resources.  A gRPC
+   binding can map operations to services and messages.  Event bus or
+   message bus bindings can expose ledger streams, asynchronous
+   commands, or index rebuild events.  None of these bindings is
+   mandatory.
+
+   A non-normative reference MCP binding is provided in the repository
+   under bindings/mcp/. It maps every PAMSPEC operation to a stable tool
+   name (pamspec.<operation>), maps Memory Scopes to MCP resources
+   (pamspec://scope/{scope_id}/...), preserves the PAMSPEC error
+   envelope end-to-end rather than collapsing errors into MCP protocol
+   errors, and defines a discovery manifest that advertises supported
+   profiles and operations.  Servers that implement the reference
+   binding become usable by any MCP-aware client without per-client
+   integration work.
+
+   Bindings do not weaken scope enforcement or convert denied cross-
+   scope access into successful partial disclosure.  Bindings preserve
+   explainable denial without exposing protected Memory Object content.
+   Bindings document how idempotency keys, operation identifiers,
+   pagination cursors, and snapshot identifiers are represented.
+
+14.  Error Model
+
+   Errors use a stable transport-neutral envelope.  A binding can map
+   the envelope to protocol-specific status codes, but it preserves the
+   semantic fields.
+
+   Every error identifies a stable code, human-readable message,
+   retryable status, operation identifier, and scope-safe details.  It
+   identifies a policy rule identifier where applicable.  Optional
+
+
+
+Infantado                Expires 12 January 2027               [Page 31]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   fields can include object identifier, current version identifier,
+   expected version identifier, correlation identifier, and remediation
+   hint.  Explainable denial does not expose protected Memory Object
+   content or confirm protected object existence when policy forbids
+   that disclosure.
+
+    +==========================+======================+===============+
+    | Code                     | Meaning              | Retryable     |
+    +==========================+======================+===============+
+    | invalid_request          | Request shape or     | No, unless    |
+    |                          | parameters are       | corrected.    |
+    |                          | invalid.             |               |
+    +--------------------------+----------------------+---------------+
+    | invalid_object           | Object envelope or   | No, unless    |
+    |                          | content violates the | corrected.    |
+    |                          | candidate model.     |               |
+    +--------------------------+----------------------+---------------+
+    | unsupported_object_type  | Object type is not   | No, unless    |
+    |                          | supported by the     | profile       |
+    |                          | implementation or    | changes.      |
+    |                          | profile.             |               |
+    +--------------------------+----------------------+---------------+
+    | object_not_found         | Object is absent or  | No.           |
+    |                          | not visible in       |               |
+    |                          | scope.               |               |
+    +--------------------------+----------------------+---------------+
+    | scope_not_found          | Scope is absent or   | No.           |
+    |                          | not visible.         |               |
+    +--------------------------+----------------------+---------------+
+    | access_denied            | Actor lacks          | No, unless    |
+    |                          | authorization.       | authorization |
+    |                          |                      | changes.      |
+    +--------------------------+----------------------+---------------+
+    | policy_denied            | Policy blocks the    | No, unless    |
+    |                          | operation.           | policy or     |
+    |                          |                      | request       |
+    |                          |                      | changes.      |
+    +--------------------------+----------------------+---------------+
+    | version_conflict         | Expected version is  | Yes, after    |
+    |                          | stale or mismatched. | refetch and   |
+    |                          |                      | merge.        |
+    +--------------------------+----------------------+---------------+
+    | duplicate_operation      | Idempotency key was  | No.           |
+    |                          | reused with          |               |
+    |                          | different request    |               |
+    |                          | content.             |               |
+    +--------------------------+----------------------+---------------+
+    | invalid_state_transition | Requested lifecycle  | No, unless    |
+
+
+
+Infantado                Expires 12 January 2027               [Page 32]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+    |                          | or validation        | state or      |
+    |                          | transition is not    | policy        |
+    |                          | allowed.             | changes.      |
+    +--------------------------+----------------------+---------------+
+    | relationship_conflict    | Relationship         | Maybe, after  |
+    |                          | operation conflicts  | inspection.   |
+    |                          | with state or        |               |
+    |                          | policy.              |               |
+    +--------------------------+----------------------+---------------+
+    | embedding_space_mismatch | Query or comparison  | No, unless    |
+    |                          | uses incompatible    | corrected.    |
+    |                          | Embedding Spaces.    |               |
+    +--------------------------+----------------------+---------------+
+    | snapshot_not_found       | Requested snapshot   | No.           |
+    |                          | does not exist or is |               |
+    |                          | not visible.         |               |
+    +--------------------------+----------------------+---------------+
+    | retention_restriction    | Retention policy     | No, unless    |
+    |                          | restricts redaction, | policy        |
+    |                          | deletion, or export. | changes.      |
+    +--------------------------+----------------------+---------------+
+    | legal_hold               | Legal hold blocks    | No, until     |
+    |                          | the operation.       | hold changes. |
+    +--------------------------+----------------------+---------------+
+    | object_redacted          | Object content is    | No.           |
+    |                          | redacted for this    |               |
+    |                          | request.             |               |
+    +--------------------------+----------------------+---------------+
+    | object_deleted           | Object has been      | No.           |
+    |                          | deleted or           |               |
+    |                          | tombstoned.          |               |
+    +--------------------------+----------------------+---------------+
+    | service_unavailable      | Service cannot       | Yes.          |
+    |                          | complete the         |               |
+    |                          | operation now.       |               |
+    +--------------------------+----------------------+---------------+
+    | internal_error           | Unexpected           | Maybe.        |
+    |                          | implementation       |               |
+    |                          | failure.             |               |
+    +--------------------------+----------------------+---------------+
+
+                                  Table 9
+
+15.  Security Considerations
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 33]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+15.1.  Threat Model
+
+   PAMSPEC systems store durable machine-readable state that can affect
+   future agent behavior.  Threats include unauthorized access, cross-
+   scope data leakage, confused-deputy behavior, memory poisoning,
+   persisted prompt injection, provenance forgery, ledger tampering,
+   replay, excessive privilege, malicious cross-object relationships,
+   backup leakage, and derived-index remnants.
+
+15.2.  Scope Enforcement
+
+   Every operation is evaluated within a Memory Scope.  Implementations
+   MUST enforce scope boundaries for reads, writes, queries, exports,
+   imports, indexing, snapshots, and deletion.  Unscoped global semantic
+   search MUST NOT be the default because it can reveal protected
+   information across administrative, security, retention, policy, or
+   query boundaries.
+
+15.3.  Authorization
+
+   Cross-scope access requires explicit policy and authorization.  This
+   document does not mandate RBAC.  Implementations may use RBAC, ABAC,
+   capability-based authorization, policy engines, or equivalent models.
+   Authorization decisions should be recorded when they affect state,
+   and denied access may be recorded as access_denied events without
+   exposing protected content.
+
+15.4.  Confused-Deputy Risks
+
+   A Memory Client or Agent Runtime can become a confused deputy if it
+   uses its own authority to retrieve, transform, or relate memory on
+   behalf of a less-authorized actor.  Implementations should bind
+   operations to the requesting actor, delegated authority, scope,
+   purpose, and policy version.
+
+   Delegated authority SHOULD be represented explicitly as a *Delegation
+   Object* (delegation.schema.json).  A Delegation Object is an
+   independently identified, typed, versioned, scope-bound authoritative
+   object that binds a granting_actor to a delegated_actor over a
+   bounded set of granted_operations, an optional granted_object_types
+   and granted_object_ids restriction, an optional target_scope_id for
+   cross-scope delegation, a required policy_basis, a not_before /
+   not_after window, an optional usage_limit, and a revocable flag.
+   Every exercise of a delegation MUST reference the delegation_id in
+   provenance so an audit can reconstruct the chain from operation back
+   to grant.  Delegation Objects produce delegation_granted,
+   delegation_revoked, and delegation_exercised Event Ledger entries.  A
+   delegation whose not_after has passed, whose usage_limit is
+
+
+
+Infantado                Expires 12 January 2027               [Page 34]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   exhausted, or whose grantor no longer holds the granted operations
+   MUST be treated as no longer effective, regardless of Lifecycle
+   State.  Delegation Objects do not themselves grant authority — they
+   record that authority was granted by an actor who held it;
+   authorization enforcement remains the responsibility of the Memory
+   Service and its policy engine.
+
+15.5.  Injection and Memory Poisoning
+
+   Prompt injection and malicious tool output can be persisted as memory
+   if extraction and validation are not controlled.  Implementations
+   should preserve provenance, distinguish observed content from
+   validated content, support validation states, and prevent unreviewed
+   content from being silently promoted into trusted memory.
+
+15.6.  Integrity and Tamper Evidence
+
+   Ledger events MUST NOT be silently rewritten.  Implementations should
+   protect ledger ordering, version identity, and provenance.
+   Cryptographic continuity, signatures, or content hashing may be used
+   to make tampering evident, but this -00 draft does not mandate a
+   particular cryptographic mechanism.
+
+15.7.  Cross-Scope Relationships
+
+   A relationship that points to another Memory Object does not grant
+   access to that object.  Malicious or accidental relationships can
+   leak identifiers, infer existence, or induce retrieval across scopes.
+   Implementations should evaluate relationship traversal under the
+   target scope policy.
+
+15.8.  Derived-Index Leakage
+
+   Embeddings, lexical indexes, graph projections, generated summaries,
+   ranking caches, retrieval caches, and backups can retain sensitive
+   content after canonical deletion or redaction.  Implementations MUST
+   preserve scope boundaries in Derived Indexes and should propagate
+   deletion and redaction to derived state according to policy.
+
+16.  Privacy Considerations
+
+16.1.  Data Minimization
+
+   Systems should store only memory needed for an explicit purpose and
+   scope.  Memory extraction should avoid collecting unnecessary
+   personal data, sensitive inferences, or incidental third-party
+   information.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 35]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+16.2.  Retention
+
+   Retention policy is part of the Memory Scope boundary.
+   Implementations should support expiration and retention planning for
+   both authoritative state and Derived Indexes.
+
+16.3.  Erasure
+
+   Append-only history and privacy obligations can coexist by separating
+   immutable operational history from prohibited retained content.
+   Redaction or erasure may remove content while retaining a content-
+   free tombstone when policy permits.  Legal hold may delay erasure,
+   but the hold basis should be explicit.
+
+16.4.  Sensitive Inferences
+
+   Agentic systems can generate sensitive inferences from non-sensitive
+   inputs.  Validation state, provenance, and lifecycle controls should
+   distinguish inferred claims from observed evidence and reviewed
+   conclusions.
+
+16.5.  Provenance and Personal Data
+
+   Provenance can contain personal data, including actors, sources,
+   timestamps, and evidence.  Implementations should minimize provenance
+   fields, restrict access, and support redaction where policy permits.
+
+16.6.  Embedding Privacy
+
+   Embeddings may reveal information about source content or permit
+   membership inference.  Embedding Spaces and Derived Indexes should be
+   scoped, access-controlled, rebuildable, and deletable independently
+   from Canonical Content.  Export and portability workflows should
+   identify whether embeddings and derived caches are included.
+
+17.  Operational Considerations
+
+17.1.  Backup and Recovery
+
+   Backups should preserve authoritative state, version history, scope
+   identity, and ledger ordering while respecting deletion and redaction
+   policy.
+
+17.2.  Migration
+
+   Migration should preserve object identity, version identity, Event
+   Ledger semantics, scope identity, and provenance, or explicitly
+   document remapping.
+
+
+
+Infantado                Expires 12 January 2027               [Page 36]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+17.3.  Index Rebuilding
+
+   Index rebuilding regenerates Derived Indexes and does not create
+   canonical versions by itself.
+
+17.4.  Clock and Time Handling
+
+   Implementations distinguish observation time, assertion time,
+   validity interval, commit time, record time, and logical sequence.
+   The Memory Service assigns commit time, record time, and sequence.
+   Client-supplied observation or assertion times may be absent and are
+   untrusted until validated.
+
+17.5.  Observability
+
+   Observability should expose operational state without leaking
+   protected memory content.
+
+17.6.  Capacity and Retention Planning
+
+   Capacity planning should account for authoritative versions, ledger
+   entries, snapshots, derived indexes, and tombstones.
+
+18.  Interoperability and Conformance
+
+   Implementations declare the profile name and version they support.
+   Partial implementation is permitted, but an implementation MUST NOT
+   claim a profile unless it satisfies every mandatory requirement for
+   that profile.
+
+18.1.  PAMSPEC-Lite
+
+   PAMSPEC-Lite is a minimal on-ramp profile for single-developer
+   agents, prototypes, and embedded deployments.  A Conforming
+   Implementation of PAMSPEC-Lite MUST support:
+
+   *  Memory Scope enforcement for reads, writes, and queries.
+
+   *  The canonical Memory Object envelope with stable object_id and
+      immutable version_id.
+
+   *  The Lifecycle State subset active, superseded, and archived.
+
+   *  The Availability State subset available and deleted (with a
+      terminal tombstone).
+
+   *  The Retention State subset retained and pending_deletion.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 37]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   *  The Validation State subset unverified and corroborated.
+
+   *  Append-only Event Ledger recording of object_created,
+      object_updated, object_deleted, lifecycle_transitioned, and
+      validation_transitioned events, with atomic version+event commit.
+
+   *  Expected-version preconditions on Update, Transition, and Delete,
+      and version_conflict on stale expectations.
+
+   *  Durable idempotency-key handling for Create: idempotency records
+      MUST survive the Memory Service process restarting with the same
+      persistent store.
+
+   PAMSPEC-Lite deliberately omits Relationship Objects, Semantic Query,
+   Snapshots, Redaction (beyond deletion), Legal Hold, and Derived Index
+   management.  Implementations that support any of those areas SHOULD
+   declare the corresponding full profile instead of, or in addition to,
+   PAMSPEC-Lite.
+
+   A reference implementation of PAMSPEC-Lite is provided under
+   implementations/reference-python/ for illustration; it is not
+   normative.
+
+18.2.  PAMSPEC-Delegation
+
+   PAMSPEC-Delegation is an authorization profile for multi-agent
+   deployments that require scoped, time-bounded, revocable permission
+   grants.  It layers on top of PAMSPEC-Lite.  A Conforming
+   Implementation of PAMSPEC-Delegation MUST support:
+
+   *  A grant operation that binds a granting_actor to a delegated_actor
+      over a bounded set of granted_operations, an optional
+      granted_object_ids restriction, a required policy_basis, and a
+      not_before / not_after time window.
+
+   *  A check operation that evaluates a delegation grant against a
+      requested operation, actor, scope, and optionally an object
+      identifier, returning the grant on success or access_denied on
+      failure.
+
+   *  Rejection of grants whose not_before is later than not_after with
+      policy_denied.
+
+   *  Denial of check requests that fall outside the grant's not_before
+      / not_after window with access_denied.
+
+   *  Enforcement of usage_limit when declared: checks beyond the limit
+      return access_denied.
+
+
+
+Infantado                Expires 12 January 2027               [Page 38]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   *  A revoke operation that immediately marks a delegation as no
+      longer effective; subsequent checks return access_denied.
+
+   *  Enforcement of granted_object_ids restrictions when declared:
+      checks against non-permitted object identifiers return
+      access_denied.
+
+   PAMSPEC-Delegation does not specify how delegation grants are stored
+   or transmitted; it specifies observable enforcement semantics.
+
+18.3.  PAMSPEC-Subscribe
+
+   PAMSPEC-Subscribe is a streaming profile for agents and integrators
+   that react to memory changes.  It layers on top of PAMSPEC-Lite.  A
+   Conforming Implementation of PAMSPEC-Subscribe MUST support:
+
+   *  A subscribe operation that accepts a scope identifier, actor, and
+      filter expression, and returns a subscription_id with a starting
+      ledger sequence.
+
+   *  Delivery of every Event Ledger entry that satisfies the declared
+      filter within the authorized scope, available via a poll or push
+      channel.
+
+   *  Exclusion of events that do not match the filter; filter
+      evaluation MUST be applied per event.
+
+   *  A stable cursor that advances after each poll: events already
+      delivered MUST NOT be re-delivered on the next poll unless the
+      cursor is explicitly reset.
+
+   *  A close or unsubscribe operation that stops further delivery;
+      events produced after close MUST NOT be delivered on subsequent
+      polls against the closed subscription.
+
+   PAMSPEC-Subscribe does not specify the delivery transport; HTTP long-
+   poll, WebSocket, MCP notification stream, and message-bus
+   integrations are all conforming channels provided they satisfy the
+   above behavioral requirements.
+
+18.4.  PAMSPEC-Core
+
+   Requires Memory Scope enforcement, the canonical Memory Object
+   envelope, stable object identity, immutable version identity, the
+   four state dimensions, Authoritative State versus Derived Index
+   separation, the core error envelope, and exportable representation.
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 39]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+18.5.  PAMSPEC-Versioning
+
+   Requires expected-version semantics, a new immutable Memory Version
+   for every Authoritative State change, version_conflict, and
+   historical reads.
+
+18.6.  PAMSPEC-Ledger
+
+   Requires append-only event recording, object-version linkage,
+   authoritative-change events, event-only operational events, logical
+   ordering, and Tombstone behavior compatible with erasure and legal
+   hold.
+
+18.7.  PAMSPEC-Structured-Query
+
+   Requires scope filtering, filters for all four state dimensions,
+   temporal filters, stable ordering, pagination, and snapshot-bound
+   repeatability.
+
+18.8.  PAMSPEC-Semantic-Query
+
+   Requires Embedding Space descriptors, semantic-result metadata,
+   incompatible-space rejection, approximate-retrieval disclosure, and
+   index or snapshot identity where available.
+
+18.9.  PAMSPEC-Relationship
+
+   Requires independently identified and versioned Relationship Objects,
+   cross-scope policy, source and target authorization, and traversal
+   checks at every step.
+
+18.10.  PAMSPEC-Protocol-Binding
+
+   Requires preservation of operation semantics, stable error-code
+   mapping, authorization outcomes, idempotency, version preconditions,
+   query parameters, Event Ledger behavior, redaction, and deletion
+   semantics without mandating a transport.
+
+18.11.  PAMSPEC-Evaluation
+
+   Sub-profile for deterministic agent evaluation.  A Conforming
+   Implementation of PAMSPEC-Evaluation MUST support:
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 40]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   *  *Sealed Snapshots*: immutable Snapshot descriptors conforming to
+      evaluation-snapshot.schema.json, with a fixed
+      ledger_sequence_high_watermark and explicit or implicit object and
+      Embedding Space membership.  Once sealed, a snapshot's
+      authoritative membership and derived-index identity MUST NOT
+      change; a new snapshot MUST be created for any change.
+
+   *  *Deterministic clock injection*: when a snapshot declares
+      deterministic_clock, evaluation-time operations conducted against
+      the snapshot MUST use the declared clock as the source for any
+      authoritative timestamp that would otherwise be wall-clock
+      derived, so replays yield identical timestamps.
+
+   *  *Deterministic RNG seeding*: when a snapshot declares
+      deterministic_rng_seed, evaluation-time operations MUST seed
+      randomness (retrieval tie-break jitter, sampling) with the
+      declared seed.
+
+   *  *Evaluation-run propagation*: when a snapshot declares
+      evaluation_run_id, that identifier MUST be propagated into the
+      provenance of every Memory Version and Event Ledger entry produced
+      during evaluation-time operations, so evaluation-authored memory
+      is distinguishable from production-authored memory.
+
+   *  *Snapshot comparison*: implementations MUST support inspecting two
+      sealed snapshots and reporting authoritative differences (added or
+      removed objects, version deltas, state transition deltas) using
+      the same query surface as Inspect History, so regression
+      comparison between evaluation runs is expressible.
+
+   PAMSPEC-Evaluation composes with other profiles.  It does not by
+   itself require Semantic Query or Relationship support.  Evaluation-
+   time operations MUST NOT modify state outside the evaluation scope
+   unless policy explicitly permits it.
+
+18.12.  Implementation Reports
+
+   Implementation reports MUST document supported profile names and
+   versions.  They SHOULD document storage choices, authorization model,
+   index behavior, export behavior, deletion behavior, test-vector
+   results, and known deviations.
+
+19.  IANA Considerations
+
+   This document has no IANA actions.
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 41]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+20.  References
+
+   Normative and informative references are declared in the document
+   metadata.  This draft uses RFC 2119 [RFC2119] and RFC 8174 [RFC8174]
+   normatively for requirements language.  It uses URI syntax [RFC3986],
+   URN syntax [RFC8141], Internet timestamps [RFC3339], JSON [RFC8259],
+   JSON Patch [RFC6902], HTTP semantics [RFC9110], UUIDs [RFC9562], JSON
+   Schema [JSON-SCHEMA], and W3C PROV-DM [PROV-DM] informatively for
+   architectural alignment and review.
+
+   Related implementation context includes OpenAI session and
+   conversation-state documentation [OPENAI-AGENTS-SESSIONS]
+   [OPENAI-CONVERSATION-STATE], Anthropic multi-agent engineering
+   material [ANTHROPIC-MULTIAGENT], LangGraph memory documentation
+   [LANGGRAPH-MEMORY], Letta memory documentation [LETTA-MEMORY], MemGPT
+   research [MEMGPT-PAPER], Mem0 documentation [MEM0-DOCS], event-
+   sourcing literature [FOWLER-EVENT-SOURCING], and Agent Communication
+   Gateway material [AGENT-COMMUNICATION-GATEWAY].
+
+   Related academic and industry research on agent memory architectures
+   includes the Cognitive Architectures for Language Agents (CoALA)
+   taxonomy [COALA], the Generative Agents memory-stream-plus-reflection
+   pattern [GENERATIVE-AGENTS], HippoRAG's neurobiologically inspired
+   long-term memory [HIPPORAG], a survey of the memory mechanism of LLM-
+   based agents [AGENT-MEMORY-SURVEY], and the LongMemEval [LONGMEMEVAL]
+   and LoCoMo [LOCOMO] benchmarks for long-term interactive memory.
+   Multi-agent coordination context includes a survey of LLM-based
+   multi-agent systems [MAS-LLM-SURVEY] and MetaGPT [METAGPT].
+
+   Provenance context includes Model Cards [MODEL-CARDS], Datasheets for
+   Datasets [DATASHEETS], and PROV-AGENT, a PROV extension for agentic
+   workflows [PROV-AGENT].  Embedding-space portability research
+   includes Relative Representations [RELATIVE-REPRESENTATIONS] and
+   Matryoshka Representation Learning [MATRYOSHKA].
+
+   Agent identity and attestation context includes W3C Decentralized
+   Identifiers [W3C-DID], the Agent Identity Protocol IETF draft
+   [AIP-DRAFT], the Agent-ID Framework IETF draft [AGENT-ID-FRAMEWORK],
+   and the SCITT transparency architecture [SCITT].  IETF work adjacent
+   to PAMSPEC includes the AI Agent Protocols framework draft
+   [AI-PROTOCOLS-FRAMEWORK], MCP-over-MoQ [MCP-OVER-MOQ], and MCP
+   security considerations [MCP-SECURITY].
+
+   Retrieval evaluation context includes RAGAS [RAGAS] and the
+   Retrieval-Augmented Generation Benchmark [RGB-BENCHMARK].  Cognitive-
+   science analogues for the PAMSPEC memory-type vocabulary include
+   Tulving's episodic and semantic memory distinction
+   [TULVING-EPISODIC], Baddeley and Hitch's working-memory model
+
+
+
+Infantado                Expires 12 January 2027               [Page 42]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   [BADDELEY-WM], Baddeley's episodic buffer [BADDELEY-EPISODIC-BUFFER],
+   the Complementary Learning Systems theory [CLS-THEORY], and Squire's
+   overview of the brain's memory systems [SQUIRE-MEMORY-SYSTEMS].
+   These are cited informatively; PAMSPEC does not require or endorse
+   any specific cognitive theory.
+
+21.  References
+
+21.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+21.2.  Informative References
+
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66,
+              RFC 3986, DOI 10.17487/RFC3986, January 2005,
+              <https://www.rfc-editor.org/info/rfc3986>.
+
+   [RFC8259]  Bray, T., Ed., "The JavaScript Object Notation (JSON) Data
+              Interchange Format", STD 90, RFC 8259,
+              DOI 10.17487/RFC8259, December 2017,
+              <https://www.rfc-editor.org/info/rfc8259>.
+
+   [RFC6902]  Bryan, P., Ed. and M. Nottingham, Ed., "JavaScript Object
+              Notation (JSON) Patch", RFC 6902, DOI 10.17487/RFC6902,
+              April 2013, <https://www.rfc-editor.org/info/rfc6902>.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110,
+              DOI 10.17487/RFC9110, June 2022,
+              <https://www.rfc-editor.org/info/rfc9110>.
+
+   [RFC9562]  Davis, K., Peabody, B., and P. Leach, "Universally Unique
+              IDentifiers (UUIDs)", RFC 9562, DOI 10.17487/RFC9562, May
+              2024, <https://www.rfc-editor.org/info/rfc9562>.
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 43]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   [JSON-SCHEMA]
+              Wright, A., Andrews, H., and B. Hutton, "JSON Schema: A
+              Media Type for Describing JSON Documents", 2022,
+              <https://json-schema.org/draft/2020-12/json-schema-
+              core.html>.
+
+   [RFC3339]  Klyne, G. and C. Newman, "Date and Time on the Internet:
+              Timestamps", RFC 3339, DOI 10.17487/RFC3339, July 2002,
+              <https://www.rfc-editor.org/info/rfc3339>.
+
+   [RFC8141]  Saint-Andre, P. and J. Klensin, "Uniform Resource Names
+              (URNs)", RFC 8141, DOI 10.17487/RFC8141, April 2017,
+              <https://www.rfc-editor.org/info/rfc8141>.
+
+   [OPENAI-AGENTS-SESSIONS]
+              OpenAI, "Sessions - OpenAI Agents SDK", 2025,
+              <https://openai.github.io/openai-agents-python/sessions/>.
+
+   [OPENAI-CONVERSATION-STATE]
+              OpenAI, "Conversation state - OpenAI API documentation",
+              2025, <https://platform.openai.com/docs/guides/
+              conversation-state>.
+
+   [ANTHROPIC-MULTIAGENT]
+              Anthropic, "How we built our multi-agent research system",
+              2025, <https://www.anthropic.com/engineering/built-multi-
+              agent-research-system>.
+
+   [LANGGRAPH-MEMORY]
+              LangChain, "Memory - LangGraph documentation", 2025,
+              <https://langchain-ai.github.io/langgraph/concepts/
+              memory/>.
+
+   [LETTA-MEMORY]
+              Letta, "Memory Blocks - Letta documentation", 2025,
+              <https://docs.letta.com/guides/agents/memory>.
+
+   [MEMGPT-PAPER]
+              Packer, C., Fang, V., Patil, S. G., Lin, K., Wooders, S.,
+              and J. E. Gonzalez, "MemGPT: Towards LLMs as Operating
+              Systems", 2023, <https://arxiv.org/abs/2310.08560>.
+
+   [MEM0-DOCS]
+              Mem0, "Mem0 Documentation", 2025, <https://docs.mem0.ai/>.
+
+   [FOWLER-EVENT-SOURCING]
+              Fowler, M., "Event Sourcing", 2005,
+              <https://martinfowler.com/eaaDev/EventSourcing.html>.
+
+
+
+Infantado                Expires 12 January 2027               [Page 44]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   [AGENT-COMMUNICATION-GATEWAY]
+              Xie, X., Wang, Z., Hu, T., and Y. Cui, "Agent
+              Communication Gateway for Semantic Routing and Working
+              Memory", 2026,
+              <https://datatracker.ietf.org/doc/draft-agent-gw/>.
+
+   [PROV-DM]  Moreau, L. and P. Missier, "PROV-DM: The PROV Data Model",
+              2013, <https://www.w3.org/TR/prov-dm/>.
+
+   [COALA]    Sumers, T. R., Yao, S., Narasimhan, K., and T. L.
+              Griffiths, "Cognitive Architectures for Language Agents",
+              2024, <https://arxiv.org/abs/2309.02427>.
+
+   [GENERATIVE-AGENTS]
+              Park, J. S., O'Brien, J. C., Cai, C. J., Morris, M. R.,
+              Liang, P., and M. S. Bernstein, "Generative Agents:
+              Interactive Simulacra of Human Behavior", 2023,
+              <https://arxiv.org/abs/2304.03442>.
+
+   [HIPPORAG] Gutiérrez, B. J., Shu, Y., Gu, Y., Yasunaga, M., and Y.
+              Su, "HippoRAG: Neurobiologically Inspired Long-Term Memory
+              for Large Language Models", 2024,
+              <https://arxiv.org/abs/2405.14831>.
+
+   [AGENT-MEMORY-SURVEY]
+              Zhang, Z., Bo, X., and C. Ma, "A Survey on the Memory
+              Mechanism of Large Language Model Based Agents", 2024,
+              <https://arxiv.org/abs/2404.13501>.
+
+   [LONGMEMEVAL]
+              Wu, D., "LongMemEval: Benchmarking Chat Assistants on
+              Long-Term Interactive Memory", 2024,
+              <https://arxiv.org/abs/2410.10813>.
+
+   [LOCOMO]   Maharana, A., Lee, D., Tulyakov, S., Bansal, M., Barbieri,
+              F., and Y. Fang, "Evaluating Very Long-Term Conversational
+              Memory of LLM Agents", 2024,
+              <https://arxiv.org/abs/2402.17753>.
+
+   [MAS-LLM-SURVEY]
+              Guo, T., Chen, X., and Y. Wang, "Large Language Model
+              based Multi-Agents: A Survey of Progress and Challenges",
+              2024, <https://arxiv.org/abs/2402.01680>.
+
+   [METAGPT]  Hong, S. and M. Zhuge, "MetaGPT: Meta Programming for a
+              Multi-Agent Collaborative Framework", 2024,
+              <https://arxiv.org/abs/2308.00352>.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 45]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   [MODEL-CARDS]
+              Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman,
+              L., Hutchinson, B., Spitzer, E., Raji, I. D., and T.
+              Gebru, "Model Cards for Model Reporting", 2019,
+              <https://dl.acm.org/doi/10.1145/3287560.3287596>.
+
+   [DATASHEETS]
+              Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W.,
+              Wallach, H., Daumé III, H., and K. Crawford, "Datasheets
+              for Datasets", 2021, <https://arxiv.org/abs/1803.09010>.
+
+   [PROV-AGENT]
+              Souza, R. and L. Azevedo, "PROV-AGENT: Unified Provenance
+              for Tracking AI Agent Interactions in Agentic Workflows",
+              2025, <https://arxiv.org/abs/2508.02866>.
+
+   [RELATIVE-REPRESENTATIONS]
+              Moschella, L., Maiorca, V., Fumero, M., Norelli, A.,
+              Locatello, F., and E. Rodolà, "Relative Representations
+              Enable Zero-Shot Latent Space Communication", 2023,
+              <https://arxiv.org/abs/2209.15430>.
+
+   [MATRYOSHKA]
+              Kusupati, A. and G. Bhatt, "Matryoshka Representation
+              Learning", 2022, <https://arxiv.org/abs/2205.13147>.
+
+   [W3C-DID]  Sporny, M., Longley, D., Sabadello, M., Reed, D., Steele,
+              O., and C. Allen, "Decentralized Identifiers (DIDs) v1.0",
+              2022, <https://www.w3.org/TR/did-core/>.
+
+   [AIP-DRAFT]
+              Singla, A., "Agent Identity Protocol (AIP): Decentralized
+              Identity and Delegation for AI Agents", 2025,
+              <https://datatracker.ietf.org/doc/draft-singla-agent-
+              identity-protocol/>.
+
+   [AGENT-ID-FRAMEWORK]
+              Duda, K., "Self-Certifying Identity and Capability-Based
+              Delegation for Autonomous AI Agents", 2025,
+              <https://datatracker.ietf.org/doc/draft-duda-agent-id-
+              framework/>.
+
+   [SCITT]    Birkholz, H., Delignat-Lavaud, A., Fournet, C., Deshpande,
+              Y., and S. Lasker, "An Architecture for Trustworthy and
+              Transparent Digital Supply Chains", 2025,
+              <https://datatracker.ietf.org/doc/draft-ietf-scitt-
+              architecture/>.
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 46]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   [AI-PROTOCOLS-FRAMEWORK]
+              Rosenberg, J., "Framework, Use Cases and Requirements for
+              AI Agent Protocols", 2025,
+              <https://datatracker.ietf.org/doc/draft-rosenberg-ai-
+              protocols/>.
+
+   [MCP-OVER-MOQ]
+              Jennings, C., "Model Context Protocol and Agent Skills
+              over Media over QUIC Transport", 2025,
+              <https://datatracker.ietf.org/doc/draft-jennings-ai-mcp-
+              over-moq/>.
+
+   [MCP-SECURITY]
+              Mohiuddin, T., "Security Considerations for Model Context
+              Protocol (MCP) Implementations in AI Agent Systems", 2025,
+              <https://datatracker.ietf.org/doc/draft-mohiuddin-mcp-
+              security-considerations/>.
+
+   [RAGAS]    Es, S., James, J., Espinosa-Anke, L., and S. Schockaert,
+              "RAGAS: Automated Evaluation of Retrieval Augmented
+              Generation", 2024, <https://arxiv.org/abs/2309.15217>.
+
+   [RGB-BENCHMARK]
+              Chen, J., Lin, H., Han, X., and L. Sun, "Benchmarking
+              Large Language Models in Retrieval-Augmented Generation",
+              2024, <https://arxiv.org/abs/2309.01431>.
+
+   [TULVING-EPISODIC]
+              Tulving, E., "Episodic and Semantic Memory", 1972.
+
+   [BADDELEY-WM]
+              Baddeley, A. D. and G. Hitch, "Working Memory", 1974.
+
+   [BADDELEY-EPISODIC-BUFFER]
+              Baddeley, A. D., "The Episodic Buffer: A New Component of
+              Working Memory?", 2000,
+              <https://doi.org/10.1016/S1364-6613(00)01538-2>.
+
+   [CLS-THEORY]
+              McClelland, J. L., McNaughton, B. L., and R. C. O'Reilly,
+              "Why There Are Complementary Learning Systems in the
+              Hippocampus and Neocortex", 1995,
+              <https://doi.org/10.1037/0033-295X.102.3.419>.
+
+   [SQUIRE-MEMORY-SYSTEMS]
+              Squire, L. R., "Memory Systems of the Brain: A Brief
+              History and Current Perspective", 2004,
+              <https://doi.org/10.1016/j.nlm.2004.06.005>.
+
+
+
+Infantado                Expires 12 January 2027               [Page 47]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+Appendix A.  Canonical JSON Schemas
+
+   The schemas/0.1-draft/ directory contains the candidate
+   interoperability schema profile.  Schema identifiers are versioned
+   under the provisional public GitHub namespace.  Schema warnings are
+   metadata and are not transmitted in PAMSPEC instances.
+
+Appendix B.  State Transition Tables
+
+   Section 9 defines human-readable and machine-readable transition
+   tables for Lifecycle State, Availability State, Retention State, and
+   Validation State.  Object-type profiles may further restrict
+   transitions but cannot move values between dimensions.
+
+Appendix C.  Example Interactions
+
+   The examples/ directory contains review examples for claim, decision,
+   task, artifact, version chain, lifecycle transition, semantic query,
+   and concurrent update conflict.  These examples illustrate intended
+   semantics without freezing all fields.
+
+Appendix D.  Design Rationale
+
+   The design separates Compute Plane and Persistent State Plane to
+   prevent temporary context from becoming the hidden source of
+   authority.  It separates authoritative state from Derived Indexes to
+   support deletion, portability, deterministic evaluation, and
+   independent indexing implementations.
+
+Appendix E.  Comparison with Related Architectures
+
+   PAMSPEC is intended to coexist with provider-hosted session memory,
+   conversation persistence, framework-specific stores, extraction-
+   oriented memory systems, stateful-agent runtimes, graph-native memory
+   systems, event-sourced memory databases, and working memory in agent
+   communication gateways.  It does not claim to replace those systems.
+
+   Provider-hosted session memory and conversation-state systems,
+   including OpenAI session and conversation-state mechanisms
+   [OPENAI-AGENTS-SESSIONS] [OPENAI-CONVERSATION-STATE], can preserve
+   interaction continuity.  PAMSPEC focuses on persistent, typed,
+   versioned, scoped, auditable Memory Objects whose authoritative state
+   is independent of any single provider-hosted context mechanism.
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 48]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   Framework-specific stores, including LangGraph memory concepts such
+   as stores, namespaces, and semantic indexing [LANGGRAPH-MEMORY],
+   provide practical persistence inside a runtime ecosystem.  PAMSPEC
+   defines transport-neutral object, operation, scope, versioning,
+   provenance, and Derived Index semantics that can be mapped by
+   multiple frameworks.
+
+   Stateful-agent memory systems, including Letta and MemGPT concepts
+   around memory blocks and long-running agent state [LETTA-MEMORY]
+   [MEMGPT-PAPER], demonstrate the value of persistent agent state.
+   PAMSPEC separates the memory architecture from agent runtime
+   behavior, prompt engineering, hidden reasoning, and model-selection
+   policy.
+
+   Extraction-oriented memory systems, including Mem0-style memory add,
+   update, delete, and retrieval workflows [MEM0-DOCS], can be
+   compatible implementation approaches when exported memory preserves
+   PAMSPEC object identity, version identity, scope, provenance,
+   lifecycle, validation, Event Ledger, and Embedding Space semantics.
+
+   Graph-native memory systems and event-sourced memory databases can
+   provide natural implementations for relationships, immutable
+   transitions, replay, and snapshots.  PAMSPEC borrows architectural
+   vocabulary from provenance and event-sourcing practice [PROV-DM]
+   [FOWLER-EVENT-SOURCING] without mandating a graph database, event
+   store, or replay engine.
+
+   Agent Communication Gateway for Semantic Routing and Working Memory,
+   currently draft-agent-gw-01 and a Work in Progress, focuses on agent
+   communication, semantic routing, protocol adaptation, capability
+   discovery, and active workflow or working context
+   [AGENT-COMMUNICATION-GATEWAY].  PAMSPEC focuses on persistent, typed,
+   versioned, scoped, auditable Memory Objects, Relationship Objects,
+   Event Ledger history, and Derived Indexes.  The architectures are
+   complementary: an agent gateway can carry references to PAMSPEC
+   Memory Objects, while PAMSPEC does not define agent discovery,
+   semantic routing, capability negotiation, or protocol adaptation.
+
+   Cognitive-architecture research on language agents, particularly the
+   Cognitive Architectures for Language Agents (CoALA) taxonomy [COALA],
+   distinguishes working, episodic, semantic, and procedural memory.
+   PAMSPEC's standard object types (claim, decision, task, artifact,
+   observation, entity, summary, tool_invocation, tool_result,
+   working_memory) approximate this taxonomy without adopting it as
+   normative: working_memory maps to CoALA working memory, claim and
+   entity to semantic memory, observation to episodic memory, and
+   tool_invocation and tool_result to procedural memory traces.
+   Cognitive-science foundations for the distinctions include Tulving's
+
+
+
+Infantado                Expires 12 January 2027               [Page 49]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+   episodic and semantic memory [TULVING-EPISODIC], Baddeley and Hitch's
+   working-memory model [BADDELEY-WM] and the episodic buffer
+   [BADDELEY-EPISODIC-BUFFER], the Complementary Learning Systems theory
+   [CLS-THEORY], and Squire's overview of memory systems of the brain
+   [SQUIRE-MEMORY-SYSTEMS].  These are cited informatively; conformance
+   does not require adopting any specific cognitive theory.
+
+   Concrete memory architectures inform PAMSPEC's design: Generative
+   Agents' memory-stream-plus-reflection pattern [GENERATIVE-AGENTS]
+   inspired the append-only Event Ledger plus generated retrieval
+   summaries as Derived Indexes; HippoRAG [HIPPORAG] demonstrates
+   hippocampus-indexing-style retrieval that a PAMSPEC-conformant
+   Derived Index can implement; a survey of memory mechanisms in LLM
+   agents [AGENT-MEMORY-SURVEY] maps the design space PAMSPEC positions
+   within.  Long-term memory benchmarks LongMemEval [LONGMEMEVAL] and
+   LoCoMo [LOCOMO] are suitable evaluation targets for PAMSPEC-
+   conformant stores.
+
+   Provenance for AI systems has multiple related standards.  Model
+   Cards [MODEL-CARDS] and Datasheets for Datasets [DATASHEETS] document
+   the model and data sides of ML provenance; PAMSPEC provenance objects
+   SHOULD reference these where applicable.  PROV-AGENT [PROV-AGENT]
+   extends W3C PROV specifically for agentic workflows; PAMSPEC's
+   provenance model is compatible in spirit and cites PROV-DM directly.
+
+   Embedding-space portability is an open research area.  Relative
+   Representations [RELATIVE-REPRESENTATIONS] and Matryoshka
+   Representation Learning [MATRYOSHKA] suggest paths toward cross-model
+   comparability.  PAMSPEC's Embedding Space identity model reflects the
+   current state of the art: vectors from different spaces MUST NOT be
+   treated as directly comparable, but explicit re-projection or
+   alignment is not forbidden.
+
+   Agent identity and attestation is an emerging standards area.  The
+   IETF Agent Identity Protocol [AIP-DRAFT], the Agent-ID Framework
+   [AGENT-ID-FRAMEWORK], W3C DIDs [W3C-DID], and the SCITT transparency
+   architecture [SCITT] provide the identity, delegation, and
+   provenance-anchoring substrate that a PAMSPEC actor attestation block
+   can reference.  PAMSPEC deliberately does not mandate any specific
+   identity mechanism; the attestation block is designed to carry the
+   identifiers and signatures produced by whichever mechanism an
+   implementation chooses.
+
+   Adjacent IETF work on AI agent protocols includes a framework
+   document [AI-PROTOCOLS-FRAMEWORK], MCP-over-MoQ transport
+   [MCP-OVER-MOQ], and MCP security considerations [MCP-SECURITY].
+   PAMSPEC's transport-neutral core plus its reference MCP binding (see
+   Protocol Bindings) are intended to be compatible with all of them.
+
+
+
+Infantado                Expires 12 January 2027               [Page 50]
+
+Internet-Draft                   PAMSPEC                       July 2026
+
+
+Appendix F.  Acknowledgements
+
+   This initial draft records architectural requirements and open issues
+   for review.  Additional acknowledgements will be added when
+   contributors provide review or text.
+
+   Robert Leroux (rl.isapience@gmail.com) contributed project review and
+   specification feedback and is confirmed as a Contributor.  He is not
+   listed as a formal Internet-Draft author or editor in the front
+   matter.
+
+Author's Address
+
+   Richard M. Infantado (editor)
+   Independent
+   Email: richard.infantado@gmail.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Infantado                Expires 12 January 2027               [Page 51]

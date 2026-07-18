@@ -1,0 +1,51 @@
+{
+  "draft_name": "draft-infantado-agent-memory-architecture-00",
+  "title": "Architecture and Data Model for Persistent Memory in Agentic Systems",
+  "source_commit": "61d0e166e8ef4a393f0cbf533d652285a622e918",
+  "branch": "publication/00-submission-readiness",
+  "author": {
+    "name": "Richard M. Infantado",
+    "organization": "Independent",
+    "email": "richard.infantado@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "Robert Leroux",
+      "email": "rl.isapience@gmail.com",
+      "role": "Contributor"
+    }
+  ],
+  "artifacts": {
+    "xml": {
+      "path": "publication/00/draft-infantado-agent-memory-architecture-00.xml",
+      "sha256": "8A41577CEC13AFD1451121C5E7D9DE9F2C58C5D0774AC807C1BA2B740CB87FEE"
+    },
+    "txt": {
+      "path": "publication/00/draft-infantado-agent-memory-architecture-00.txt",
+      "sha256": "441214720126F6CFBA6CE5B7E6F33F265C946CA328948BB6BCA3C525CA1FD784"
+    },
+    "html": {
+      "path": "publication/00/draft-infantado-agent-memory-architecture-00.html",
+      "sha256": "0B4ADC6D33219869430897E29531B5069FC7B92DBAFE69645EB84F70851A8FAF"
+    }
+  },
+  "build": {
+    "tool_chain": {
+      "kramdown_rfc": "1.7.39",
+      "xml2rfc": "3.34.0",
+      "python": "3.14.5",
+      "ruby": "3.3.11"
+    },
+    "reproducible": true,
+    "build_warnings": [
+      "xml2rfc advisory: document date (2026-07-11) is more than 3 days from build date — non-blocking"
+    ]
+  },
+  "validation": {
+    "xml2rfc": "PASS",
+    "idnits": "MANUAL CHECK REQUIRED",
+    "repository": "PASS",
+    "conformance": "PASS"
+  },
+  "submission_performed": false
+}
