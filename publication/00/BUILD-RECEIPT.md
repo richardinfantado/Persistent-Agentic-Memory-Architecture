@@ -8,7 +8,7 @@
 | Baseline commit message | `merge: R9 normative consolidation — OD-C4/OD-P1/OD-X1 resolved, PAMSPEC-Lite 17 cases` |
 | Branch | `publication/00-submission-readiness` |
 | Branch point | `main` at `61d0e166e8ef4a393f0cbf533d652285a622e918` |
-| Publication commit | recorded in SUBMISSION-MANIFEST.json after final `git commit` |
+| Publication commit | `90cb33502bcb37297aefd8bf1ceea7b7280f9e94` |
 
 ## Build Environment
 

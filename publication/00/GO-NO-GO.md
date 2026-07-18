@@ -52,6 +52,7 @@ None. All of the following were verified clean:
 ## Artifact Commit
 
 Source commit (baseline): `61d0e166e8ef4a393f0cbf533d652285a622e918`
+Publication commit: `90cb33502bcb37297aefd8bf1ceea7b7280f9e94`
 Publication branch: `publication/00-submission-readiness`
 
 ## Artifact SHA-256 Hashes
