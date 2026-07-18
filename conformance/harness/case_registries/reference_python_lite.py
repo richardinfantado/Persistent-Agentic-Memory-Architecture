@@ -26,14 +26,23 @@ from ..evidence_emitter import CaseAssessment
 
 
 def _native_or_gap(requirement_id: str, extra_limitations: list[str] | None = None) -> CaseAssessment:
+    """R6.2b: four structured outcomes require four stances.
+    - passed            -> native / confirmed  (subject satisfies requirement)
+    - assertion_failure -> gap / confirmed     (subject does not satisfy)
+    - missing_feature   -> not_testable / not_testable (adapter has no path)
+    - execution_error   -> questionable / inconclusive (infra failure,
+                                                        can't attribute to subject)
+    """
     return CaseAssessment(
         requirement_id=requirement_id,
-        on_pass_classification="native",
-        on_pass_claim_status="confirmed",
-        on_fail_classification="gap",
-        on_fail_claim_status="confirmed",
+        on_passed_classification="native",
+        on_passed_claim_status="confirmed",
+        on_assertion_failure_classification="gap",
+        on_assertion_failure_claim_status="confirmed",
         on_missing_feature_classification="not_testable",
         on_missing_feature_claim_status="not_testable",
+        on_execution_error_classification="questionable",
+        on_execution_error_claim_status="inconclusive",
         evidence_source=["adapter"],
         extra_limitations=list(extra_limitations or []),
     )

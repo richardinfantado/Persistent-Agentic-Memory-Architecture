@@ -59,6 +59,13 @@ class CaseResult:
     passed: bool
     duration_ms: float
     error: str | None = None
+    # R6.2b: structured outcome classification, DELIBERATELY NOT
+    # serialized in to_dict() so the legacy JSON report shape is
+    # unchanged. Consumed by the R6 evidence emitter through the
+    # ExecutionSession returned from runner.run_profile() callers.
+    # Values: 'passed' | 'assertion_failure' | 'missing_feature' |
+    #         'execution_error'
+    outcome_kind: str = "passed"
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -183,17 +190,21 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
         adapter = factory()
         started = time.perf_counter()
         error: str | None = None
+        outcome_kind = "passed"
         try:
             fn(adapter)
             passed = True
         except NotImplementedError as e:
             passed = False
+            outcome_kind = "missing_feature"
             error = f"adapter missing feature: {e}"
         except AssertionError as e:
             passed = False
+            outcome_kind = "assertion_failure"
             error = f"assertion failed: {e}"
         except Exception:
             passed = False
+            outcome_kind = "execution_error"
             error = traceback.format_exc()
         finally:
             try:
@@ -201,7 +212,10 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
             except Exception:
                 pass
         elapsed_ms = (time.perf_counter() - started) * 1000
-        report.cases.append(CaseResult(name=name, passed=passed, duration_ms=elapsed_ms, error=error))
+        report.cases.append(CaseResult(
+            name=name, passed=passed, duration_ms=elapsed_ms,
+            error=error, outcome_kind=outcome_kind,
+        ))
 
     report.finished_at = _iso_utc_now()
     return report
