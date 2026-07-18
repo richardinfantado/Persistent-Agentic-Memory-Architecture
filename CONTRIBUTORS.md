@@ -7,7 +7,7 @@ Contributor listing is separate from formal Internet-Draft authorship or editors
 | Richard M. Infantado | Primary author and specification editor |
 | Robert Leroux | Contributor |
 
-Robert Leroux is not listed as a formal Internet-Draft author or editor in the front matter because public author metadata, contribution role details, and explicit consent for author/editor listing remain pending confirmation.
+Robert Leroux (rl.isapience@gmail.com) is listed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.
 
 ## Corrections
 
