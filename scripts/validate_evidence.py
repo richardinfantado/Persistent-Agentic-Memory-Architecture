@@ -1,0 +1,319 @@
+"""Validate PAMSPEC evidence-record chains against the R6.1b schema and
+enforce chain-level invariants.
+
+Usage:
+    python scripts/validate_evidence.py                     # validate all evidence-chain-*.jsonl under validation/reports/
+    python scripts/validate_evidence.py path/to/chain.jsonl [more.jsonl ...]
+
+Exit status: 0 on success; non-zero on any schema or invariant failure.
+
+The Draft 2020-12 validator is instantiated with a FormatChecker so
+`format: date-time` on `recorded_at` and `evidence_observed_at` is
+actually enforced (RFC 3339 timestamps with timezone offset).
+
+Chain-level invariants enforced (the schema itself carries the
+property-level `if/then` conditionals):
+
+  5. record_id unique within a chain file.
+  6. controlled_experiment control_design MUST have at least one entry in
+     confounders_ruled_out or negative_controls.
+  7. revises.record_id MUST resolve to a record earlier in the same file.
+  8. A record MUST NOT revise itself.
+  9. Revision cycles prohibited.
+ 10. revises target's requirement_id MUST equal the reviser's
+     requirement_id.
+ 11. evidence_observed_at MUST NOT move backward along a revision edge.
+     (The semantically-correct field is the OBSERVATION time, not the
+     record-materialization time, because retrospective_reconstruction
+     records may be materialized in any order.)
+ 12. Multiple altering revisions with the SAME effect on the same
+     target are allowed (independent reproductions of a retraction, or
+     independent supersessions with the same outcome). Conflicting
+     altering effects on the same target (one retracts, one supersedes)
+     ARE prohibited.
+ 13. For records with origin=retrospective_reconstruction,
+     evidence_observed_at MUST be less-than-or-equal-to recorded_at
+     (the underlying experiment cannot occur after the record was
+     materialized).
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+from jsonschema import Draft202012Validator, FormatChecker
+
+RFC3339_DATE_TIME_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCHEMA_PATH = ROOT / "conformance" / "schemas" / "0.1-draft" / "evidence-record.schema.json"
+DEFAULT_SEARCH_DIRS = [ROOT / "validation" / "reports"]
+DEFAULT_GLOB = "evidence-chain-*.jsonl"
+
+ALTERING_EFFECTS = {"retracts", "supersedes"}
+
+
+def load_schema() -> dict:
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _make_datetime_format_checker() -> FormatChecker:
+    """Build a FormatChecker with a strict RFC 3339 `date-time` handler.
+
+    Without this, jsonschema on environments that lack rfc3339-validator
+    has NO checker registered for date-time, so it silently accepts
+    anything — including 'yesterday afternoon' or
+    '2026-07-18T15:00:00' (no timezone).
+
+    R6.1c: strict RFC 3339. The regex enforces:
+      - 'T' date-time separator (space is REJECTED)
+      - literal timezone: 'Z' or a '+HH:MM' / '-HH:MM' offset
+    Then datetime.fromisoformat() validates the calendar values
+    (rejects e.g. '2026-13-45T99:99:99+08:00').
+    """
+    fc = FormatChecker()
+
+    @fc.checks("date-time", raises=(ValueError,))
+    def _check_date_time(value):  # noqa: ANN001
+        if not isinstance(value, str):
+            return True
+        if not RFC3339_DATE_TIME_RE.match(value):
+            raise ValueError(
+                f"not a valid RFC 3339 date-time: {value!r} "
+                f"(requires 'T' separator and 'Z' or '+HH:MM' offset)"
+            )
+        try:
+            datetime.fromisoformat(value)
+        except ValueError as e:
+            raise ValueError(f"invalid calendar date-time: {value!r} ({e})")
+        return True
+
+    return fc
+
+
+def make_validator() -> Draft202012Validator:
+    return Draft202012Validator(load_schema(), format_checker=_make_datetime_format_checker())
+
+
+def iter_default_chains() -> list[Path]:
+    paths: list[Path] = []
+    for d in DEFAULT_SEARCH_DIRS:
+        if d.exists():
+            paths.extend(sorted(d.glob(DEFAULT_GLOB)))
+    return paths
+
+
+def _parse_iso(ts: str):
+    try:
+        return datetime.fromisoformat(ts)
+    except Exception:
+        return None
+
+
+def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
+    errors: list[str] = []
+    records: list[dict] = []
+    positions: dict[str, int] = {}
+
+    for lineno, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            rec = json.loads(raw)
+        except json.JSONDecodeError as e:
+            errors.append(f"{path}:{lineno}: JSON decode error: {e}")
+            continue
+        schema_errors = list(validator.iter_errors(rec))
+        for err in schema_errors:
+            errors.append(f"{path}:{lineno}: schema: {err.message} at {list(err.absolute_path)}")
+        if schema_errors:
+            continue
+        records.append(rec)
+
+    for idx, rec in enumerate(records):
+        rid = rec["record_id"]
+        if rid in positions:
+            errors.append(f"{path}: duplicate record_id '{rid}' at record {idx} (R6 invariant 5)")
+        positions[rid] = idx
+
+    for idx, rec in enumerate(records):
+        if rec["test_kind"] == "controlled_experiment":
+            cd = rec.get("control_design")
+            if cd is None:
+                errors.append(
+                    f"{path}: record_id={rec['record_id']}: controlled_experiment "
+                    f"MUST have non-null control_design (schema conditional)"
+                )
+            else:
+                if not (cd.get("confounders_ruled_out") or cd.get("negative_controls")):
+                    errors.append(
+                        f"{path}: record_id={rec['record_id']}: controlled_experiment "
+                        f"control_design MUST have at least one confounders_ruled_out or "
+                        f"negative_controls entry (R6 invariant 6)"
+                    )
+
+    id_to_rec = {r["record_id"]: r for r in records}
+    id_to_idx = {r["record_id"]: i for i, r in enumerate(records)}
+
+    for idx, rec in enumerate(records):
+        revises = rec.get("revises")
+        if revises is None:
+            continue
+        target_id = revises["record_id"]
+        rid = rec["record_id"]
+
+        if target_id == rid:
+            errors.append(f"{path}: record_id={rid}: self-revision prohibited (R6 invariant 8)")
+            continue
+
+        if target_id not in id_to_rec:
+            errors.append(
+                f"{path}: record_id={rid}: revises '{target_id}' but no such "
+                f"record_id in this chain (R6 invariant 7)"
+            )
+            continue
+
+        if id_to_idx[target_id] >= idx:
+            errors.append(
+                f"{path}: record_id={rid}: revises '{target_id}' but that record "
+                f"appears at or after this one (R6 invariant 7: append-only ordering)"
+            )
+
+        target = id_to_rec[target_id]
+        if target["requirement_id"] != rec["requirement_id"]:
+            errors.append(
+                f"{path}: record_id={rid}: revises '{target_id}' but requirement_id differs "
+                f"({target['requirement_id']} vs {rec['requirement_id']}) (R6 invariant 10)"
+            )
+
+        t_this = _parse_iso(rec.get("evidence_observed_at", ""))
+        t_target = _parse_iso(target.get("evidence_observed_at", ""))
+        if t_this is not None and t_target is not None and t_this < t_target:
+            errors.append(
+                f"{path}: record_id={rid}: evidence_observed_at is BEFORE the record it revises "
+                f"'{target_id}' — revision edges must move forward in observation time "
+                f"(R6 invariant 11)"
+            )
+
+    altering_by_target: dict[str, list[tuple[str, str]]] = {}
+    for rec in records:
+        revises = rec.get("revises")
+        if revises is None:
+            continue
+        if revises["effect"] in ALTERING_EFFECTS:
+            altering_by_target.setdefault(revises["record_id"], []).append(
+                (rec["record_id"], revises["effect"])
+            )
+    for target_id, revs in altering_by_target.items():
+        distinct_effects = {e for _, e in revs}
+        if len(distinct_effects) > 1:
+            details = ", ".join(f"{rid}:{eff}" for rid, eff in revs)
+            errors.append(
+                f"{path}: record '{target_id}' has conflicting altering revisions "
+                f"({details}) — a target may not be both retracted and superseded "
+                f"with different effects (R6 invariant 12)"
+            )
+
+    for rec in records:
+        if rec.get("origin") != "retrospective_reconstruction":
+            continue
+        t_rec = _parse_iso(rec.get("recorded_at", ""))
+        t_obs = _parse_iso(rec.get("evidence_observed_at", ""))
+        if t_rec is not None and t_obs is not None and t_obs > t_rec:
+            errors.append(
+                f"{path}: record_id={rec['record_id']}: "
+                f"retrospective_reconstruction requires "
+                f"evidence_observed_at <= recorded_at "
+                f"(experiment cannot occur after materialization) "
+                f"(R6 invariant 13)"
+            )
+
+    def _has_cycle(start: str) -> bool:
+        seen = {start}
+        cur = start
+        while True:
+            rec = id_to_rec.get(cur)
+            if rec is None:
+                return False
+            revises = rec.get("revises")
+            if revises is None:
+                return False
+            nxt = revises["record_id"]
+            if nxt in seen:
+                return True
+            seen.add(nxt)
+            cur = nxt
+    for rec in records:
+        if _has_cycle(rec["record_id"]):
+            errors.append(
+                f"{path}: record_id={rec['record_id']}: revision cycle detected "
+                f"(R6 invariant 9)"
+            )
+
+    return errors
+
+
+def compute_effective_status(records: list[dict]) -> dict[str, str]:
+    """For each record_id in a chain, return its EFFECTIVE disposition.
+
+    'confirmed' | 'inconclusive' | 'not_testable' | 'retracted' | 'superseded'
+
+    The intrinsic claim_status of a record is preserved unless a LATER
+    record carries revises.effect in {retracts, supersedes} pointing at
+    it. reproduces / extends leave effective disposition unchanged.
+    """
+    effective = {r["record_id"]: r["claim_status"] for r in records}
+    for rec in records:
+        revises = rec.get("revises")
+        if revises is None:
+            continue
+        if revises["effect"] == "retracts":
+            effective[revises["record_id"]] = "retracted"
+        elif revises["effect"] == "supersedes":
+            effective[revises["record_id"]] = "superseded"
+    return effective
+
+
+def main(argv: list[str]) -> int:
+    validator = make_validator()
+    if len(argv) > 1:
+        paths = [Path(a) for a in argv[1:]]
+    else:
+        paths = iter_default_chains()
+
+    if not paths:
+        print("validate_evidence: no evidence-chain files found (searched:",
+              ", ".join(str(d) for d in DEFAULT_SEARCH_DIRS), ")")
+        return 0
+
+    all_errors: list[str] = []
+    for p in paths:
+        if not p.exists():
+            all_errors.append(f"{p}: file not found")
+            continue
+        errs = validate_chain(p, validator)
+        if errs:
+            all_errors.extend(errs)
+        else:
+            n = sum(1 for _ in p.open(encoding="utf-8") if _.strip())
+            print(f"OK  {p}  ({n} records)")
+
+    if all_errors:
+        print()
+        print("EVIDENCE VALIDATION FAILED:")
+        for e in all_errors:
+            print(" -", e)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

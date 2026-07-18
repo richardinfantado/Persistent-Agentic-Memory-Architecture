@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/richardinfantado/Persistent-Agentic-Memory-Architecture/main/conformance/schemas/0.1-draft/evidence-record.schema.json",
+  "title": "PAMSPEC Evidence Record (0.1-draft)",
+  "$comment": "R6.1b. Append-only immutable records. Retraction and supersession are relationships carried by later records via `revises`. The $id URL contains a `main`-branch path, which is technically mutable; this is acceptable during the 0.1-draft cycle because the versioned schema directory (`0.1-draft/`) will be frozen before external publication and a release-tag URL will replace this identifier before then. See conformance/EVIDENCE-MODEL.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "recorded_at",
+    "evidence_observed_at",
+    "origin",
+    "test_kind",
+    "requirement_id",
+    "subject",
+    "adapter",
+    "pamspec_context",
+    "classification",
+    "claim_status",
+    "sub_requirements",
+    "evidence_source",
+    "revises",
+    "control_design",
+    "environment_manifest",
+    "results_artifact",
+    "evidence_commit",
+    "limitations",
+    "observed_evidence"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the EvidenceRecord itself was materialized. For native_emission records this is when the harness authored the record. For retrospective_reconstruction records this is when the R6 record was materialized from prior artifacts, not when the underlying experiment ran (see evidence_observed_at)."
+    },
+    "evidence_observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the underlying claim was observed. For native_emission records this equals recorded_at (or is very close). For retrospective_reconstruction records this preserves the original observation time so revision-edge monotonicity is meaningful."
+    },
+    "origin": {
+      "type": "string",
+      "enum": ["native_emission", "retrospective_reconstruction"],
+      "description": "native_emission = the record was produced directly by a harness run or scenario at the moment the claim was observed. retrospective_reconstruction = the record was materialized after the fact from prior evidence (e.g. commit history, prior JSONL, prose reports)."
+    },
+    "test_kind": {
+      "type": "string",
+      "enum": ["probe", "conformance", "regression", "controlled_experiment"]
+    },
+    "requirement_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "version"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["framework", "implementation", "adapter", "binding", "specification"]},
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "adapter": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "version": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "pamspec_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec_commit", "profile", "profile_version", "harness_commit"],
+      "properties": {
+        "spec_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "profile": {"type": ["string", "null"]},
+        "profile_version": {"type": ["string", "null"]},
+        "harness_commit": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+          ],
+          "description": "Full git SHA of the R7 conformance harness run that produced the record. MUST be null for retrospective_reconstruction records and for probes that were not produced by an R7 harness invocation."
+        }
+      }
+    },
+    "classification": {
+      "type": "string",
+      "enum": ["native", "emulated", "gap", "questionable", "not_testable"]
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": ["confirmed", "inconclusive", "not_testable"]
+    },
+    "sub_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sub_requirement_id", "classification"],
+        "properties": {
+          "sub_requirement_id": {"type": "string", "minLength": 1},
+          "classification": {"type": "string", "enum": ["native", "emulated", "gap", "questionable", "not_testable"]},
+          "note": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "evidence_source": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["public_api", "backend_inspection", "adapter", "source_review"]},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "revises": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["record_id", "effect", "reason"],
+          "properties": {
+            "record_id": {"type": "string", "minLength": 1},
+            "effect": {"type": "string", "enum": ["retracts", "supersedes", "reproduces", "extends"]},
+            "reason": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "control_design": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "primary_signal", "baseline", "positive_controls", "negative_controls", "confounders_considered", "confounders_ruled_out", "replications", "notes"],
+          "properties": {
+            "method": {"type": "string", "minLength": 1},
+            "primary_signal": {"type": "string", "minLength": 1},
+            "baseline": {"type": ["string", "null"]},
+            "positive_controls": {"type": "array", "items": {"type": "string"}},
+            "negative_controls": {"type": "array", "items": {"type": "string"}},
+            "confounders_considered": {"type": "array", "items": {"type": "string"}},
+            "confounders_ruled_out": {"type": "array", "items": {"type": "string"}},
+            "replications": {"type": "integer", "minimum": 1},
+            "notes": {"type": ["string", "null"]}
+          }
+        }
+      ]
+    },
+    "environment_manifest": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reference", "sha256"],
+          "properties": {
+            "reference": {"type": "string", "minLength": 1},
+            "sha256": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "results_artifact": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reference", "sha256"],
+          "properties": {
+            "reference": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          },
+          "description": "Reference-and-hash pair identifying the raw machine-readable evidence artifact this record summarizes. Both reference (repo-relative path) and sha256 (full 64-char hex) are required when non-null. Null when the record IS the raw evidence or no separate artifact exists."
+        }
+      ]
+    },
+    "evidence_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "observed_evidence": {"type": "object"},
+    "conclusion_narrative": {"type": "string"},
+    "adapter_feasibility": {
+      "type": ["string", "null"],
+      "enum": ["feasible", "infeasible", "unknown", "not_applicable", null]
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "classification=not_testable => claim_status=not_testable",
+      "if": {"properties": {"classification": {"const": "not_testable"}}, "required": ["classification"]},
+      "then": {"properties": {"claim_status": {"const": "not_testable"}}}
+    },
+    {
+      "$comment": "claim_status=not_testable => classification=not_testable (bidirectional)",
+      "if": {"properties": {"claim_status": {"const": "not_testable"}}, "required": ["claim_status"]},
+      "then": {"properties": {"classification": {"const": "not_testable"}}}
+    },
+    {
+      "$comment": "controlled_experiment => non-null control_design",
+      "if": {"properties": {"test_kind": {"const": "controlled_experiment"}}, "required": ["test_kind"]},
+      "then": {"properties": {"control_design": {"type": "object"}}}
+    },
+    {
+      "$comment": "controlled_experiment => non-null environment_manifest AND non-null results_artifact",
+      "if": {"properties": {"test_kind": {"const": "controlled_experiment"}}, "required": ["test_kind"]},
+      "then": {"properties": {"environment_manifest": {"type": "object"}, "results_artifact": {"type": "object"}}}
+    },
+    {
+      "$comment": "environment_manifest non-null => sha256 non-null",
+      "if": {"properties": {"environment_manifest": {"type": "object"}}, "required": ["environment_manifest"]},
+      "then": {"properties": {"environment_manifest": {"type": "object", "properties": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}}}
+    },
+    {
+      "$comment": "classification=not_testable => at least one limitation",
+      "if": {"properties": {"classification": {"const": "not_testable"}}, "required": ["classification"]},
+      "then": {"properties": {"limitations": {"minItems": 1}}}
+    },
+    {
+      "$comment": "source_review in evidence_source => at least one limitation",
+      "if": {"properties": {"evidence_source": {"contains": {"const": "source_review"}}}},
+      "then": {"properties": {"limitations": {"minItems": 1}}}
+    },
+    {
+      "$comment": "classification=emulated => adapter non-null AND evidence_source contains 'adapter'",
+      "if": {"properties": {"classification": {"const": "emulated"}}, "required": ["classification"]},
+      "then": {"properties": {"adapter": {"type": "object"}, "evidence_source": {"contains": {"const": "adapter"}}}}
+    },
+    {
+      "$comment": "evidence_source contains 'adapter' => adapter non-null",
+      "if": {"properties": {"evidence_source": {"contains": {"const": "adapter"}}}},
+      "then": {"properties": {"adapter": {"type": "object"}}}
+    },
+    {
+      "$comment": "revises with altering effect => claim_status=confirmed",
+      "if": {
+        "properties": {
+          "revises": {
+            "type": "object",
+            "properties": {"effect": {"enum": ["retracts", "supersedes"]}},
+            "required": ["effect"]
+          }
+        },
+        "required": ["revises"]
+      },
+      "then": {"properties": {"claim_status": {"const": "confirmed"}}}
+    },
+    {
+      "$comment": "profile null => profile_version null",
+      "if": {"properties": {"pamspec_context": {"type": "object", "properties": {"profile": {"type": "null"}}, "required": ["profile"]}}, "required": ["pamspec_context"]},
+      "then": {"properties": {"pamspec_context": {"properties": {"profile_version": {"type": "null"}}}}}
+    },
+    {
+      "$comment": "profile string => profile_version string (bidirectional pairing)",
+      "if": {"properties": {"pamspec_context": {"type": "object", "properties": {"profile": {"type": "string"}}, "required": ["profile"]}}, "required": ["pamspec_context"]},
+      "then": {"properties": {"pamspec_context": {"properties": {"profile_version": {"type": "string"}}}}}
+    },
+    {
+      "$comment": "R6.1c: origin=retrospective_reconstruction => harness_commit=null. Native emissions may still legitimately carry a null harness_commit (e.g. produced by a non-R7 validation scenario), so the reverse implication is NOT enforced.",
+      "if": {"properties": {"origin": {"const": "retrospective_reconstruction"}}, "required": ["origin"]},
+      "then": {"properties": {"pamspec_context": {"properties": {"harness_commit": {"type": "null"}}}}}
+    }
+  ]
+}
