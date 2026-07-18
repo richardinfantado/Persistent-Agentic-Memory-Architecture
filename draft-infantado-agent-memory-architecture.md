@@ -859,13 +859,15 @@ Temporal evaluation explicitly selects observation time, assertion time, validit
 
 Pagination includes a stable cursor or ordering basis when repeatability is claimed. Stable ordering uses deterministic keys such as snapshot identifier, primary score, secondary score, update time, object identifier, and version identifier. Tie-breaking is documented for any profile that claims repeatable retrieval.
 
+The content of each Memory Object envelope returned by query or read operations MUST be stable across repeated calls against the same committed version. Implementations MUST NOT introduce fields that vary per call — such as per-request timestamps, processing identifiers, or random nonces — into the envelope representation of a committed version. When evaluated against identical filter and ordering parameters over the same authoritative state, serialization of the result set MUST be byte-identical across repeated calls.
+
 Default retrieval is conservative: Lifecycle State `active`, Availability State `available`, Retention State `retained`, and Validation State `corroborated` form the normal trusted retrieval target. Other states require explicit query policy or filters unless a profile declares different defaults.
 
 # Consistency and Concurrency
 
 The candidate profile uses optimistic concurrency. Update, Transition, Redact, Delete, and Relationship Object operations use expected-version semantics. An operation with an obsolete expected version fails with `version_conflict` and returns the current version identifier when policy permits.
 
-Idempotency keys identify duplicate requests. A duplicate request with the same idempotency key and identical request content returns the original successful result or original stable error. A duplicate request with the same idempotency key and different content fails with `duplicate_operation`.
+Idempotency keys identify duplicate requests. A duplicate request with the same idempotency key and identical request content returns the original successful result or original stable error. A duplicate request with the same idempotency key and different content fails with `duplicate_operation`. The idempotency record MUST be durable: it MUST survive the Memory Service process restarting with the same persistent store. An implementation that stores idempotency state only in memory does not conform to this requirement. Cross-process concurrent idempotency atomicity is a deployment quality concern; this document does not require any specific guarantee beyond restart durability.
 
 A committed Memory Version and its required Event Ledger entry are atomic from the perspective of Inspect History. If either cannot be committed, the state-changing operation fails. Implementations can use different physical mechanisms to provide this logical atomicity.
 
@@ -1015,11 +1017,37 @@ PAMSPEC-Lite is a minimal on-ramp profile for single-developer agents, prototype
 - The Validation State subset `unverified` and `corroborated`.
 - Append-only Event Ledger recording of `object_created`, `object_updated`, `object_deleted`, `lifecycle_transitioned`, and `validation_transitioned` events, with atomic version+event commit.
 - Expected-version preconditions on Update, Transition, and Delete, and `version_conflict` on stale expectations.
-- Idempotency-key handling for Create.
+- Durable idempotency-key handling for Create: idempotency records MUST survive the Memory Service process restarting with the same persistent store.
 
 PAMSPEC-Lite deliberately omits Relationship Objects, Semantic Query, Snapshots, Redaction (beyond deletion), Legal Hold, and Derived Index management. Implementations that support any of those areas SHOULD declare the corresponding full profile instead of, or in addition to, PAMSPEC-Lite.
 
 A reference implementation of PAMSPEC-Lite is provided under `implementations/reference-python/` for illustration; it is not normative.
+
+## PAMSPEC-Delegation
+
+PAMSPEC-Delegation is an authorization profile for multi-agent deployments that require scoped, time-bounded, revocable permission grants. It layers on top of PAMSPEC-Lite. A Conforming Implementation of PAMSPEC-Delegation MUST support:
+
+- A grant operation that binds a `granting_actor` to a `delegated_actor` over a bounded set of `granted_operations`, an optional `granted_object_ids` restriction, a required `policy_basis`, and a `not_before` / `not_after` time window.
+- A check operation that evaluates a delegation grant against a requested operation, actor, scope, and optionally an object identifier, returning the grant on success or `access_denied` on failure.
+- Rejection of grants whose `not_before` is later than `not_after` with `policy_denied`.
+- Denial of check requests that fall outside the grant's `not_before` / `not_after` window with `access_denied`.
+- Enforcement of `usage_limit` when declared: checks beyond the limit return `access_denied`.
+- A revoke operation that immediately marks a delegation as no longer effective; subsequent checks return `access_denied`.
+- Enforcement of `granted_object_ids` restrictions when declared: checks against non-permitted object identifiers return `access_denied`.
+
+PAMSPEC-Delegation does not specify how delegation grants are stored or transmitted; it specifies observable enforcement semantics.
+
+## PAMSPEC-Subscribe
+
+PAMSPEC-Subscribe is a streaming profile for agents and integrators that react to memory changes. It layers on top of PAMSPEC-Lite. A Conforming Implementation of PAMSPEC-Subscribe MUST support:
+
+- A subscribe operation that accepts a scope identifier, actor, and filter expression, and returns a `subscription_id` with a starting ledger sequence.
+- Delivery of every Event Ledger entry that satisfies the declared filter within the authorized scope, available via a poll or push channel.
+- Exclusion of events that do not match the filter; filter evaluation MUST be applied per event.
+- A stable cursor that advances after each poll: events already delivered MUST NOT be re-delivered on the next poll unless the cursor is explicitly reset.
+- A close or unsubscribe operation that stops further delivery; events produced after close MUST NOT be delivered on subsequent polls against the closed subscription.
+
+PAMSPEC-Subscribe does not specify the delivery transport; HTTP long-poll, WebSocket, MCP notification stream, and message-bus integrations are all conforming channels provided they satisfy the above behavioral requirements.
 
 ## PAMSPEC-Core
 

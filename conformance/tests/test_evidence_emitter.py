@@ -151,7 +151,7 @@ def test_run_and_emit_integrated_produces_valid_chain(tmp_path, clean_source):
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
     )
     assert records is not None
-    assert len(records) == len(report.cases) == 15
+    assert len(records) == len(report.cases) == 17
     # Chain-level invariants and schema pass
     r = subprocess.run(
         [sys.executable, str(VALIDATOR_CLI), str(evidence_path)],
@@ -1172,7 +1172,7 @@ def test_matching_evidence_identity_succeeds(tmp_path, clean_source):
         context=_make_context(tmp_path),
         case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
     )
-    assert records is not None and len(records) == 15
+    assert records is not None and len(records) == 17
 
 
 def test_runner_collects_evidence_identity_from_adapter(tmp_path):

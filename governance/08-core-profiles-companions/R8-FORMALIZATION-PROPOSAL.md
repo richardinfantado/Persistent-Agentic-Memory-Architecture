@@ -145,7 +145,7 @@ An implementation that serializes the same set of objects into a portability bun
 
 **Suite module:** `conformance/suite/test_lite.py`  
 **Runner profile key:** `PAMSPEC-Lite`  
-**Cases (15):**
+**Cases (17, updated in R9):**
 
 | Case | Requirement covered |
 |---|---|
@@ -164,8 +164,10 @@ An implementation that serializes the same set of objects into a portability bun
 | `case_query_default_filters_apply` | §10 Operation Semantics (query) |
 | `case_history_is_monotonic` | CR-4 Immutable Versions, §7.7 Event Ledger |
 | `case_unknown_extension_fields_preserved_on_read` | CR-3 Canonical Content |
+| `case_scope_mutation_rejected` | CR-2 Immutable Scope (write-path) |
+| `case_bundle_output_is_deterministic` | CR-7 Deterministic Outcomes (provisional) |
 
-PAMSPEC-Lite is the current Core-oriented conformance suite but does not yet provide complete test coverage for every proposed Core requirement. Specifically: CR-2's write-path scope mutation rejection is not tested (only read-time isolation is tested); CR-7 bundle determinism has no direct test case. An implementation passing all 15 Lite cases satisfies CR-1, CR-3, CR-4, CR-5, and CR-6. CR-2 write-path and CR-7 require additional test coverage before PAMSPEC-Lite can serve as a complete Core conformance signal (see OD-P1).
+PAMSPEC-Lite is the Core-oriented conformance suite. As of R9, it covers CR-2 write-path scope mutation rejection and CR-7 bundle determinism. An implementation passing all 17 Lite cases satisfies CR-1, CR-2, CR-3, CR-4, CR-5, and CR-6. CR-7 remains provisional pending a direct normative MUST for export-bundle determinism; the current test exercises query-layer determinism as a proxy (OD-P1 resolved in R9).
 
 ### 4.2 PAMSPEC-Delegation (formalized)
 
