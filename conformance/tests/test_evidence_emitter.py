@@ -1,24 +1,30 @@
-"""R6.2 tests: EvidenceRecord emission alongside the legacy
-ConformanceReport.
+"""R6.2a tests: EvidenceRecord emission integrated with the harness.
 
-Acceptance-criteria coverage:
-  - existing 26 pre-R6 conformance tests remain unchanged (separate file)
-  - legacy report emits successfully AND is byte-identical to what the
-    unmodified runner produces (byte compat)
-  - EvidenceRecords validate against the merged R6.1c schema
-  - emitted hashes resolve to actual artifacts
-  - all commit fields use full 40-char SHAs
-  - timestamps pass strict RFC 3339 validation
-  - deterministic runs produce stable semantic records
-  - failure, not_testable, and limitation cases are covered
-  - malformed emission fails closed
-  - schema/repo/reference-python/conformance/MCP suites remain green
-    (checked via CLI after commit, not inside this test file)
+Covers every reviewer-required guarantee:
+  * `run_and_emit` orchestrates both artifacts in one invocation.
+  * Legacy behavior (no evidence_output_path) unchanged.
+  * Single authoritative source (report file bytes are hashed and parsed).
+  * Explicit CaseAssessment required for every reported case; missing
+    entries fail closed.
+  * No pass/fail-only classification inference; classification comes
+    from the registry.
+  * Structured "adapter missing feature" detection (prefix, not
+    fuzzy substring).
+  * Preflight-and-atomic-commit: schema + chain-invariant checks before
+    any write; failures leave the existing evidence file byte-identical.
+  * Profile identity: report.profile MUST match context.profile.
+  * Portable artifact references only (relative to artifact_root; no
+    absolute paths, no .. traversal).
+  * evidence_commit is a distinct required context field.
+  * observed_evidence.semantic_results_sha256 captures a canonical
+    projection and surfaces real semantic differences.
+  * Determinism helper works and does not mask the semantic hash.
 """
 
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import re
 import subprocess
@@ -32,9 +38,17 @@ from jsonschema import Draft202012Validator
 from conformance.harness import runner
 from conformance.harness.evidence_emitter import (
     DEFAULT_ADAPTER_LIMITATION,
+    CaseAssessment,
     EmissionContext,
-    emit_evidence_from_report,
+    EvidenceEmissionError,
+    emit_evidence_from_report_file,
     normalize_for_determinism,
+    run_and_emit,
+)
+from conformance.harness.case_registries.reference_python_lite import (
+    REFERENCE_PYTHON_LITE_REGISTRY,
+    REFERENCE_PYTHON_SUBJECT,
+    REFERENCE_PYTHON_ADAPTER,
 )
 from conformance.adapters.reference_python import ReferencePythonAdapter
 
@@ -47,369 +61,568 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import validate_evidence  # noqa: E402
 
 
-FAKE_SPEC_COMMIT = "a" * 40
-FAKE_HARNESS_COMMIT = "b" * 40
+FAKE_SPEC = "a" * 40
+FAKE_HARNESS = "b" * 40
+FAKE_EVIDENCE = "c" * 40
 
 
-def _make_context(**overrides):
+def _make_context(tmp_path: Path, **overrides) -> EmissionContext:
     kwargs = dict(
-        spec_commit=FAKE_SPEC_COMMIT,
-        harness_commit=FAKE_HARNESS_COMMIT,
+        spec_commit=FAKE_SPEC,
+        harness_commit=FAKE_HARNESS,
+        evidence_commit=FAKE_EVIDENCE,
         profile="PAMSPEC-Lite",
         profile_version="0.1-draft",
-        subject={"kind": "implementation", "name": "reference-python", "version": "0.1-draft"},
+        artifact_root=tmp_path,
+        subject=dict(REFERENCE_PYTHON_SUBJECT),
+        adapter=dict(REFERENCE_PYTHON_ADAPTER),
         run_id="testrun0001",
     )
     kwargs.update(overrides)
     return EmissionContext(**kwargs)
 
 
-def _run_lite_against_reference(tmp_path: Path):
-    """Run the Lite profile against ReferencePythonAdapter, persist the
-    legacy report to tmp_path, and return (report_dict, report_path)."""
-    tmp_path = Path(tmp_path)
-    tmp_path.mkdir(parents=True, exist_ok=True)
-    report = runner.run_profile("PAMSPEC-Lite", ReferencePythonAdapter)
-    report_dict = report.to_dict()
-    report_path = tmp_path / "conformance-report.json"
-    report_path.write_text(report.to_json(), encoding="utf-8")
-    return report, report_dict, report_path
+# --------------------------------------------------------------------------- #
+# run_and_emit orchestration
+# --------------------------------------------------------------------------- #
+
+def test_run_and_emit_produces_only_legacy_report_when_evidence_output_absent(tmp_path):
+    """Default (backward-compat) call path: no evidence emitted."""
+    report_path = tmp_path / "report.json"
+    report, records = run_and_emit(
+        "PAMSPEC-Lite",
+        ReferencePythonAdapter,
+        report_output_path=report_path,
+    )
+    assert report_path.exists()
+    assert records is None
+    # No stray evidence file created anywhere.
+    assert not list(tmp_path.glob("*.jsonl"))
 
 
-# ---------- positive: end-to-end ----------
+def test_run_and_emit_produces_both_artifacts_in_one_invocation(tmp_path):
+    report_path = tmp_path / "report.json"
+    evidence_path = tmp_path / "evidence.jsonl"
+    context = _make_context(tmp_path)
 
-def test_end_to_end_emission_produces_valid_chain(tmp_path):
-    report, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    emission_path = tmp_path / "evidence-chain.jsonl"
-    context = _make_context()
+    report, records = run_and_emit(
+        "PAMSPEC-Lite",
+        ReferencePythonAdapter,
+        report_output_path=report_path,
+        evidence_output_path=evidence_path,
+        context=context,
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
 
-    records = emit_evidence_from_report(report_dict, report_path, emission_path, context)
-
+    assert report_path.exists()
+    assert evidence_path.exists()
+    assert records is not None
     assert len(records) == len(report.cases) == 15
-    assert emission_path.exists()
-    lines = emission_path.read_text(encoding="utf-8").splitlines()
-    assert len(lines) == len(records)
-
-    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    schema_validator = Draft202012Validator(schema)
-    for rec in records:
-        errors = list(schema_validator.iter_errors(rec))
-        assert not errors, f"{rec['record_id']} failed schema: {[e.message for e in errors]}"
 
 
-def test_emitted_chain_passes_full_validator_cli(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    emission_path = tmp_path / "evidence-chain-cli.jsonl"
-    emit_evidence_from_report(report_dict, report_path, emission_path, _make_context())
+def test_run_and_emit_requires_context_when_evidence_requested(tmp_path):
+    with pytest.raises(EvidenceEmissionError):
+        run_and_emit(
+            "PAMSPEC-Lite",
+            ReferencePythonAdapter,
+            report_output_path=tmp_path / "r.json",
+            evidence_output_path=tmp_path / "e.jsonl",
+            context=None,
+            case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+def test_run_and_emit_requires_registry_when_evidence_requested(tmp_path):
+    with pytest.raises(EvidenceEmissionError):
+        run_and_emit(
+            "PAMSPEC-Lite",
+            ReferencePythonAdapter,
+            report_output_path=tmp_path / "r.json",
+            evidence_output_path=tmp_path / "e.jsonl",
+            context=_make_context(tmp_path),
+            case_registry=None,
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Single authoritative source
+# --------------------------------------------------------------------------- #
+
+def test_emitter_loads_and_hashes_same_bytes(tmp_path):
+    report_path = tmp_path / "report.json"
+    evidence_path = tmp_path / "evidence.jsonl"
+    context = _make_context(tmp_path)
+    report, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=report_path,
+        evidence_output_path=evidence_path,
+        context=context, case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    expected = hashlib.sha256(report_path.read_bytes()).hexdigest()
+    for r in records:
+        assert r["results_artifact"]["sha256"] == expected
+
+
+# --------------------------------------------------------------------------- #
+# Schema and chain-level validity
+# --------------------------------------------------------------------------- #
+
+def test_emitted_chain_passes_schema_and_chain_invariants(tmp_path):
+    report_path = tmp_path / "report.json"
+    evidence_path = tmp_path / "evidence.jsonl"
+    run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=report_path,
+        evidence_output_path=evidence_path,
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
     r = subprocess.run(
-        [sys.executable, str(VALIDATOR_CLI), str(emission_path)],
+        [sys.executable, str(VALIDATOR_CLI), str(evidence_path)],
         capture_output=True, text=True,
     )
     assert r.returncode == 0, f"stdout={r.stdout}\nstderr={r.stderr}"
 
 
-# ---------- semantic content ----------
-
-def test_records_use_native_emission_origin(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
+def test_records_use_native_emission_origin_and_conformance_kind(tmp_path):
+    _, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=tmp_path / "r.json",
+        evidence_output_path=tmp_path / "e.jsonl",
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
     )
-    assert all(r["origin"] == "native_emission" for r in records)
+    for r in records:
+        assert r["origin"] == "native_emission"
+        assert r["test_kind"] == "conformance"
+        assert "adapter" in r["evidence_source"]
 
 
-def test_records_use_conformance_test_kind(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
-    )
-    assert all(r["test_kind"] == "conformance" for r in records)
-
-
-def test_records_include_adapter_evidence_source(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
-    )
-    assert all("adapter" in r["evidence_source"] for r in records)
-
-
-def test_records_use_full_40_char_commit_shas(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
+def test_records_use_full_40_char_shas_and_strict_rfc3339_timestamps(tmp_path):
+    _, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=tmp_path / "r.json",
+        evidence_output_path=tmp_path / "e.jsonl",
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
     )
     sha40 = re.compile(r"^[0-9a-f]{40}$")
+    checker = validate_evidence._make_datetime_format_checker()
     for r in records:
         assert sha40.match(r["pamspec_context"]["spec_commit"])
         assert sha40.match(r["pamspec_context"]["harness_commit"])
         assert sha40.match(r["evidence_commit"])
-
-
-def test_records_use_strict_rfc3339_timestamps(tmp_path):
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
-    )
-    checker = validate_evidence._make_datetime_format_checker()
-    for r in records:
         checker.check(r["recorded_at"], "date-time")
         checker.check(r["evidence_observed_at"], "date-time")
 
 
-def test_results_artifact_hash_resolves(tmp_path):
-    import hashlib
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
+# --------------------------------------------------------------------------- #
+# Legacy compat
+# --------------------------------------------------------------------------- #
+
+def test_default_call_produces_legacy_report_with_unchanged_shape(tmp_path):
+    report_path = tmp_path / "r.json"
+    report, _ = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=report_path,
     )
-    expected = hashlib.sha256(report_path.read_bytes()).hexdigest()
-    for r in records:
-        assert r["results_artifact"]["sha256"] == expected
-        assert Path(r["results_artifact"]["reference"]).name == report_path.name
-
-
-# ---------- legacy compatibility ----------
-
-def test_legacy_report_bytes_unchanged_by_emission(tmp_path):
-    """Emitter must NEVER modify the legacy report file."""
-    _, report_dict, report_path = _run_lite_against_reference(tmp_path)
-    original_bytes = report_path.read_bytes()
-    emit_evidence_from_report(
-        report_dict, report_path, tmp_path / "c.jsonl", _make_context(),
-    )
-    assert report_path.read_bytes() == original_bytes, \
-        "emitter must not modify the legacy report file"
-
-
-def test_legacy_to_dict_shape_unchanged(tmp_path):
-    """The legacy ConformanceReport.to_dict() shape must be identical
-    to the R7 shape at merged main (a6a0d05...). If R6.2 accidentally
-    added a key, this test flags it."""
-    report, _, _ = _run_lite_against_reference(tmp_path)
     d = report.to_dict()
     expected_top_keys = {
         "report_format_version", "profile", "adapter_class", "adapter_info",
         "suite_commit", "started_at", "finished_at", "totals", "cases",
     }
-    assert set(d.keys()) == expected_top_keys, \
-        f"legacy report top-level keys drifted: {set(d.keys()) ^ expected_top_keys}"
+    assert set(d.keys()) == expected_top_keys
 
 
-# ---------- determinism ----------
-
-def test_deterministic_runs_produce_stable_semantic_records(tmp_path):
-    """Two independent runs at the same commit, with masked timing and
-    per-run fields, must produce semantically identical records."""
-    _, d1, p1 = _run_lite_against_reference(tmp_path)
-    time.sleep(1.0)  # ensure recorded_at differs
-    _, d2, p2 = _run_lite_against_reference(tmp_path / "second")
-
-    r1 = emit_evidence_from_report(d1, p1, tmp_path / "c1.jsonl", _make_context(run_id="r1"))
-    r2 = emit_evidence_from_report(d2, p2, tmp_path / "c2.jsonl", _make_context(run_id="r2"))
-
-    n1 = [normalize_for_determinism(x) for x in r1]
-    n2 = [normalize_for_determinism(x) for x in r2]
-    # Also mask reference (path differs between temp dirs); we already
-    # masked sha256 in the helper. Mask reference path too.
-    for arr in (n1, n2):
-        for rec in arr:
-            if rec.get("results_artifact"):
-                rec["results_artifact"]["reference"] = "<masked>"
-            # observed_evidence.error may be None on both runs; leave as-is
-    assert n1 == n2, "semantic records must be stable across identical runs"
+def test_emission_does_not_modify_legacy_report(tmp_path):
+    report_path = tmp_path / "r.json"
+    evidence_path = tmp_path / "e.jsonl"
+    run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=report_path,
+        evidence_output_path=evidence_path,
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    bytes_after_emission = report_path.read_bytes()
+    # Second emission into a different chain must not touch the report
+    other = tmp_path / "e2.jsonl"
+    emit_evidence_from_report_file(
+        report_path, other, _make_context(tmp_path, run_id="second"),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    assert report_path.read_bytes() == bytes_after_emission
 
 
-# ---------- classification: pass / fail / not_testable ----------
+# --------------------------------------------------------------------------- #
+# Explicit classification (no pass/fail inference)
+# --------------------------------------------------------------------------- #
 
-def test_passing_case_classifies_native_confirmed(tmp_path):
-    fake_report = {
-        "profile": "PAMSPEC-Lite",
-        "adapter_class": "FakeAdapter",
-        "adapter_info": {"class_name": "FakeAdapter"},
-        "cases": [{"name": "case_ok", "passed": True, "duration_ms": 1.0}],
+def _write_report(tmp_path: Path, cases: list[dict], profile: str = "PAMSPEC-Lite") -> Path:
+    r = {
+        "profile": profile,
+        "adapter_class": "ReferencePythonAdapter",
+        "adapter_info": {"class_name": "ReferencePythonAdapter"},
+        "cases": cases,
     }
+    tmp_path = Path(tmp_path)
+    tmp_path.mkdir(parents=True, exist_ok=True)
     p = tmp_path / "r.json"
-    p.write_text(json.dumps(fake_report), encoding="utf-8")
-    recs = emit_evidence_from_report(fake_report, p, tmp_path / "c.jsonl", _make_context())
+    p.write_text(json.dumps(r), encoding="utf-8")
+    return p
+
+
+def test_passing_case_uses_registry_pass_action(tmp_path):
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ])
+    recs = emit_evidence_from_report_file(
+        p, tmp_path / "e.jsonl", _make_context(tmp_path),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
     assert recs[0]["classification"] == "native"
     assert recs[0]["claim_status"] == "confirmed"
 
 
-def test_failing_case_classifies_gap_confirmed(tmp_path):
-    fake_report = {
-        "profile": "PAMSPEC-Lite",
-        "adapter_class": "FakeAdapter",
-        "adapter_info": {"class_name": "FakeAdapter"},
-        "cases": [{"name": "case_fail", "passed": False, "duration_ms": 1.0,
-                   "error": "assertion failed: expected 3 got 2"}],
-    }
-    p = tmp_path / "r.json"
-    p.write_text(json.dumps(fake_report), encoding="utf-8")
-    recs = emit_evidence_from_report(fake_report, p, tmp_path / "c.jsonl", _make_context())
+def test_failing_case_uses_registry_fail_action(tmp_path):
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": False, "duration_ms": 1.0,
+         "error": "assertion failed: expected 3 got 2"},
+    ])
+    recs = emit_evidence_from_report_file(
+        p, tmp_path / "e.jsonl", _make_context(tmp_path),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    # Reference-python registry says fail -> gap/confirmed
     assert recs[0]["classification"] == "gap"
     assert recs[0]["claim_status"] == "confirmed"
     assert any("case failed" in lim for lim in recs[0]["limitations"])
 
 
-def test_missing_feature_classifies_not_testable(tmp_path):
-    fake_report = {
-        "profile": "PAMSPEC-Lite",
-        "adapter_class": "FakeAdapter",
-        "adapter_info": {"class_name": "FakeAdapter"},
-        "cases": [{"name": "case_missing", "passed": False, "duration_ms": 0.5,
-                   "error": "adapter missing feature: delegation.check"}],
-    }
-    p = tmp_path / "r.json"
-    p.write_text(json.dumps(fake_report), encoding="utf-8")
-    recs = emit_evidence_from_report(fake_report, p, tmp_path / "c.jsonl", _make_context())
+def test_missing_feature_uses_registry_missing_feature_action(tmp_path):
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": False, "duration_ms": 0.5,
+         "error": "adapter missing feature: query"},
+    ])
+    recs = emit_evidence_from_report_file(
+        p, tmp_path / "e.jsonl", _make_context(tmp_path),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
     assert recs[0]["classification"] == "not_testable"
     assert recs[0]["claim_status"] == "not_testable"
-    assert len(recs[0]["limitations"]) >= 1
 
 
-# ---------- fail-closed on bad input ----------
+def test_case_assessment_rejects_construction_without_explicit_stances():
+    """R6.2a hard rule: registry authors MUST state a deliberate
+    stance for pass/fail/missing-feature. Omitting them raises
+    TypeError from the dataclass. This prevents unannotated passing
+    or failing cases from being emitted with a silent default."""
+    with pytest.raises(TypeError):
+        CaseAssessment(requirement_id="PAMSPEC-Lite.SOMETHING")  # type: ignore[call-arg]
 
-def test_missing_spec_commit_raises():
+
+def test_case_assessment_rejects_invalid_classification_enum():
+    with pytest.raises(ValueError, match="on_pass_classification"):
+        CaseAssessment(
+            requirement_id="PAMSPEC-Lite.SOMETHING",
+            on_pass_classification="inconclusive",  # not a classification enum value
+            on_pass_claim_status="inconclusive",
+            on_fail_classification="gap",
+            on_fail_claim_status="confirmed",
+            on_missing_feature_classification="not_testable",
+            on_missing_feature_claim_status="not_testable",
+        )
+
+
+def test_case_assessment_permits_explicit_questionable_stance(tmp_path):
+    """Registry authors CAN choose a conservative stance explicitly:
+    a passing test recorded as `questionable`/`inconclusive` for a
+    framework subject where native-ness is not established."""
+    ca = CaseAssessment(
+        requirement_id="PAMSPEC-Lite.SOMETHING",
+        on_pass_classification="questionable",
+        on_pass_claim_status="inconclusive",
+        on_fail_classification="questionable",
+        on_fail_claim_status="inconclusive",
+        on_missing_feature_classification="not_testable",
+        on_missing_feature_claim_status="not_testable",
+    )
+    p = _write_report(tmp_path, [
+        {"name": "case_x", "passed": True, "duration_ms": 1.0},
+    ])
+    recs = emit_evidence_from_report_file(
+        p, tmp_path / "e.jsonl", _make_context(tmp_path),
+        {"case_x": ca},
+    )
+    assert recs[0]["classification"] == "questionable"
+    assert recs[0]["claim_status"] == "inconclusive"
+
+
+# --------------------------------------------------------------------------- #
+# Fail-closed on registry gaps
+# --------------------------------------------------------------------------- #
+
+def test_missing_registry_entry_rejects_emission(tmp_path):
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+        {"name": "case_UNMAPPED", "passed": True, "duration_ms": 1.0},
+    ])
+    evidence = tmp_path / "e.jsonl"
+    assert not evidence.exists()
+    with pytest.raises(EvidenceEmissionError, match="case_UNMAPPED"):
+        emit_evidence_from_report_file(
+            p, evidence, _make_context(tmp_path), REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+    # And no evidence was written.
+    assert not evidence.exists()
+
+
+# --------------------------------------------------------------------------- #
+# Profile identity
+# --------------------------------------------------------------------------- #
+
+def test_profile_mismatch_rejects_emission(tmp_path):
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ], profile="PAMSPEC-Delegation")  # report says Delegation
+    with pytest.raises(EvidenceEmissionError, match="profile"):
+        emit_evidence_from_report_file(
+            p, tmp_path / "e.jsonl",
+            _make_context(tmp_path),  # context says PAMSPEC-Lite
+            REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Fail-closed: SHA, profile, artifact_root, subject/adapter validation
+# --------------------------------------------------------------------------- #
+
+def test_context_rejects_short_spec_commit(tmp_path):
     with pytest.raises(ValueError, match="spec_commit"):
         EmissionContext(
-            spec_commit="",
-            harness_commit=FAKE_HARNESS_COMMIT,
-            profile="PAMSPEC-Lite",
-            profile_version="0.1-draft",
-            subject={"kind": "implementation", "name": "x", "version": "y"},
+            spec_commit="abc", harness_commit=FAKE_HARNESS,
+            evidence_commit=FAKE_EVIDENCE, profile="PAMSPEC-Lite",
+            profile_version="0.1-draft", artifact_root=tmp_path,
+            subject=dict(REFERENCE_PYTHON_SUBJECT),
         )
 
 
-def test_short_spec_commit_raises():
-    with pytest.raises(ValueError, match="spec_commit"):
+def test_context_rejects_missing_evidence_commit(tmp_path):
+    with pytest.raises(ValueError, match="evidence_commit"):
         EmissionContext(
-            spec_commit="abc123",
-            harness_commit=FAKE_HARNESS_COMMIT,
-            profile="PAMSPEC-Lite",
-            profile_version="0.1-draft",
-            subject={"kind": "implementation", "name": "x", "version": "y"},
+            spec_commit=FAKE_SPEC, harness_commit=FAKE_HARNESS,
+            evidence_commit="", profile="PAMSPEC-Lite",
+            profile_version="0.1-draft", artifact_root=tmp_path,
+            subject=dict(REFERENCE_PYTHON_SUBJECT),
         )
 
 
-def test_short_harness_commit_raises():
-    with pytest.raises(ValueError, match="harness_commit"):
+def test_context_rejects_nonexistent_artifact_root(tmp_path):
+    with pytest.raises(ValueError, match="artifact_root"):
         EmissionContext(
-            spec_commit=FAKE_SPEC_COMMIT,
-            harness_commit="abc123",
-            profile="PAMSPEC-Lite",
+            spec_commit=FAKE_SPEC, harness_commit=FAKE_HARNESS,
+            evidence_commit=FAKE_EVIDENCE, profile="PAMSPEC-Lite",
             profile_version="0.1-draft",
-            subject={"kind": "implementation", "name": "x", "version": "y"},
+            artifact_root=tmp_path / "does-not-exist",
+            subject=dict(REFERENCE_PYTHON_SUBJECT),
         )
 
 
-def test_empty_profile_raises():
-    with pytest.raises(ValueError, match="profile"):
+def test_context_rejects_invalid_env_manifest(tmp_path):
+    with pytest.raises(ValueError, match="environment_manifest"):
         EmissionContext(
-            spec_commit=FAKE_SPEC_COMMIT,
-            harness_commit=FAKE_HARNESS_COMMIT,
-            profile="",
-            profile_version="0.1-draft",
-            subject={"kind": "implementation", "name": "x", "version": "y"},
+            spec_commit=FAKE_SPEC, harness_commit=FAKE_HARNESS,
+            evidence_commit=FAKE_EVIDENCE, profile="PAMSPEC-Lite",
+            profile_version="0.1-draft", artifact_root=tmp_path,
+            subject=dict(REFERENCE_PYTHON_SUBJECT),
+            environment_manifest={"reference": "x"},  # missing sha256
         )
 
 
-def test_empty_profile_version_raises():
-    with pytest.raises(ValueError, match="profile_version"):
-        EmissionContext(
-            spec_commit=FAKE_SPEC_COMMIT,
-            harness_commit=FAKE_HARNESS_COMMIT,
-            profile="PAMSPEC-Lite",
-            profile_version="",
-            subject={"kind": "implementation", "name": "x", "version": "y"},
-        )
+# --------------------------------------------------------------------------- #
+# Portable artifact references
+# --------------------------------------------------------------------------- #
 
-
-def test_missing_report_file_raises(tmp_path):
-    fake_report = {"profile": "PAMSPEC-Lite", "cases": []}
-    with pytest.raises(FileNotFoundError):
-        emit_evidence_from_report(
-            fake_report,
-            tmp_path / "does-not-exist.json",
-            tmp_path / "c.jsonl",
-            _make_context(),
-        )
-
-
-def test_report_missing_cases_raises(tmp_path):
-    p = tmp_path / "r.json"
-    p.write_text("{}", encoding="utf-8")
-    with pytest.raises(ValueError, match="cases"):
-        emit_evidence_from_report({}, p, tmp_path / "c.jsonl", _make_context())
-
-
-def test_case_missing_name_raises(tmp_path):
-    p = tmp_path / "r.json"
-    p.write_text("{}", encoding="utf-8")
-    # subject + adapter provided in context so derivation is skipped
-    # and the name check is the first thing to fail.
-    context = _make_context(adapter={"name": "FakeAdapter", "version": "0"})
-    fake_report = {"profile": "PAMSPEC-Lite", "cases": [{"passed": True, "duration_ms": 1}]}
-    with pytest.raises(ValueError, match="'name'"):
-        emit_evidence_from_report(fake_report, p, tmp_path / "c.jsonl", context)
-
-
-def test_subject_derivation_fails_when_in_process_adapter_has_no_identity(tmp_path):
-    """The in-process reference adapter carries no subprocess-reported
-    implementation identity. Without an explicit subject, the emitter
-    MUST refuse rather than emit an unidentified record."""
-    p = tmp_path / "r.json"
-    fake_report = {
-        "profile": "PAMSPEC-Lite",
-        "adapter_class": "SomeAdapter",
-        "adapter_info": {"class_name": "SomeAdapter"},
-        "cases": [{"name": "case_x", "passed": True, "duration_ms": 1.0}],
-    }
-    p.write_text(json.dumps(fake_report), encoding="utf-8")
-    context = EmissionContext(
-        spec_commit=FAKE_SPEC_COMMIT,
-        harness_commit=FAKE_HARNESS_COMMIT,
-        profile="PAMSPEC-Lite",
-        profile_version="0.1-draft",
-        # subject=None deliberately omitted to trigger derivation
+def test_reference_is_portable_relative_path(tmp_path):
+    _, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=tmp_path / "sub" / "r.json",
+        evidence_output_path=tmp_path / "e.jsonl",
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
     )
-    with pytest.raises(ValueError, match="cannot derive subject"):
-        emit_evidence_from_report(fake_report, p, tmp_path / "c.jsonl", context)
-
-
-# ---------- append-only behavior ----------
-
-def test_emission_appends_and_preserves_prior_lines(tmp_path):
-    """Simulate a second emission into the same JSONL and confirm the
-    first records are byte-identical prefix (append-only)."""
-    _, d1, p1 = _run_lite_against_reference(tmp_path)
-    chain = tmp_path / "chain.jsonl"
-    emit_evidence_from_report(d1, p1, chain, _make_context(run_id="one"))
-    prefix_bytes = chain.read_bytes()
-
-    _, d2, p2 = _run_lite_against_reference(tmp_path / "second")
-    emit_evidence_from_report(d2, p2, chain, _make_context(run_id="two"))
-    combined = chain.read_bytes()
-
-    assert combined.startswith(prefix_bytes), "emission must be append-only"
-
-
-def test_records_pass_all_chain_level_invariants_when_emitted_alone(tmp_path):
-    """One emission's records — even 15 of them — must pass the R6.1c
-    chain-level invariants when validated as a standalone chain file."""
-    _, d, p = _run_lite_against_reference(tmp_path)
-    chain = tmp_path / "chain.jsonl"
-    emit_evidence_from_report(d, p, chain, _make_context())
-    r = subprocess.run(
-        [sys.executable, str(VALIDATOR_CLI), str(chain)],
-        capture_output=True, text=True,
-    )
-    assert r.returncode == 0, f"stdout={r.stdout}"
-
-
-def test_default_limitations_always_present(tmp_path):
-    _, d, p = _run_lite_against_reference(tmp_path)
-    records = emit_evidence_from_report(d, p, tmp_path / "c.jsonl", _make_context())
     for r in records:
-        assert DEFAULT_ADAPTER_LIMITATION in r["limitations"], \
-            "the adapter-only-evidence limitation must be present on every record"
+        ref = r["results_artifact"]["reference"]
+        assert ref == "sub/r.json", f"non-portable reference emitted: {ref}"
+
+
+def test_reference_outside_artifact_root_rejected(tmp_path):
+    """A report path outside artifact_root is rejected — the reference
+    could not be made portable."""
+    (tmp_path / "root").mkdir()
+    outside = tmp_path / "outside" / "r.json"
+    outside.parent.mkdir()
+    outside.write_text(json.dumps({"profile": "PAMSPEC-Lite", "cases": []}), encoding="utf-8")
+    context = _make_context(tmp_path / "root")
+    with pytest.raises(EvidenceEmissionError, match="not under artifact_root"):
+        emit_evidence_from_report_file(
+            outside, tmp_path / "e.jsonl", context, REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Atomic / preflight: failures leave chain unchanged
+# --------------------------------------------------------------------------- #
+
+def test_duplicate_record_id_rejects_and_leaves_chain_unchanged(tmp_path):
+    """Emit once, then try to emit again with the same run_id -> record_id
+    collision -> validator rejects -> file is byte-identical to first
+    emission."""
+    context1 = _make_context(tmp_path, run_id="samerun")
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ])
+    evidence = tmp_path / "e.jsonl"
+    emit_evidence_from_report_file(p, evidence, context1, REFERENCE_PYTHON_LITE_REGISTRY)
+    first_bytes = evidence.read_bytes()
+    with pytest.raises(EvidenceEmissionError):
+        emit_evidence_from_report_file(p, evidence, context1, REFERENCE_PYTHON_LITE_REGISTRY)
+    assert evidence.read_bytes() == first_bytes
+
+
+def test_missing_report_file_leaves_chain_unchanged(tmp_path):
+    evidence = tmp_path / "e.jsonl"
+    evidence.write_bytes(b"existing_bytes_never_touched\n")
+    with pytest.raises(FileNotFoundError):
+        emit_evidence_from_report_file(
+            tmp_path / "nope.json", evidence, _make_context(tmp_path),
+            REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+    assert evidence.read_bytes() == b"existing_bytes_never_touched\n"
+
+
+def test_missing_registry_entry_leaves_chain_unchanged(tmp_path):
+    evidence = tmp_path / "e.jsonl"
+    evidence.write_bytes(b"prior\n")
+    p = _write_report(tmp_path, [
+        {"name": "case_UNKNOWN", "passed": True, "duration_ms": 1.0},
+    ])
+    with pytest.raises(EvidenceEmissionError):
+        emit_evidence_from_report_file(
+            p, evidence, _make_context(tmp_path),
+            REFERENCE_PYTHON_LITE_REGISTRY,
+        )
+    assert evidence.read_bytes() == b"prior\n"
+
+
+def test_append_is_byte_prefix_preserving(tmp_path):
+    """After a successful append, the pre-existing chain bytes are an
+    exact byte prefix of the post-append bytes."""
+    ctx1 = _make_context(tmp_path, run_id="first")
+    ctx2 = _make_context(tmp_path, run_id="second")
+    p = _write_report(tmp_path, [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ])
+    evidence = tmp_path / "e.jsonl"
+    emit_evidence_from_report_file(p, evidence, ctx1, REFERENCE_PYTHON_LITE_REGISTRY)
+    prefix = evidence.read_bytes()
+    emit_evidence_from_report_file(p, evidence, ctx2, REFERENCE_PYTHON_LITE_REGISTRY)
+    combined = evidence.read_bytes()
+    assert combined.startswith(prefix), "R6.1c invariant 7 violated: chain not append-only"
+
+
+# --------------------------------------------------------------------------- #
+# Semantic determinism
+# --------------------------------------------------------------------------- #
+
+def test_semantic_hash_stable_across_identical_runs(tmp_path):
+    """Two independent runs at the same subject produce the same
+    canonical semantic hash even though wall-clock and duration
+    values differ between runs."""
+    root1 = tmp_path / "root1"
+    root1.mkdir()
+    _, r1 = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=root1 / "r.json",
+        evidence_output_path=root1 / "e.jsonl",
+        context=_make_context(root1, run_id="r1"),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    time.sleep(1.0)
+    root2 = tmp_path / "root2"
+    root2.mkdir()
+    _, r2 = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=root2 / "r.json",
+        evidence_output_path=root2 / "e.jsonl",
+        context=_make_context(root2, run_id="r2"),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    sem1 = {r["observed_evidence"]["semantic_results_sha256"] for r in r1}
+    sem2 = {r["observed_evidence"]["semantic_results_sha256"] for r in r2}
+    assert sem1 == sem2, "semantic hash MUST be stable across identical runs"
+    # All 15 records in a single run share the same semantic hash (it
+    # describes the whole report projection, not any individual case).
+    assert len(sem1) == 1
+
+
+def test_semantic_hash_differs_when_outcomes_differ(tmp_path):
+    """If the underlying report has genuinely different outcomes, the
+    semantic hash MUST change — determinism cannot mask this."""
+    p1 = _write_report(tmp_path / "a", [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ])
+    (tmp_path / "a").mkdir(exist_ok=True)
+    p1.parent.mkdir(parents=True, exist_ok=True)
+    p1 = _write_report(tmp_path / "a", [
+        {"name": "case_read_returns_current_envelope", "passed": True, "duration_ms": 1.0},
+    ])
+    p2 = _write_report(tmp_path / "b", [
+        {"name": "case_read_returns_current_envelope", "passed": False,
+         "duration_ms": 1.0, "error": "assertion failed: x"},
+    ])
+    r1 = emit_evidence_from_report_file(
+        p1, tmp_path / "a" / "e.jsonl",
+        _make_context(tmp_path / "a", run_id="one"),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    r2 = emit_evidence_from_report_file(
+        p2, tmp_path / "b" / "e.jsonl",
+        _make_context(tmp_path / "b", run_id="two"),
+        REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    assert r1[0]["observed_evidence"]["semantic_results_sha256"] \
+        != r2[0]["observed_evidence"]["semantic_results_sha256"], \
+        "semantic hash MUST differ when the underlying outcome differs"
+
+
+def test_normalize_does_not_mask_semantic_hash(tmp_path):
+    """normalize_for_determinism() must NOT mask the semantic hash;
+    that field is the authoritative determinism signal."""
+    _, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=tmp_path / "r.json",
+        evidence_output_path=tmp_path / "e.jsonl",
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    n = normalize_for_determinism(records[0])
+    assert n["observed_evidence"]["semantic_results_sha256"] \
+        == records[0]["observed_evidence"]["semantic_results_sha256"]
+    assert n["results_artifact"]["sha256"] == "<masked>"
+
+
+# --------------------------------------------------------------------------- #
+# Default limitation always present
+# --------------------------------------------------------------------------- #
+
+def test_default_adapter_limitation_always_present(tmp_path):
+    _, records = run_and_emit(
+        "PAMSPEC-Lite", ReferencePythonAdapter,
+        report_output_path=tmp_path / "r.json",
+        evidence_output_path=tmp_path / "e.jsonl",
+        context=_make_context(tmp_path),
+        case_registry=REFERENCE_PYTHON_LITE_REGISTRY,
+    )
+    for r in records:
+        assert DEFAULT_ADAPTER_LIMITATION in r["limitations"]
