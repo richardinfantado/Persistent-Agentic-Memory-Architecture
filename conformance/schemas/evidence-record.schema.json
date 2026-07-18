@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pamspec.org/conformance/schemas/evidence-record.schema.json",
+  "title": "PAMSPEC Evidence Record",
+  "description": "One machine-readable record about a single claim made against a PAMSPEC requirement. Records live in append-only evidence chains (JSONL files). A record whose claim is later shown to be wrong is NEVER deleted; it is marked `retracted` and a new record with the correcting result is added with `supersedes_claim` pointing back at the retracted record's `record_id`. This is the R6 evidence model; it is not a PAMSPEC normative wire type.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "recorded_at",
+    "test_kind",
+    "requirement_id",
+    "framework",
+    "framework_version",
+    "evidence_source",
+    "claim_status",
+    "classification",
+    "evidence_commit",
+    "results_hash"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable, unique identifier for this record. Referenced by `supersedes_claim` in later records. Convention: `<sprint>.<subject>.<kind>`, e.g. `v08.scenario7.probe`, `v08.1.scenario7.controlled_experiment`."
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when this record was authored (not when the test ran, unless they are the same event)."
+    },
+    "test_kind": {
+      "type": "string",
+      "enum": ["probe", "conformance", "regression", "controlled_experiment"],
+      "description": "probe = 'what does this external framework currently do?'; conformance = 'does this implementation satisfy PAMSPEC's normative requirement?'; regression = 'did previously observed behavior change?'; controlled_experiment = 'is the observed signal distinguishable from an experimental artifact?'"
+    },
+    "requirement_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dotted identifier of the PAMSPEC requirement or property under evaluation, e.g. `PAMSPEC.scope.immutable_across_update`, `PAMSPEC.authoritative_derived.vector_refresh_on_update`. Stable across records so a claim's history can be reassembled by `requirement_id`."
+    },
+    "framework": {
+      "type": ["string", "null"],
+      "description": "Name of the framework under test, e.g. `mem0ai`, `letta`, `langgraph`. Null when the record is about the PAMSPEC reference implementation or the spec itself (test_kind=conformance against reference-python)."
+    },
+    "framework_version": {
+      "type": ["string", "null"],
+      "description": "Exact version string of the framework under test. Null when framework is null."
+    },
+    "classification": {
+      "type": "string",
+      "enum": ["native", "emulated", "gap", "questionable", "not_testable"],
+      "description": "Observed outcome for the requirement against the framework/implementation. native = provided directly. emulated = adapter-side compensation would be needed. gap = the requirement cannot be met with the current public API. questionable = evidence suggests the requirement itself may be artificial. not_testable = the scenario cannot be probed with the current public API without modifying the framework."
+    },
+    "sub_requirements": {
+      "type": "array",
+      "description": "Zero or more finer-grained sub-requirement classifications. Each entry classifies one aspect of the top-level requirement independently, so a top-level `emulated` can carry, for example, `{native, native, not_testable, emulated}` internally.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sub_requirement_id", "classification"],
+        "properties": {
+          "sub_requirement_id": {"type": "string", "minLength": 1},
+          "classification": {"type": "string", "enum": ["native", "emulated", "gap", "questionable", "not_testable"]},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "evidence_source": {
+      "type": "array",
+      "description": "How the evidence was obtained. `public_api` = only public interfaces of the framework/implementation. `backend_inspection` = read-only inspection of an underlying store (e.g. Chroma collection). `adapter` = observed through a PAMSPEC adapter, not directly. `source_review` = derived from reading the framework's source, not from execution. Multiple sources may apply.",
+      "items": {"type": "string", "enum": ["public_api", "backend_inspection", "adapter", "source_review"]},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": ["confirmed", "inconclusive", "retracted", "superseded", "not_testable"],
+      "description": "Lifecycle of the claim this record makes. `confirmed` = the record's stated classification is supported by the evidence. `inconclusive` = the experiment ran but cannot distinguish among alternative explanations. `retracted` = a later record has shown this record's claim to be wrong; retracted records MUST remain in the evidence chain and a superseding record MUST exist. `superseded` = a later record replaced this one without contradicting it (e.g. re-run with better methodology and matching result). `not_testable` = the claim cannot be evaluated with the current framework surface."
+    },
+    "supersedes_claim": {
+      "type": ["string", "null"],
+      "description": "The `record_id` of the record this record supersedes (with or without contradiction). MUST be present when a prior record for the same `requirement_id` exists. Set to null only for the first record on a given requirement."
+    },
+    "control_design": {
+      "type": ["object", "null"],
+      "description": "Structured description of the experimental controls used. REQUIRED when `test_kind` is `controlled_experiment`. Recommended for `probe` when a control set was used. Null otherwise.",
+      "additionalProperties": false,
+      "properties": {
+        "control_count": {"type": "integer", "minimum": 0, "description": "Number of decoy/distractor entries populated to distinguish the target signal from ordinary nearest-neighbor behavior."},
+        "distinctive_phrases": {"type": "boolean", "description": "Whether target-before and target-after used maximally unrelated distinctive text so a similarity change is detectable."},
+        "direct_signal_captured": {"type": "boolean", "description": "Whether the primary signal (e.g. stored embedding bytes) was captured directly rather than inferred from downstream behavior."},
+        "alternative_explanations_ruled_out": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Explicit list of alternative explanations that the design rules out (and how)."
+        },
+        "note": {"type": "string"}
+      }
+    },
+    "environment_manifest": {
+      "type": ["object", "null"],
+      "description": "Reference to the environment manifest under which the evidence was produced. The referenced file is not required to be inline; the (path, sha256) pair is enough to make the environment traceable. Null only when explicitly not applicable.",
+      "additionalProperties": false,
+      "properties": {
+        "reference": {"type": "string", "description": "Repo-relative path to the environment-manifest.json (or equivalent)."},
+        "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the referenced file at the recorded commit."}
+      }
+    },
+    "results_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the raw machine-readable evidence file (e.g. the JSONL emitted by the test scenario) this record summarizes. Null only when explicitly not applicable (e.g. this record IS the raw evidence)."
+    },
+    "evidence_commit": {
+      "type": "string",
+      "minLength": 7,
+      "description": "Git commit SHA where the raw evidence file lives. MUST be an immutable commit that is expected never to move (outreach permalinks and scientific reproducibility depend on this)."
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Explicit honest list of what this evidence does NOT establish. If the experiment cannot distinguish two alternative explanations, say so here."
+    },
+    "observed_evidence": {
+      "type": "object",
+      "description": "Concrete key values observed (e.g. rank_before, rank_after, l2_delta). Not schema-validated in detail because it is per-scenario. This is the durable record of 'what was seen', not 'what was concluded'."
+    },
+    "conclusion_narrative": {
+      "type": "string",
+      "description": "One paragraph, plain-English, explaining what the record's classification and claim_status mean in context. NOT a replacement for `observed_evidence`."
+    }
+  }
+}
