@@ -1134,4 +1134,4 @@ Adjacent IETF work on AI agent protocols includes a framework document {{AI-PROT
 
 This initial draft records architectural requirements and open issues for review. Additional acknowledgements will be added when contributors provide review or text.
 
-Robert Leroux contributed project review and specification feedback and is acknowledged as a contributor. Formal co-authorship or editorship remains pending explicit consent and complete public author metadata.
+Robert Leroux (rl.isapience@gmail.com) contributed project review and specification feedback and is confirmed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.

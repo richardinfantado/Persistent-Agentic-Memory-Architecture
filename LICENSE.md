@@ -22,4 +22,4 @@ This includes JSON Schemas, JSON examples, valid and invalid test vectors, valid
 
 ## Audit Note
 
-The local Git repository currently has no prior commits. Contributor documentation identifies Richard M. Infantado as primary author and specification editor and Robert Leroux as a contributor. Robert Leroux is not listed as a formal Internet-Draft author/editor because complete public author metadata and explicit consent remain pending.
+Contributor documentation identifies Richard M. Infantado as primary author and specification editor and Robert Leroux (rl.isapience@gmail.com) as a confirmed Contributor. Robert Leroux is not listed as a formal Internet-Draft author or editor in the front matter.

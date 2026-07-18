@@ -16,19 +16,33 @@ PAMSPEC defines a provider-independent architecture and data model for persisten
 4. Append-only Event Ledger
 5. Isolated Derived Indexes and Embedding Spaces
 
+## Core Requirements (R8)
+
+Six established Core requirements define the minimum behavioral guarantees every conforming PAMSPEC implementation MUST satisfy:
+
+| CR | Requirement | Draft anchor |
+| --- | --- | --- |
+| CR-1 | Stable Identity — `object_id` never changes | §8.3 |
+| CR-2 | Immutable Scope — scope fixed at creation | §7.5 |
+| CR-3 | Canonical Content — content stored verbatim, extension fields preserved | §8.1, §7.6 |
+| CR-4 | Immutable Versions — append-only, strictly increasing sequence | §8.4, §7.7 |
+| CR-5 | Expected-Version Mutation — stale version rejected with `version_conflict` | §8.4 |
+| CR-6 | Idempotency — durable across process restart | §10.1 |
+
+CR-7 (Deterministic bundle output) is a provisional candidate pending a direct normative draft statement and a dedicated conformance test. See [`governance/08-core-profiles-companions/`](governance/08-core-profiles-companions/).
+
 ## Conformance Profiles
 
-| Profile | Purpose |
-| --- | --- |
-| **PAMSPEC-Lite** | Minimal on-ramp for prototypes and single-developer agents |
-| **PAMSPEC-Core** | Full envelope, four state dimensions, error envelope |
-| **PAMSPEC-Versioning** | Expected-version concurrency + `version_conflict` |
-| **PAMSPEC-Ledger** | Append-only Event Ledger with atomic version+event commit |
-| **PAMSPEC-Structured-Query** | Scope-bound filters, temporal, snapshot-repeatable |
-| **PAMSPEC-Semantic-Query** | Embedding Space identity, incompatible-space rejection |
-| **PAMSPEC-Relationship** | Versioned Relationship Objects, cross-scope policy |
-| **PAMSPEC-Protocol-Binding** | Preserves semantics across transports |
-| **PAMSPEC-Evaluation** | Sealed snapshots, deterministic clock/RNG, run-id provenance |
+Three profiles are currently formalized with passing harness suites:
+
+| Profile | Cases | Purpose |
+| --- | --- | --- |
+| **PAMSPEC-Lite** | 15 | Core-oriented behavioral profile; exercises CR-1 through CR-6 |
+| **PAMSPEC-Delegation** | 7 | Scoped permission grants; layered above PAMSPEC-Lite |
+| **PAMSPEC-Subscribe** | 4 | Event subscription and delivery |
+
+The following profiles are named placeholders with no harness suite yet:
+Ledger, Relationships, Retrieval, Evaluation, Working Memory (experimental).
 
 ## Repository Contents
 
@@ -39,8 +53,11 @@ PAMSPEC defines a provider-independent architecture and data model for persisten
 - Test vectors (positive + negative): [`test-vectors/`](test-vectors/)
 - Architecture decisions (27 ADRs): [`decisions/`](decisions/)
 - Reference implementation (Python, PAMSPEC-Lite + Delegation + Subscribe): [`implementations/reference-python/`](implementations/reference-python/)
-- MCP binding profile + Python stub server: [`bindings/mcp/`](bindings/mcp/)
+- MCP binding profile + Python prototype server (draft, not yet stable): [`bindings/mcp/`](bindings/mcp/)
 - **Portable conformance harness** (adapter-based, implementation-agnostic): [`conformance/`](conformance/)
+- **R5 Mem0 portability proof** — enforcement adapter, round-trip, 10 evidence-backed tests: [`validation/r5_mem0_portability/`](validation/r5_mem0_portability/)
+- **Evidence chains** (EvidenceRecord JSONL, R6 schema): [`validation/evidence/`](validation/evidence/)
+- **R8 governance documents** — Core/Profiles/Companions formalization: [`governance/08-core-profiles-companions/`](governance/08-core-profiles-companions/)
 - Implementation report for the reference impl: [`reviews/implementation-report-reference-python.md`](reviews/implementation-report-reference-python.md)
 - External review guides: [`reviews/`](reviews/)
 - Consistency matrix (cross-file review artifact): [`CONSISTENCY-MATRIX.md`](CONSISTENCY-MATRIX.md)
@@ -100,4 +117,4 @@ Critical review, interoperability feedback, security analysis, privacy analysis,
 
 ## Contributors
 
-Richard M. Infantado is the primary author and specification editor. Robert Leroux is acknowledged as a project contributor. Contributor listing is separate from formal Internet-Draft authorship.
+Richard M. Infantado is the primary author and specification editor. Robert Leroux (rl.isapience@gmail.com) is a confirmed Contributor. Contributor listing is separate from formal Internet-Draft authorship; Robert Leroux is not listed in the Internet-Draft front matter. See [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
