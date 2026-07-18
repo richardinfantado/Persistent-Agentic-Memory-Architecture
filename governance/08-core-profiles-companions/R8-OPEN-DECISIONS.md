@@ -76,19 +76,23 @@ This document lists open questions and decisions that require resolution before 
 
 ## Profile Open Decisions
 
-### OD-P1: PAMSPEC-Lite CR coverage completeness
+### OD-P1: PAMSPEC-Lite CR coverage completeness *(R9 blocker)*
 
-**Decision needed:** Should PAMSPEC-Lite add `case_scope_mutation_rejected` (testing CR-2 write-path enforcement) before the profile is considered complete?
+**Decision needed:** Should PAMSPEC-Lite add `case_scope_mutation_rejected` (testing CR-2 write-path enforcement) and `case_bundle_output_is_deterministic` (testing CR-7) before the profile is considered a complete Core conformance signal?
 
-**Current state:** `case_scope_isolation` tests read-time scope isolation but does not test that an update with a different scope is rejected. CR-2's write-path enforcement is tested only by the R5 evidence records (`r5.scope_mutation_rejected`), not by any PAMSPEC-Lite case.
+**Current state:** Two gaps exist:
+1. `case_scope_isolation` tests read-time scope isolation but does not test that an update with a different scope is rejected. CR-2's write-path enforcement is tested only by R5 evidence (`r5.scope_mutation_rejected`), not by any PAMSPEC-Lite case.
+2. CR-7 bundle determinism has no direct PAMSPEC-Lite test. The current proxy (`case_history_is_monotonic`) does not verify bundle serialization output.
+
+Without closing these gaps, PAMSPEC-Lite cannot credibly claim to fully instantiate Core, and CR-7 cannot be promoted from provisional to established Core.
 
 **Options:**
-1. **Add `case_scope_mutation_rejected` to PAMSPEC-Lite** — Closes the write-path gap for CR-2. Requires adding one test to `conformance/suite/test_lite.py` and updating the profile case count (15 → 16).
-2. **Leave as-is** — Accept that write-path scope enforcement is tested in R5 evidence only. PAMSPEC-Lite remains at 15 cases.
+1. **Add both missing cases to PAMSPEC-Lite** — Closes CR-2 write-path and CR-7 gaps. Requires adding two tests to `conformance/suite/test_lite.py` and updating the profile case count (15 → 17). Required before claiming full Core coverage.
+2. **Add only `case_scope_mutation_rejected`** — Closes CR-2 write-path; leaves CR-7 provisional. Profile count becomes 16.
 
-**Impact if option 2:** Any implementation that passes all 15 Lite cases could still fail CR-2 write-path enforcement. The CR definition says write-path rejection is mandatory; the profile does not test it.
+**Impact if neither is added:** Implementations can pass PAMSPEC-Lite without satisfying CR-2 write-path or CR-7. The formalization proposal cannot be presented as complete Core coverage.
 
-**Owner:** Conformance engineering (not an R8 implementation task — would be R9 prep)
+**Owner:** Conformance engineering — R9 prep task, not an R8 implementation item
 
 ---
 
@@ -126,17 +130,17 @@ This document lists open questions and decisions that require resolution before 
 
 ## Companion Open Decisions
 
-### OD-X1: MCP binding scope and timing
+### OD-X1: MCP binding stabilization for R9 *(R9 blocker)*
 
-**Decision needed:** When should the MCP binding companion be started, and what is its scope relative to R9?
+**Decision needed:** Should the existing MCP binding work be stabilized and formally included as a Companion for R9, or deferred to a post-submission milestone?
 
-**Current state:** The MCP binding is named in the proposal as a planned companion with no implementation. It was explicitly excluded from R8. The question is whether R9 (IETF -00 submission) should include an MCP binding as a companion, or defer it further.
+**Current state:** The repository already contains a PAMSPEC-over-MCP binding profile, `bindings/mcp/tools.json`, a `bindings/mcp/server-python/` prototype, and defined MCP tools, resources, error mapping, discovery, and idempotency semantics. This is not a question of whether to start MCP work — it already exists. The question is whether to finalize and promote it as a stable Companion before IETF -00 submission.
 
 **Options:**
-1. **Include MCP binding as companion by R9** — Would need to expose at minimum `create`, `read`, `update`, `delete`, `query` as MCP tools using reference-python as the backend. Adds scope to R9.
-2. **Defer until after R9** — R9 submission proceeds without MCP. MCP becomes R10 or a named companion milestone after submission.
+1. **Stabilize for R9** — Audit the existing binding for completeness against Core (CR-1 through CR-6), write at least one round-trip test via the MCP server, promote to stable Companion in the R9 governance documents.
+2. **Defer finalization to post-R9** — The existing work remains in `bindings/mcp/` as a draft artifact. The R9 submission does not reference it as a stable Companion. Finalization becomes a named milestone after -00 review.
 
-**Constraint:** R9 is described as IETF submission preparation. Adding an MCP implementation dependency risks delaying submission. Option 2 is lower risk.
+**Constraint:** R9 is IETF submission preparation. If the MCP binding has unresolved gaps or untested paths, including it as a stable Companion adds risk to the submission narrative. Option 2 is lower risk unless the prototype already passes a basic round-trip test.
 
 **Owner:** Richard M. Infantado (R9 scope decision)
 
@@ -182,11 +186,11 @@ This document lists open questions and decisions that require resolution before 
 | OD-C2 | Core | Open (needs §8.6 source check) | Editorial | No |
 | OD-C3 | Core | Open (design decision) | Editorial + IETF input | Possibly — determinism scope affects -00 text |
 | OD-C4 | Core | Open | Architecture | Yes — affects conformance testing definition |
-| OD-P1 | Profile | Open | Conformance engineering | No |
+| OD-P1 | Profile | Open — **R9 blocker** | Conformance engineering | Yes — Lite must cover CR-2 write-path and CR-7 before Core claim is complete |
 | OD-P2 | Profile | Open | Editorial | No |
 | OD-P3 | Profile | Open | Conformance engineering | No |
-| OD-X1 | Companion | Open | Richard M. Infantado | Yes — MCP decision affects R9 scope |
+| OD-X1 | Companion | Open — **R9 blocker** | Richard M. Infantado | Yes — stabilization decision affects R9 submission narrative |
 | OD-X2 | Companion | Recommended (option 1) | Companion maintenance | No |
 | OD-X3 | Companion | Recommended (option 2) | Editorial | No |
 
-**R9 blockers:** OD-C4 (idempotency cross-process scope) and OD-X1 (MCP binding timing) must be resolved before R9 scope is finalized. All other decisions can be deferred without blocking IETF submission.
+**R9 blockers:** OD-C4 (idempotency cross-process scope), OD-P1 (PAMSPEC-Lite coverage gaps for CR-2 write-path and CR-7), and OD-X1 (MCP binding stabilization decision) must be resolved before R9 scope is finalized. All other decisions can be deferred without blocking IETF submission.

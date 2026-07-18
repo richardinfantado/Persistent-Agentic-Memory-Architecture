@@ -11,7 +11,7 @@ This audit reviewed the local Git repository history and current contributor doc
 - `git log` reported no prior commits in the local repository before the publication-candidate commit.
 - `git status` showed the repository contents as uncommitted local files.
 - Contributor documentation identifies Richard M. Infantado as primary author and specification editor.
-- Robert Leroux is identified as a contributor but is not listed as a formal Internet-Draft author or editor because complete public author metadata and explicit consent remain pending.
+- Robert Leroux (rl.isapience@gmail.com) is confirmed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.
 
 ## Result
 

@@ -21,8 +21,10 @@ Core requirements are the minimum behavioral guarantees that every conforming PA
 
 Core requirements are backed by:
 - At least one normative MUST or MUST NOT in `draft-infantado-agent-memory-architecture-latest`
-- At least one passing conformance test in the PAMSPEC-Lite profile
 - At least one confirmed EvidenceRecord in a `validation/evidence/*.jsonl` chain
+- For established Core (CR-1 through CR-6): at least one passing conformance test in the PAMSPEC-Lite profile that directly exercises the requirement
+
+CR-7 (Deterministic Outcomes) is a provisional candidate Core requirement. It has R5 evidence and a draft anchor but lacks a direct normative bundle-determinism statement in the current draft and a dedicated PAMSPEC-Lite test case. It is included here to make the gap visible; it cannot be treated as established Core until those two conditions are met (OD-C3, OD-P1).
 
 ### 2.2 Profiles
 
@@ -53,7 +55,7 @@ Current companions:
 | reference-python | `implementations/reference-python/` | Canonical SQLite-backed implementation; native conformance |
 | Mem0EnforcementAdapter | `validation/r5_mem0_portability/mem0_enforcement_adapter.py` | Adapter enforcing PAMSPEC semantics over Mem0 2.0.12 |
 | Portability bundle format | `validation/r5_mem0_portability/round_trip.py` | Deterministic export/import format for cross-implementation transport |
-| MCP binding | Not yet implemented | Protocol adapter for Model Context Protocol |
+| MCP binding | `bindings/mcp/` | Draft binding and Python prototype implemented; not yet finalized or promoted as a stable Companion |
 | Evidence tooling | `conformance/harness/evidence_emitter.py` | R6 EvidenceRecord emission and chain validation |
 | Conformance harness | `conformance/harness/runner.py` | Profile runner and report generator |
 
@@ -123,9 +125,11 @@ A create operation that supplies an `idempotency_key` with identical request con
 
 **Evidence:** `PAMSPEC.mutation.idempotent_create` — `v08.s4.idempotency.probe` (gap), `r5.idempotency_key` (gap); `PAMSPEC.mutation.idempotent_create.durable_across_restart` — `r5.idempotency_restart_durable` (gap, SQLite sidecar durability proven)
 
-### CR-7: Deterministic Outcomes
+### CR-7: Deterministic Outcomes *(provisional — candidate Core)*
 
 An implementation that serializes the same set of objects into a portability bundle MUST produce the same normalized output on repeated calls, given identical object state. The normalized output MUST be independent of the call timestamp and process identity.
+
+**Provisional status:** The current draft does not yet contain a direct normative MUST for bundle-deterministic serialization, and PAMSPEC-Lite has no test case that directly exercises this property. CR-7 is a candidate requirement recorded here to make the gap visible and to give R9 a concrete target. CR-1 through CR-6 are the established proposed Core.
 
 **Rationale:** Cross-implementation comparison and evidence reproducibility require that the same inputs always produce the same bundle bytes. Non-determinism would make `results_artifact` SHA-256 pinning meaningless.
 
@@ -161,7 +165,7 @@ An implementation that serializes the same set of objects into a portability bun
 | `case_history_is_monotonic` | CR-4 Immutable Versions, §7.7 Event Ledger |
 | `case_unknown_extension_fields_preserved_on_read` | CR-3 Canonical Content |
 
-PAMSPEC-Lite is the profile that directly instantiates all seven Core requirements. Every implementation that passes PAMSPEC-Lite satisfies Core.
+PAMSPEC-Lite is the current Core-oriented conformance suite but does not yet provide complete test coverage for every proposed Core requirement. Specifically: CR-2's write-path scope mutation rejection is not tested (only read-time isolation is tested); CR-7 bundle determinism has no direct test case. An implementation passing all 15 Lite cases satisfies CR-1, CR-3, CR-4, CR-5, and CR-6. CR-2 write-path and CR-7 require additional test coverage before PAMSPEC-Lite can serve as a complete Core conformance signal (see OD-P1).
 
 ### 4.2 PAMSPEC-Delegation (formalized)
 
@@ -205,7 +209,13 @@ The canonical reference implementation. SQLite-backed, in-process. Passes PAMSPE
 
 ### 5.2 Mem0EnforcementAdapter
 
-Wraps Mem0 2.0.12 (unmodified) to enforce PAMSPEC semantics that Mem0 does not natively provide. Maintains durable side state in a SQLite sidecar. R5 evidence establishes which behaviors are native (identity assignment) vs. adapter-emulated (scope immutability, version conflict, idempotency) vs. gap (tombstone persistence, deterministic bundle).
+Wraps Mem0 2.0.12 (unmodified) to enforce PAMSPEC semantics that Mem0 does not natively provide. Maintains durable side state in a SQLite sidecar. R5 evidence establishes the following distinctions:
+
+- **Native (Mem0 behavior):** object identity assignment (CR-1), append-only history log (partial CR-4)
+- **Mem0 gap, adapter-enforced:** scope immutability (CR-2), expected-version conflict detection (CR-5), idempotency (CR-6), tombstone tracking (candidate CR-8)
+- **Adapter-emulated portability:** round-trip fidelity (CR-3) and deterministic bundle output (CR-7 provisional) — provided by the adapter's sidecar storage and bundle format layer, not Mem0's native persistence
+
+"Adapter-enforced" means Mem0 does not provide the behavior and the adapter adds it via the SQLite sidecar. "Adapter-emulated portability" means the guarantee is delivered by the bundle format layer on top of sidecar storage; Mem0's own storage is not the authoritative source.
 
 **Location:** `validation/r5_mem0_portability/mem0_enforcement_adapter.py`
 
@@ -226,9 +236,13 @@ The R6 evidence model (`EvidenceRecord` schema, emission harness, chain validato
 - `scripts/validate_repository.py` — repository-wide validation including evidence chains
 - `conformance/schemas/0.1-draft/evidence-record.schema.json` — JSON Schema 2020-12
 
-### 5.5 MCP Binding (planned, not yet implemented)
+### 5.5 MCP Binding
 
-A Model Context Protocol adapter that would expose PAMSPEC operations as MCP tools. Not within R8 scope. Recorded here as a named future companion.
+A PAMSPEC-over-MCP binding profile, tools definition (`bindings/mcp/tools.json`), and Python prototype server (`bindings/mcp/server-python/`) are already present in the repository. The binding defines MCP tools, resources, error mapping, discovery semantics, and idempotency semantics for PAMSPEC operations.
+
+**Location:** `bindings/mcp/`
+
+**Status:** Draft binding and Python prototype implemented; not yet finalized or promoted as a stable Companion. The open question for R9 is whether to stabilize and formally include this existing work as a Companion, or defer finalization to a post-submission milestone (see OD-X1).
 
 ---
 

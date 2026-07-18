@@ -19,4 +19,4 @@ Review the Persistent Agentic Memory Architecture for provider independence, obj
 
 ## Contributor Identification
 
-Richard M. Infantado is the primary author and specification editor. Robert Leroux is acknowledged as a contributor. Contributor listing is separate from formal Internet-Draft authorship — no formal Internet-Draft authorship exists yet because no revision has been submitted.
+Richard M. Infantado is the primary author and specification editor. Robert Leroux (rl.isapience@gmail.com) is a confirmed Contributor. Contributor listing is separate from formal Internet-Draft authorship; Robert Leroux is not listed in the Internet-Draft front matter.
