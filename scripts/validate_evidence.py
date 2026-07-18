@@ -1,4 +1,4 @@
-"""Validate PAMSPEC evidence-record chains against the R6.1a schema and
+"""Validate PAMSPEC evidence-record chains against the R6.1b schema and
 enforce chain-level invariants.
 
 Usage:
@@ -7,21 +7,30 @@ Usage:
 
 Exit status: 0 on success; non-zero on any schema or invariant failure.
 
-Chain-level invariants enforced (schema-level ones are enforced by the
-Draft 2020-12 conditional rules in the schema itself):
+The Draft 2020-12 validator is instantiated with a FormatChecker so
+`format: date-time` on `recorded_at` and `evidence_observed_at` is
+actually enforced (RFC 3339 timestamps with timezone offset).
+
+Chain-level invariants enforced (the schema itself carries the
+property-level `if/then` conditionals):
 
   5. record_id unique within a chain file.
   6. controlled_experiment control_design MUST have at least one entry in
      confounders_ruled_out or negative_controls.
   7. revises.record_id MUST resolve to a record earlier in the same file.
   8. A record MUST NOT revise itself.
-  9. Revision cycles prohibited (defensive; earlier-only already prevents).
- 10. revises target's requirement_id MUST equal the reviser's requirement_id.
- 11. recorded_at MUST NOT move backward along a revision edge.
- 12. Two later records that both alter effective disposition of the same
-     target with conflicting effects (e.g. one retracts, one supersedes)
-     ARE rejected. Only one 'altering' revision per target is allowed;
-     multiple 'reproduces'/'extends' are fine.
+  9. Revision cycles prohibited.
+ 10. revises target's requirement_id MUST equal the reviser's
+     requirement_id.
+ 11. evidence_observed_at MUST NOT move backward along a revision edge.
+     (The semantically-correct field is the OBSERVATION time, not the
+     record-materialization time, because retrospective_reconstruction
+     records may be materialized in any order.)
+ 12. Multiple altering revisions with the SAME effect on the same
+     target are allowed (independent reproductions of a retraction, or
+     independent supersessions with the same outcome). Conflicting
+     altering effects on the same target (one retracts, one supersedes)
+     ARE prohibited.
 """
 
 from __future__ import annotations
@@ -31,7 +40,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +53,39 @@ ALTERING_EFFECTS = {"retracts", "supersedes"}
 
 def load_schema() -> dict:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _make_datetime_format_checker() -> FormatChecker:
+    """Build a FormatChecker with a strict `date-time` handler.
+
+    Without this, `jsonschema` on environments that lack `rfc3339-validator`
+    (or an equivalent extras package) has NO checker registered for
+    date-time, so it silently accepts anything — including
+    'yesterday afternoon' or '2026-07-18T15:00:00' (no timezone).
+
+    This custom checker uses `datetime.fromisoformat`, which on Python
+    3.11+ accepts a wide range of ISO 8601 timestamps, and additionally
+    requires a timezone offset (rejecting naive timestamps).
+    """
+    fc = FormatChecker()
+
+    @fc.checks("date-time", raises=(ValueError,))
+    def _check_date_time(value):  # noqa: ANN001
+        if not isinstance(value, str):
+            return True
+        try:
+            dt = datetime.fromisoformat(value)
+        except ValueError as e:
+            raise ValueError(f"not a valid ISO 8601 date-time: {value!r} ({e})")
+        if dt.tzinfo is None:
+            raise ValueError(f"date-time MUST include a timezone offset: {value!r}")
+        return True
+
+    return fc
+
+
+def make_validator() -> Draft202012Validator:
+    return Draft202012Validator(load_schema(), format_checker=_make_datetime_format_checker())
 
 
 def iter_default_chains() -> list[Path]:
@@ -94,7 +136,7 @@ def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
             if cd is None:
                 errors.append(
                     f"{path}: record_id={rec['record_id']}: controlled_experiment "
-                    f"MUST have non-null control_design (schema conditional 2)"
+                    f"MUST have non-null control_design (schema conditional)"
                 )
             else:
                 if not (cd.get("confounders_ruled_out") or cd.get("negative_controls")):
@@ -138,12 +180,13 @@ def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
                 f"({target['requirement_id']} vs {rec['requirement_id']}) (R6 invariant 10)"
             )
 
-        t_this = _parse_iso(rec.get("recorded_at", ""))
-        t_target = _parse_iso(target.get("recorded_at", ""))
+        t_this = _parse_iso(rec.get("evidence_observed_at", ""))
+        t_target = _parse_iso(target.get("evidence_observed_at", ""))
         if t_this is not None and t_target is not None and t_this < t_target:
             errors.append(
-                f"{path}: record_id={rid}: recorded_at is BEFORE the record it revises "
-                f"'{target_id}' — revision edges must move forward in time (R6 invariant 11)"
+                f"{path}: record_id={rid}: evidence_observed_at is BEFORE the record it revises "
+                f"'{target_id}' — revision edges must move forward in observation time "
+                f"(R6 invariant 11)"
             )
 
     altering_by_target: dict[str, list[tuple[str, str]]] = {}
@@ -196,8 +239,8 @@ def compute_effective_status(records: list[dict]) -> dict[str, str]:
     'confirmed' | 'inconclusive' | 'not_testable' | 'retracted' | 'superseded'
 
     The intrinsic claim_status of a record is preserved unless a LATER
-    record carries revises.effect in {retracts, supersedes} pointing at it.
-    reproduces / extends leave effective disposition unchanged.
+    record carries revises.effect in {retracts, supersedes} pointing at
+    it. reproduces / extends leave effective disposition unchanged.
     """
     effective = {r["record_id"]: r["claim_status"] for r in records}
     for rec in records:
@@ -212,7 +255,7 @@ def compute_effective_status(records: list[dict]) -> dict[str, str]:
 
 
 def main(argv: list[str]) -> int:
-    validator = Draft202012Validator(load_schema())
+    validator = make_validator()
     if len(argv) > 1:
         paths = [Path(a) for a in argv[1:]]
     else:
