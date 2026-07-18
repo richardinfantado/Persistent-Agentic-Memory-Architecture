@@ -31,16 +31,25 @@ property-level `if/then` conditionals):
      independent supersessions with the same outcome). Conflicting
      altering effects on the same target (one retracts, one supersedes)
      ARE prohibited.
+ 13. For records with origin=retrospective_reconstruction,
+     evidence_observed_at MUST be less-than-or-equal-to recorded_at
+     (the underlying experiment cannot occur after the record was
+     materialized).
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+RFC3339_DATE_TIME_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,16 +65,18 @@ def load_schema() -> dict:
 
 
 def _make_datetime_format_checker() -> FormatChecker:
-    """Build a FormatChecker with a strict `date-time` handler.
+    """Build a FormatChecker with a strict RFC 3339 `date-time` handler.
 
-    Without this, `jsonschema` on environments that lack `rfc3339-validator`
-    (or an equivalent extras package) has NO checker registered for
-    date-time, so it silently accepts anything — including
-    'yesterday afternoon' or '2026-07-18T15:00:00' (no timezone).
+    Without this, jsonschema on environments that lack rfc3339-validator
+    has NO checker registered for date-time, so it silently accepts
+    anything — including 'yesterday afternoon' or
+    '2026-07-18T15:00:00' (no timezone).
 
-    This custom checker uses `datetime.fromisoformat`, which on Python
-    3.11+ accepts a wide range of ISO 8601 timestamps, and additionally
-    requires a timezone offset (rejecting naive timestamps).
+    R6.1c: strict RFC 3339. The regex enforces:
+      - 'T' date-time separator (space is REJECTED)
+      - literal timezone: 'Z' or a '+HH:MM' / '-HH:MM' offset
+    Then datetime.fromisoformat() validates the calendar values
+    (rejects e.g. '2026-13-45T99:99:99+08:00').
     """
     fc = FormatChecker()
 
@@ -73,12 +84,15 @@ def _make_datetime_format_checker() -> FormatChecker:
     def _check_date_time(value):  # noqa: ANN001
         if not isinstance(value, str):
             return True
+        if not RFC3339_DATE_TIME_RE.match(value):
+            raise ValueError(
+                f"not a valid RFC 3339 date-time: {value!r} "
+                f"(requires 'T' separator and 'Z' or '+HH:MM' offset)"
+            )
         try:
-            dt = datetime.fromisoformat(value)
+            datetime.fromisoformat(value)
         except ValueError as e:
-            raise ValueError(f"not a valid ISO 8601 date-time: {value!r} ({e})")
-        if dt.tzinfo is None:
-            raise ValueError(f"date-time MUST include a timezone offset: {value!r}")
+            raise ValueError(f"invalid calendar date-time: {value!r} ({e})")
         return True
 
     return fc
@@ -206,6 +220,20 @@ def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
                 f"{path}: record '{target_id}' has conflicting altering revisions "
                 f"({details}) — a target may not be both retracted and superseded "
                 f"with different effects (R6 invariant 12)"
+            )
+
+    for rec in records:
+        if rec.get("origin") != "retrospective_reconstruction":
+            continue
+        t_rec = _parse_iso(rec.get("recorded_at", ""))
+        t_obs = _parse_iso(rec.get("evidence_observed_at", ""))
+        if t_rec is not None and t_obs is not None and t_obs > t_rec:
+            errors.append(
+                f"{path}: record_id={rec['record_id']}: "
+                f"retrospective_reconstruction requires "
+                f"evidence_observed_at <= recorded_at "
+                f"(experiment cannot occur after materialization) "
+                f"(R6 invariant 13)"
             )
 
     def _has_cycle(start: str) -> bool:

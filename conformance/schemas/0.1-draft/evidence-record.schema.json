@@ -277,6 +277,11 @@
       "$comment": "profile string => profile_version string (bidirectional pairing)",
       "if": {"properties": {"pamspec_context": {"type": "object", "properties": {"profile": {"type": "string"}}, "required": ["profile"]}}, "required": ["pamspec_context"]},
       "then": {"properties": {"pamspec_context": {"properties": {"profile_version": {"type": "string"}}}}}
+    },
+    {
+      "$comment": "R6.1c: origin=retrospective_reconstruction => harness_commit=null. Native emissions may still legitimately carry a null harness_commit (e.g. produced by a non-R7 validation scenario), so the reverse implication is NOT enforced.",
+      "if": {"properties": {"origin": {"const": "retrospective_reconstruction"}}, "required": ["origin"]},
+      "then": {"properties": {"pamspec_context": {"properties": {"harness_commit": {"type": "null"}}}}}
     }
   ]
 }

@@ -390,3 +390,36 @@ def test_rejects_invalid_origin_value(tmp_path):
     records = _base_records()
     records[0]["origin"] = "native"  # missing suffix
     _assert_rejects(_run_validator(tmp_path, records))
+
+
+# ------- R6.1c: retrospective provenance invariants -------
+
+def test_rejects_retrospective_with_non_null_harness_commit(tmp_path):
+    """Schema conditional 11: origin=retrospective_reconstruction must
+    have pamspec_context.harness_commit=null. A retrospective record
+    cannot falsely attribute its evidence to an R7 harness run."""
+    records = _base_records()
+    records[0]["pamspec_context"]["harness_commit"] = \
+        "0123456789012345678901234567890123456789"
+    _assert_rejects(_run_validator(tmp_path, records))
+
+
+def test_rejects_retrospective_observed_after_materialized(tmp_path):
+    """Invariant 13: for origin=retrospective_reconstruction records,
+    evidence_observed_at must be <= recorded_at. The underlying
+    experiment cannot occur after the retrospective record was
+    materialized."""
+    records = _base_records()
+    # V08.1's evidence_observed_at pushed after V08.1's recorded_at.
+    records[1]["evidence_observed_at"] = "2026-07-19T00:00:00+08:00"
+    _assert_rejects(
+        _run_validator(tmp_path, records),
+        "R6 invariant 13",
+    )
+
+
+def test_rejects_date_time_with_space_separator(tmp_path):
+    """Strict RFC 3339: space between date and time is rejected."""
+    records = _base_records()
+    records[0]["recorded_at"] = "2026-07-18 15:00:00+08:00"
+    _assert_rejects(_run_validator(tmp_path, records))

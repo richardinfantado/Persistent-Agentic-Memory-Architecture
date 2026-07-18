@@ -29,8 +29,12 @@ Every record MUST identify how and when it came into being.
 - `origin` — enum: `native_emission | retrospective_reconstruction`.
   - `native_emission` means the record was produced directly by a harness or scenario at the moment the claim was observed.
   - `retrospective_reconstruction` means the record was materialized after the fact from prior evidence (commit history, prior JSONL, prose reports). All records in the V08 reference chain are `retrospective_reconstruction` — the R6 EvidenceRecord format did not exist when V08 or V08.1 were originally observed.
-- `recorded_at` — ISO 8601 timestamp when the R6 record itself was materialized. For `native_emission`, roughly the moment the harness ran. For `retrospective_reconstruction`, later than the observation, and may be identical across all reconstructed records materialized in one pass.
-- `evidence_observed_at` — ISO 8601 timestamp when the underlying claim was observed. For `native_emission`, equals `recorded_at`. For `retrospective_reconstruction`, the original observation time (usually the git commit time of the original evidence). Revision-edge monotonicity (invariant 11) is enforced on `evidence_observed_at`, NOT `recorded_at`, because the observation order is what matters — a retrospective reconstruction can materialize records in any order.
+- `recorded_at` — strict RFC 3339 date-time when the R6 record itself was materialized. For `native_emission`, roughly the moment the harness ran. For `retrospective_reconstruction`, later than the observation and may be identical across all reconstructed records materialized in one pass. **Enforced (invariant 13):** for `retrospective_reconstruction` records, `evidence_observed_at ≤ recorded_at`.
+- `evidence_observed_at` — strict RFC 3339 date-time when the underlying claim was observed. For `native_emission`, equals `recorded_at`. For `retrospective_reconstruction`, the original observation time (usually the git commit time of the original evidence). Revision-edge monotonicity (invariant 11) is enforced on `evidence_observed_at`, NOT `recorded_at`, because the observation order is what matters — a retrospective reconstruction can materialize records in any order.
+
+**Date-time format.** R6 uses **strict RFC 3339**. The `T` separator is required (a space is rejected); a timezone offset (`Z` or `+HH:MM` / `-HH:MM`) is required (naive timestamps are rejected). Calendar values must be valid (`2026-13-45T00:00:00Z` is rejected). Enforced by the validator's custom `date-time` format checker.
+
+**Retrospective records may NOT carry a harness_commit** — see the schema conditional `origin=retrospective_reconstruction ⇒ harness_commit=null`. Native emissions may still legitimately carry a null `harness_commit` (produced by a non-R7 validation scenario or a hand-authored probe), so the reverse implication is not enforced.
 
 ## The four `test_kind`s
 
@@ -90,6 +94,7 @@ Schema-level (JSON Schema `if/then` conditionals):
 8. `evidence_source contains "adapter" ⇒ adapter non-null`.
 9. `revises.effect ∈ {retracts, supersedes} ⇒ claim_status = confirmed`.
 10. `profile null ⇔ profile_version null` (both directions).
+11. `origin = retrospective_reconstruction ⇒ pamspec_context.harness_commit = null` (retrospective records may not falsely attribute evidence to the R7 harness).
 
 Chain-level (`scripts/validate_evidence.py`, invariants numbered from the earlier revisions):
 
@@ -101,8 +106,9 @@ Chain-level (`scripts/validate_evidence.py`, invariants numbered from the earlie
 10. `revises` target's `requirement_id` must equal the reviser's `requirement_id`.
 11. `evidence_observed_at` must not move backward along a revision edge.
 12. Multiple altering revisions with the **same** effect on a target are allowed; conflicting altering effects on the same target are prohibited.
+13. For `origin = retrospective_reconstruction` records, `evidence_observed_at ≤ recorded_at` (the underlying experiment cannot occur after the record was materialized).
 
-Additionally: the JSON Schema Draft 2020-12 validator is instantiated with a `FormatChecker` so `format: date-time` on `recorded_at` and `evidence_observed_at` is actively enforced. Malformed timestamps and timestamps without a timezone offset are rejected at schema-check time.
+Additionally: the JSON Schema Draft 2020-12 validator is instantiated with a custom **strict RFC 3339** date-time format checker. Malformed timestamps, space-separated forms (`2026-07-18 15:00:00+08:00`), naive timestamps without a timezone offset, and invalid calendar values are all rejected at schema-check time.
 
 ## Storage rule
 
