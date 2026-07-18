@@ -1,36 +1,45 @@
-"""Validate PAMSPEC evidence-record chains against the R6 schema and
-enforce the retraction-chain invariants.
+"""Validate PAMSPEC evidence-record chains against the R6.1a schema and
+enforce chain-level invariants.
 
 Usage:
-    python scripts/validate_evidence.py                     # validate all *.jsonl under validation/reports/
+    python scripts/validate_evidence.py                     # validate all evidence-chain-*.jsonl under validation/reports/
     python scripts/validate_evidence.py path/to/chain.jsonl [more.jsonl ...]
 
 Exit status: 0 on success; non-zero on any schema or invariant failure.
 
-R6.1 invariants enforced:
-  1. Every record validates against conformance/schemas/evidence-record.schema.json.
-  2. record_id values are unique within a chain file.
-  3. controlled_experiment records MUST have control_design present.
-  4. retracted records MUST have a superseding record with matching requirement_id
-     and supersedes_claim = <retracted record_id>, appearing later in the file.
-  5. supersedes_claim, when non-null, MUST reference a record_id present in the file
-     with a matching requirement_id.
-  6. classification and claim_status enums are enforced by the schema.
+Chain-level invariants enforced (schema-level ones are enforced by the
+Draft 2020-12 conditional rules in the schema itself):
+
+  5. record_id unique within a chain file.
+  6. controlled_experiment control_design MUST have at least one entry in
+     confounders_ruled_out or negative_controls.
+  7. revises.record_id MUST resolve to a record earlier in the same file.
+  8. A record MUST NOT revise itself.
+  9. Revision cycles prohibited (defensive; earlier-only already prevents).
+ 10. revises target's requirement_id MUST equal the reviser's requirement_id.
+ 11. recorded_at MUST NOT move backward along a revision edge.
+ 12. Two later records that both alter effective disposition of the same
+     target with conflicting effects (e.g. one retracts, one supersedes)
+     ARE rejected. Only one 'altering' revision per target is allowed;
+     multiple 'reproduces'/'extends' are fine.
 """
 
 from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "conformance" / "schemas" / "evidence-record.schema.json"
+SCHEMA_PATH = ROOT / "conformance" / "schemas" / "0.1-draft" / "evidence-record.schema.json"
 DEFAULT_SEARCH_DIRS = [ROOT / "validation" / "reports"]
 DEFAULT_GLOB = "evidence-chain-*.jsonl"
+
+ALTERING_EFFECTS = {"retracts", "supersedes"}
 
 
 def load_schema() -> dict:
@@ -45,9 +54,18 @@ def iter_default_chains() -> list[Path]:
     return paths
 
 
+def _parse_iso(ts: str):
+    try:
+        return datetime.fromisoformat(ts)
+    except Exception:
+        return None
+
+
 def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
     errors: list[str] = []
     records: list[dict] = []
+    positions: dict[str, int] = {}
+
     for lineno, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         raw = raw.strip()
         if not raw:
@@ -64,54 +82,133 @@ def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
             continue
         records.append(rec)
 
-    seen_ids: set[str] = set()
-    for rec in records:
+    for idx, rec in enumerate(records):
         rid = rec["record_id"]
-        if rid in seen_ids:
-            errors.append(f"{path}: duplicate record_id '{rid}'")
-        seen_ids.add(rid)
+        if rid in positions:
+            errors.append(f"{path}: duplicate record_id '{rid}' at record {idx} (R6 invariant 5)")
+        positions[rid] = idx
 
-    for rec in records:
-        if rec["test_kind"] == "controlled_experiment" and rec.get("control_design") is None:
-            errors.append(
-                f"{path}: record_id={rec['record_id']}: controlled_experiment "
-                f"MUST have control_design (R6 invariant 3)"
-            )
+    for idx, rec in enumerate(records):
+        if rec["test_kind"] == "controlled_experiment":
+            cd = rec.get("control_design")
+            if cd is None:
+                errors.append(
+                    f"{path}: record_id={rec['record_id']}: controlled_experiment "
+                    f"MUST have non-null control_design (schema conditional 2)"
+                )
+            else:
+                if not (cd.get("confounders_ruled_out") or cd.get("negative_controls")):
+                    errors.append(
+                        f"{path}: record_id={rec['record_id']}: controlled_experiment "
+                        f"control_design MUST have at least one confounders_ruled_out or "
+                        f"negative_controls entry (R6 invariant 6)"
+                    )
 
     id_to_rec = {r["record_id"]: r for r in records}
-    for rec in records:
-        sup = rec.get("supersedes_claim")
-        if sup is None:
+    id_to_idx = {r["record_id"]: i for i, r in enumerate(records)}
+
+    for idx, rec in enumerate(records):
+        revises = rec.get("revises")
+        if revises is None:
             continue
-        if sup not in id_to_rec:
+        target_id = revises["record_id"]
+        rid = rec["record_id"]
+
+        if target_id == rid:
+            errors.append(f"{path}: record_id={rid}: self-revision prohibited (R6 invariant 8)")
+            continue
+
+        if target_id not in id_to_rec:
             errors.append(
-                f"{path}: record_id={rec['record_id']}: supersedes_claim '{sup}' "
-                f"does not reference a record_id present in this chain (R6 invariant 5)"
+                f"{path}: record_id={rid}: revises '{target_id}' but no such "
+                f"record_id in this chain (R6 invariant 7)"
             )
             continue
-        target = id_to_rec[sup]
+
+        if id_to_idx[target_id] >= idx:
+            errors.append(
+                f"{path}: record_id={rid}: revises '{target_id}' but that record "
+                f"appears at or after this one (R6 invariant 7: append-only ordering)"
+            )
+
+        target = id_to_rec[target_id]
         if target["requirement_id"] != rec["requirement_id"]:
             errors.append(
-                f"{path}: record_id={rec['record_id']}: supersedes '{sup}' but "
-                f"requirement_id differs ({target['requirement_id']} vs "
-                f"{rec['requirement_id']}) (R6 invariant 5)"
+                f"{path}: record_id={rid}: revises '{target_id}' but requirement_id differs "
+                f"({target['requirement_id']} vs {rec['requirement_id']}) (R6 invariant 10)"
             )
 
-    superseded_by: dict[str, str] = {}
+        t_this = _parse_iso(rec.get("recorded_at", ""))
+        t_target = _parse_iso(target.get("recorded_at", ""))
+        if t_this is not None and t_target is not None and t_this < t_target:
+            errors.append(
+                f"{path}: record_id={rid}: recorded_at is BEFORE the record it revises "
+                f"'{target_id}' — revision edges must move forward in time (R6 invariant 11)"
+            )
+
+    altering_by_target: dict[str, list[tuple[str, str]]] = {}
     for rec in records:
-        sup = rec.get("supersedes_claim")
-        if sup is not None:
-            superseded_by.setdefault(sup, rec["record_id"])
+        revises = rec.get("revises")
+        if revises is None:
+            continue
+        if revises["effect"] in ALTERING_EFFECTS:
+            altering_by_target.setdefault(revises["record_id"], []).append(
+                (rec["record_id"], revises["effect"])
+            )
+    for target_id, revs in altering_by_target.items():
+        distinct_effects = {e for _, e in revs}
+        if len(distinct_effects) > 1:
+            details = ", ".join(f"{rid}:{eff}" for rid, eff in revs)
+            errors.append(
+                f"{path}: record '{target_id}' has conflicting altering revisions "
+                f"({details}) — a target may not be both retracted and superseded "
+                f"with different effects (R6 invariant 12)"
+            )
+
+    def _has_cycle(start: str) -> bool:
+        seen = {start}
+        cur = start
+        while True:
+            rec = id_to_rec.get(cur)
+            if rec is None:
+                return False
+            revises = rec.get("revises")
+            if revises is None:
+                return False
+            nxt = revises["record_id"]
+            if nxt in seen:
+                return True
+            seen.add(nxt)
+            cur = nxt
     for rec in records:
-        if rec["claim_status"] == "retracted":
-            rid = rec["record_id"]
-            if rid not in superseded_by:
-                errors.append(
-                    f"{path}: record_id={rid}: retracted record has no superseding "
-                    f"record in this chain (R6 invariant 4)"
-                )
+        if _has_cycle(rec["record_id"]):
+            errors.append(
+                f"{path}: record_id={rec['record_id']}: revision cycle detected "
+                f"(R6 invariant 9)"
+            )
 
     return errors
+
+
+def compute_effective_status(records: list[dict]) -> dict[str, str]:
+    """For each record_id in a chain, return its EFFECTIVE disposition.
+
+    'confirmed' | 'inconclusive' | 'not_testable' | 'retracted' | 'superseded'
+
+    The intrinsic claim_status of a record is preserved unless a LATER
+    record carries revises.effect in {retracts, supersedes} pointing at it.
+    reproduces / extends leave effective disposition unchanged.
+    """
+    effective = {r["record_id"]: r["claim_status"] for r in records}
+    for rec in records:
+        revises = rec.get("revises")
+        if revises is None:
+            continue
+        if revises["effect"] == "retracts":
+            effective[revises["record_id"]] = "retracted"
+        elif revises["effect"] == "supersedes":
+            effective[revises["record_id"]] = "superseded"
+    return effective
 
 
 def main(argv: list[str]) -> int:
@@ -135,7 +232,8 @@ def main(argv: list[str]) -> int:
         if errs:
             all_errors.extend(errs)
         else:
-            print(f"OK  {p}  ({sum(1 for _ in p.open(encoding='utf-8') if _.strip())} records)")
+            n = sum(1 for _ in p.open(encoding="utf-8") if _.strip())
+            print(f"OK  {p}  ({n} records)")
 
     if all_errors:
         print()
