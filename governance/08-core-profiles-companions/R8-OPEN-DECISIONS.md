@@ -185,12 +185,12 @@ Without closing these gaps, PAMSPEC-Lite cannot credibly claim to fully instanti
 | OD-C1 | Core | Open | Editorial | No — unless CR count changes |
 | OD-C2 | Core | Open (needs §8.6 source check) | Editorial | No |
 | OD-C3 | Core | Open (design decision) | Editorial + IETF input | Possibly — determinism scope affects -00 text |
-| OD-C4 | Core | Open | Architecture | Yes — affects conformance testing definition |
-| OD-P1 | Profile | Open — **R9 blocker** | Conformance engineering | Yes — Lite must cover CR-2 write-path and CR-7 before Core claim is complete |
+| OD-C4 | Core | **Resolved (R9)** — restart durability required; cross-process atomicity is deployment concern. See `decisions/0031-idempotency-durability-scope.md`. | Architecture | Closed |
+| OD-P1 | Profile | **Resolved (R9)** — `case_scope_mutation_rejected` and `case_bundle_output_is_deterministic` added; suite 15 → 17; all 143 tests pass. | Conformance engineering | Closed |
 | OD-P2 | Profile | Open | Editorial | No |
 | OD-P3 | Profile | Open | Conformance engineering | No |
-| OD-X1 | Companion | Open — **R9 blocker** | Richard M. Infantado | Yes — stabilization decision affects R9 submission narrative |
+| OD-X1 | Companion | **Resolved (R9)** — MCP stabilization deferred to post-R9 milestone. See `decisions/0032-mcp-companion-stabilization-deferred.md`. | Richard M. Infantado | Closed |
 | OD-X2 | Companion | Recommended (option 1) | Companion maintenance | No |
 | OD-X3 | Companion | Recommended (option 2) | Editorial | No |
 
-**R9 blockers:** OD-C4 (idempotency cross-process scope), OD-P1 (PAMSPEC-Lite coverage gaps for CR-2 write-path and CR-7), and OD-X1 (MCP binding stabilization decision) must be resolved before R9 scope is finalized. All other decisions can be deferred without blocking IETF submission.
+**R9 blockers resolved:** OD-C4, OD-P1, and OD-X1 are all closed as of R9 (commit `e5d8856`). Remaining open decisions (OD-C1, OD-C2, OD-C3, OD-P2, OD-P3, OD-X2, OD-X3) do not block IETF -00 submission.

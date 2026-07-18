@@ -1017,7 +1017,7 @@ PAMSPEC-Lite is a minimal on-ramp profile for single-developer agents, prototype
 - The Validation State subset `unverified` and `corroborated`.
 - Append-only Event Ledger recording of `object_created`, `object_updated`, `object_deleted`, `lifecycle_transitioned`, and `validation_transitioned` events, with atomic version+event commit.
 - Expected-version preconditions on Update, Transition, and Delete, and `version_conflict` on stale expectations.
-- Idempotency-key handling for Create.
+- Durable idempotency-key handling for Create: idempotency records MUST survive the Memory Service process restarting with the same persistent store.
 
 PAMSPEC-Lite deliberately omits Relationship Objects, Semantic Query, Snapshots, Redaction (beyond deletion), Legal Hold, and Derived Index management. Implementations that support any of those areas SHOULD declare the corresponding full profile instead of, or in addition to, PAMSPEC-Lite.
 
