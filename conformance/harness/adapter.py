@@ -75,6 +75,21 @@ class Adapter(ABC):
     def supported_profiles(self) -> list[str]:
         """Return the list of PAMSPEC profile names this adapter supports."""
 
+    # ------------- R6 evidence identity (optional) -------------
+
+    def evidence_identity(self) -> dict[str, str] | None:
+        """R6.2c: optional structured runtime identity for evidence
+        attribution. In-process adapters SHOULD return a dict with
+        keys `adapter_name`, `adapter_version`, `implementation_name`,
+        `implementation_version` so the R6 evidence emitter can bind
+        the caller-declared identity to something the runtime can
+        vouch for. Subprocess adapters can leave this unimplemented
+        because their identity comes over the R7 hello handshake.
+        Return None (default) if no identity is available; native
+        evidence emission will then be rejected for that adapter.
+        """
+        return None
+
     # ------------- Core CRUD (PAMSPEC-Lite) -------------
 
     @abstractmethod
