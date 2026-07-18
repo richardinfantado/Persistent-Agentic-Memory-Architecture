@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import sys
 
 root = Path(__file__).resolve().parents[1]
 source = (root / "draft-infantado-agent-memory-architecture.md").read_text(encoding="utf-8")
@@ -37,3 +38,22 @@ for path in root.rglob("*"):
 if old_refs:
     raise SystemExit(f"unintended pama draft-name references: {old_refs}")
 print("repository metadata, draft-name, and JSON syntax checks passed")
+
+# R6.4: evidence-chain validation automatically discovered and run.
+# validate_evidence discovers all evidence-chain-*.jsonl files under
+# validation/reports/ AND all *.jsonl files under validation/evidence/.
+sys.path.insert(0, str(root / "scripts"))
+import validate_evidence as _ve  # noqa: E402
+
+_evidence_paths = (
+    sorted((root / "validation" / "reports").glob("evidence-chain-*.jsonl"))
+    + sorted((root / "validation" / "evidence").glob("*.jsonl"))
+)
+if _evidence_paths:
+    _errs: list[str] = []
+    _validator = _ve.make_validator()
+    for _p in _evidence_paths:
+        _errs.extend(_ve.validate_chain(_p, _validator))
+    if _errs:
+        raise SystemExit("evidence-chain validation failed:\n" + "\n".join(_errs))
+    print(f"evidence chains validated: {len(_evidence_paths)} file(s)")
