@@ -23,6 +23,7 @@ import time
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 
 from .adapter import Adapter
@@ -36,13 +37,24 @@ PROFILE_SUITE_MODULES = {
 
 REPORT_FORMAT_VERSION = 1
 
+# R6.2c: always resolve git commands against the PAMSPEC repository
+# root, not the process cwd. Otherwise `git rev-parse HEAD` returns
+# the SHA of whichever repository the caller happens to be inside.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def _git_head_commit() -> str:
-    """Return the current git HEAD commit SHA if inside a repo, else empty."""
+    """Return the current git HEAD commit SHA of the PAMSPEC
+    repository (NOT of the process cwd), or empty string on failure.
+    R6.2c: always uses REPO_ROOT as the cwd so evidence attribution
+    cannot be shifted to another repository by running the harness
+    from inside a nested checkout.
+    """
     try:
         out = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             capture_output=True, text=True, check=True, timeout=2.0,
+            cwd=str(REPO_ROOT),
         )
         return out.stdout.strip()
     except Exception:
@@ -59,6 +71,19 @@ class CaseResult:
     passed: bool
     duration_ms: float
     error: str | None = None
+    # R6.2b: structured outcome classification, DELIBERATELY NOT
+    # serialized in to_dict() so the legacy JSON report shape is
+    # unchanged. Consumed by the R6 evidence emitter through the
+    # ExecutionSession returned from runner.run_profile() callers.
+    # Values: 'passed' | 'assertion_failure' | 'missing_feature' |
+    #         'execution_error'
+    outcome_kind: str = "passed"
+    # R6.2d: per-case runtime evidence identity. The runner captures
+    # this by calling adapter.evidence_identity() on each case's
+    # freshly-constructed adapter. The R6 emitter compares against the
+    # probe identity; a mismatch (drift across factory calls) rejects
+    # native evidence. Non-serialized in to_dict().
+    adapter_identity: dict | None = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -136,11 +161,24 @@ class ConformanceReport:
 
 def _collect_adapter_info(adapter: Adapter) -> dict[str, Any]:
     """Extract adapter-and-implementation metadata for the report.
-    Works for both in-process and subprocess adapters."""
+    Works for both in-process and subprocess adapters.
+
+    R6.2c: also captures the adapter's evidence_identity() if the
+    adapter defines one. Consumed by the R6 evidence emitter for
+    in-process subject/version binding.
+    """
     info: dict[str, Any] = {
         "class_name": adapter.__class__.__name__,
         "supported_profiles": list(adapter.supported_profiles()),
     }
+    identity_getter = getattr(adapter, "evidence_identity", None)
+    if callable(identity_getter):
+        try:
+            identity = identity_getter()
+            if isinstance(identity, dict) and identity:
+                info["evidence_identity"] = identity
+        except Exception:
+            pass
     subprocess_info = getattr(adapter, "info", None)
     if subprocess_info is not None:
         info["subprocess"] = {
@@ -181,19 +219,35 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
         if not name.startswith("case_"):
             continue
         adapter = factory()
+        # R6.2d: capture per-case runtime identity BEFORE running the
+        # test function so identity drift across factory calls is
+        # detected even when the case itself fails.
+        case_identity: dict | None = None
+        identity_getter = getattr(adapter, "evidence_identity", None)
+        if callable(identity_getter):
+            try:
+                candidate = identity_getter()
+                if isinstance(candidate, dict) and candidate:
+                    case_identity = dict(candidate)
+            except Exception:
+                case_identity = None
         started = time.perf_counter()
         error: str | None = None
+        outcome_kind = "passed"
         try:
             fn(adapter)
             passed = True
         except NotImplementedError as e:
             passed = False
+            outcome_kind = "missing_feature"
             error = f"adapter missing feature: {e}"
         except AssertionError as e:
             passed = False
+            outcome_kind = "assertion_failure"
             error = f"assertion failed: {e}"
         except Exception:
             passed = False
+            outcome_kind = "execution_error"
             error = traceback.format_exc()
         finally:
             try:
@@ -201,7 +255,11 @@ def run_profile(profile: str, factory: Callable[[], Adapter]) -> ConformanceRepo
             except Exception:
                 pass
         elapsed_ms = (time.perf_counter() - started) * 1000
-        report.cases.append(CaseResult(name=name, passed=passed, duration_ms=elapsed_ms, error=error))
+        report.cases.append(CaseResult(
+            name=name, passed=passed, duration_ms=elapsed_ms,
+            error=error, outcome_kind=outcome_kind,
+            adapter_identity=case_identity,
+        ))
 
     report.finished_at = _iso_utc_now()
     return report

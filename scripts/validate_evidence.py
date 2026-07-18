@@ -117,27 +117,21 @@ def _parse_iso(ts: str):
         return None
 
 
-def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
+def validate_records(records: list[dict], path_label: str = "<in-memory>") -> list[str]:
+    """Chain-level invariant checks on an already-schema-validated list of
+    records. Returns a list of error messages; empty on success.
+
+    R6.2a exposes this so pre-write preflight can validate proposed
+    combined-chain contents (existing + new records) without touching
+    the filesystem. Schema validation is caller-owned.
+    """
     errors: list[str] = []
-    records: list[dict] = []
     positions: dict[str, int] = {}
+    return _run_chain_invariants(records, path_label, errors, positions)
 
-    for lineno, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        raw = raw.strip()
-        if not raw:
-            continue
-        try:
-            rec = json.loads(raw)
-        except json.JSONDecodeError as e:
-            errors.append(f"{path}:{lineno}: JSON decode error: {e}")
-            continue
-        schema_errors = list(validator.iter_errors(rec))
-        for err in schema_errors:
-            errors.append(f"{path}:{lineno}: schema: {err.message} at {list(err.absolute_path)}")
-        if schema_errors:
-            continue
-        records.append(rec)
 
+def _run_chain_invariants(records: list[dict], path: object,
+                          errors: list[str], positions: dict[str, int]) -> list[str]:
     for idx, rec in enumerate(records):
         rid = rec["record_id"]
         if rid in positions:
@@ -259,6 +253,30 @@ def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
             )
 
     return errors
+
+
+def validate_chain(path: Path, validator: Draft202012Validator) -> list[str]:
+    errors: list[str] = []
+    records: list[dict] = []
+    positions: dict[str, int] = {}
+
+    for lineno, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            rec = json.loads(raw)
+        except json.JSONDecodeError as e:
+            errors.append(f"{path}:{lineno}: JSON decode error: {e}")
+            continue
+        schema_errors = list(validator.iter_errors(rec))
+        for err in schema_errors:
+            errors.append(f"{path}:{lineno}: schema: {err.message} at {list(err.absolute_path)}")
+        if schema_errors:
+            continue
+        records.append(rec)
+
+    return _run_chain_invariants(records, path, errors, positions)
 
 
 def compute_effective_status(records: list[dict]) -> dict[str, str]:

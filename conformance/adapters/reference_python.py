@@ -38,6 +38,17 @@ class ReferencePythonAdapter(Adapter):
     def supported_profiles(self) -> list[str]:
         return ["PAMSPEC-Lite", "PAMSPEC-Delegation", "PAMSPEC-Subscribe"]
 
+    def evidence_identity(self) -> dict[str, str]:
+        """R6.2c: structured runtime identity for evidence attribution.
+        Returned values must match the CaseRegistry's declared subject
+        and adapter identity or the emitter refuses the run."""
+        return {
+            "adapter_name": "ReferencePythonAdapter",
+            "adapter_version": "translation-only",
+            "implementation_name": "reference-python",
+            "implementation_version": "0.1-draft",
+        }
+
     # ---- Lite ----
 
     @_rewrap
