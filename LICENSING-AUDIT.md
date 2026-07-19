@@ -11,7 +11,7 @@ This audit reviewed the local Git repository history and current contributor doc
 - `git log` reported no prior commits in the local repository before the publication-candidate commit.
 - `git status` showed the repository contents as uncommitted local files.
 - Contributor documentation identifies Richard M. Infantado as primary author and specification editor.
-- Robert Leroux (rl.isapience@gmail.com) is confirmed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.
+- Robert Leroux (rl.isapience@gmail.com) is the second-listed formal Internet-Draft co-author and is not an editor.
 
 ## Result
 
@@ -22,7 +22,7 @@ At the time the dual-license structure was adopted, the local pre-publication hi
 
 This is a repository-evidence statement, not a legal opinion. If additional pre-publication contributor history is discovered, the licensing basis should be revisited before publication.
 
-Robert Leroux is acknowledged as a contributor. The repository does not currently contain evidence establishing whether Robert Leroux contributed copyrightable text outside Git or the license terms applicable to any such text. Formal publication should confirm that status; until then, no specific authored passage is attributed to him.
+Robert Leroux is acknowledged as a co-author and technical reviewer. The repository does not contain evidence establishing whether additional copyrightable text was contributed outside Git or the license terms applicable to any such text. Any further licensing basis should be confirmed before publication.
 
 ## Attribution Preservation
 

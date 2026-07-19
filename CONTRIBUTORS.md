@@ -1,13 +1,13 @@
 # Contributors
 
-Contributor listing is separate from formal Internet-Draft authorship or editorship.
+Contributor listing is separate from formal Internet-Draft editorship.
 
 | Name | Role |
 | --- | --- |
 | Richard M. Infantado | Primary author and specification editor |
-| Robert Leroux | Contributor |
+| Robert Leroux | Second-listed co-author and technical reviewer |
 
-Robert Leroux (rl.isapience@gmail.com) is listed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.
+Robert Leroux is the second-listed formal Internet-Draft co-author and is not an editor. His contributor listing is retained to recognize his technical review and implementation feedback.
 
 ## Corrections
 

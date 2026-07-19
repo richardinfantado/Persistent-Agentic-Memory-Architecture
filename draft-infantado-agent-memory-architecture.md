@@ -6,7 +6,7 @@ category: info
 ipr: trust200902
 area: General
 submissiontype: independent
-date: 2026-07-11
+date: 2026-07-19
 keyword:
   - agentic systems
   - persistent memory
@@ -20,7 +20,13 @@ author:
     name: Richard M. Infantado
     role: editor
     org: Independent
+    country: Philippines
     email: richard.infantado@gmail.com
+  -
+    ins: R. Leroux
+    name: Robert Leroux
+    country: Australia
+    email: rl.isapience@gmail.com
 normative:
   RFC2119:
   RFC8174:
@@ -1162,4 +1168,4 @@ Adjacent IETF work on AI agent protocols includes a framework document {{AI-PROT
 
 This initial draft records architectural requirements and open issues for review. Additional acknowledgements will be added when contributors provide review or text.
 
-Robert Leroux (rl.isapience@gmail.com) contributed project review and specification feedback and is confirmed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter.
+Robert Leroux contributed technical review, implementation feedback, and editorial input to this document.

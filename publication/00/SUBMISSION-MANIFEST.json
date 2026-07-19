@@ -6,27 +6,48 @@
   "author": {
     "name": "Richard M. Infantado",
     "organization": "Independent",
-    "email": "richard.infantado@gmail.com"
+    "country": "Philippines",
+    "email": "richard.infantado@gmail.com",
+    "role": "Primary Author"
   },
-  "contributors": [
+  "document_date": "2026-07-19",
+  "source": {
+    "path": "draft-infantado-agent-memory-architecture.md",
+    "sha256": "C5FD0211F0588D8FB6658AAE721C78FC278B6894B742873A58F7B86BF4CE31E5"
+  },
+  "generator": {
+    "path": "scripts/build_draft.py",
+    "sha256": "FE19C33F742EF0D003B4383ABFBCB15AA4176CC657B31FDA6F8B0CCCB62D62F8"
+  },
+  "authors": [
     {
+      "order": 1,
+      "name": "Richard M. Infantado",
+      "organization": "Independent",
+      "country": "Philippines",
+      "email": "richard.infantado@gmail.com",
+      "role": "Primary Author"
+    },
+    {
+      "order": 2,
       "name": "Robert Leroux",
+      "country": "Australia",
       "email": "rl.isapience@gmail.com",
-      "role": "Contributor"
+      "role": "Co-Author and Technical Reviewer"
     }
   ],
   "artifacts": {
     "xml": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.xml",
-      "sha256": "949B209485126CFF0A9A9B41C2C53C14CA4E922FF310B3706E6EC2E95C0F18E9"
+      "sha256": "72981BDAF58BEA7BC76E8C438BBEE8CAA1F9E3B41917C00CDB2327DFFFEC1EE8"
     },
     "txt": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.txt",
-      "sha256": "64FEE9938F598C804BD95F1B1367D13EA1558973ADDFC8995999BE6C0592D4E4"
+      "sha256": "76DB72BBDCAC61C4943A3F0B3214FF08147D716DE63B46AD2FBF8764BCCDCFC9"
     },
     "html": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.html",
-      "sha256": "5F4237983D0642BF1450EA16E1A50BF92147F25DAB88026D00B751ACFB03E266"
+      "sha256": "DDE95B806BEDED97F1CF8400DDD46342DA38C61EC0DC556137CE33A2310248B7"
     }
   },
   "changes_from_initial_freeze": {
@@ -42,12 +63,12 @@
     "tool_chain": {
       "kramdown_rfc": "1.7.39",
       "xml2rfc": "3.34.0",
-      "python": "3.14.5",
+      "python": "3.13.5",
       "ruby": "3.3.11"
     },
     "reproducible": true,
     "build_warnings": [
-      "xml2rfc advisory: document date (2026-07-11) is more than 3 days from build date — non-blocking"
+      "xml2rfc document-date advisory resolved by rebuilding with document date 2026-07-19"
     ]
   },
   "validation": {
