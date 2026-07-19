@@ -51,17 +51,20 @@ None. All of the following were verified clean:
 
 ## Artifact Commit
 
-Source commit (baseline): `61d0e166e8ef4a393f0cbf533d652285a622e918`
-Publication commit: `90cb33502bcb37297aefd8bf1ceea7b7280f9e94`
-Publication branch: `publication/00-submission-readiness`
+Frozen source commit: `6215739bcce972d930c680ca59c293b11e2c104a`  
+Commit message: `fix: prepare independent draft submission artifacts`  
+Branch: `main`
+
+Previous baseline (superseded): `61d0e166e8ef4a393f0cbf533d652285a622e918`  
+Reason superseded: submissiontype corrected to `independent`; non-ASCII characters removed from reference author names; em dashes replaced with ASCII double-dashes. Artifacts regenerated from corrected source.
 
 ## Artifact SHA-256 Hashes
 
 | Artifact | SHA-256 |
 |---|---|
-| `draft-infantado-agent-memory-architecture-00.xml` | `8A41577CEC13AFD1451121C5E7D9DE9F2C58C5D0774AC807C1BA2B740CB87FEE` |
-| `draft-infantado-agent-memory-architecture-00.txt` | `441214720126F6CFBA6CE5B7E6F33F265C946CA328948BB6BCA3C525CA1FD784` |
-| `draft-infantado-agent-memory-architecture-00.html` | `0B4ADC6D33219869430897E29531B5069FC7B92DBAFE69645EB84F70851A8FAF` |
+| `draft-infantado-agent-memory-architecture-00.xml` | `949B209485126CFF0A9A9B41C2C53C14CA4E922FF310B3706E6EC2E95C0F18E9` |
+| `draft-infantado-agent-memory-architecture-00.txt` | `64FEE9938F598C804BD95F1B1367D13EA1558973ADDFC8995999BE6C0592D4E4` |
+| `draft-infantado-agent-memory-architecture-00.html` | `5F4237983D0642BF1450EA16E1A50BF92147F25DAB88026D00B751ACFB03E266` |
 
 ---
 

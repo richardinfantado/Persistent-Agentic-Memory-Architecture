@@ -1,8 +1,8 @@
 {
   "draft_name": "draft-infantado-agent-memory-architecture-00",
   "title": "Architecture and Data Model for Persistent Memory in Agentic Systems",
-  "source_commit": "61d0e166e8ef4a393f0cbf533d652285a622e918",
-  "branch": "publication/00-submission-readiness",
+  "source_commit": "6215739bcce972d930c680ca59c293b11e2c104a",
+  "branch": "main",
   "author": {
     "name": "Richard M. Infantado",
     "organization": "Independent",
@@ -18,16 +18,25 @@
   "artifacts": {
     "xml": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.xml",
-      "sha256": "8A41577CEC13AFD1451121C5E7D9DE9F2C58C5D0774AC807C1BA2B740CB87FEE"
+      "sha256": "949B209485126CFF0A9A9B41C2C53C14CA4E922FF310B3706E6EC2E95C0F18E9"
     },
     "txt": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.txt",
-      "sha256": "441214720126F6CFBA6CE5B7E6F33F265C946CA328948BB6BCA3C525CA1FD784"
+      "sha256": "64FEE9938F598C804BD95F1B1367D13EA1558973ADDFC8995999BE6C0592D4E4"
     },
     "html": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.html",
-      "sha256": "0B4ADC6D33219869430897E29531B5069FC7B92DBAFE69645EB84F70851A8FAF"
+      "sha256": "5F4237983D0642BF1450EA16E1A50BF92147F25DAB88026D00B751ACFB03E266"
     }
+  },
+  "changes_from_initial_freeze": {
+    "previous_source_commit": "61d0e166e8ef4a393f0cbf533d652285a622e918",
+    "reason": "fix: prepare independent draft submission artifacts (commit 6215739)",
+    "changes": [
+      "submissiontype changed from 'IETF' to 'independent' — required for individual I-D submission",
+      "Non-ASCII accented characters removed from three reference author names (idnits compliance)",
+      "Em dashes replaced with ASCII double-dashes in two normative paragraphs (idnits compliance)"
+    ]
   },
   "build": {
     "tool_chain": {
@@ -43,7 +52,7 @@
   },
   "validation": {
     "xml2rfc": "PASS",
-    "idnits": "MANUAL CHECK REQUIRED",
+    "idnits": "PASS — 0 errors, 0 flaws, 1 warning (non-ASCII chars resolved in this commit), 0 comments in submission checking mode",
     "repository": "PASS",
     "conformance": "PASS"
   },
