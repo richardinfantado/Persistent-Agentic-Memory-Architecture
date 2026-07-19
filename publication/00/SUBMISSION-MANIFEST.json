@@ -13,7 +13,7 @@
   "document_date": "2026-07-19",
   "source": {
     "path": "draft-infantado-agent-memory-architecture.md",
-    "sha256": "C5FD0211F0588D8FB6658AAE721C78FC278B6894B742873A58F7B86BF4CE31E5"
+    "sha256": "2EEC851B6C86238B0174C6E0012DF9A59D33408F5E284F20A806873D8873C23C"
   },
   "generator": {
     "path": "scripts/build_draft.py",

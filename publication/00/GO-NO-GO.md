@@ -64,9 +64,9 @@ Correction branch merged: `publication/00-author-date-correction`
 
 | Artifact | SHA-256 |
 |---|---|
-| `draft-infantado-agent-memory-architecture-00.xml` | `949B209485126CFF0A9A9B41C2C53C14CA4E922FF310B3706E6EC2E95C0F18E9` |
-| `draft-infantado-agent-memory-architecture-00.txt` | `64FEE9938F598C804BD95F1B1367D13EA1558973ADDFC8995999BE6C0592D4E4` |
-| `draft-infantado-agent-memory-architecture-00.html` | `5F4237983D0642BF1450EA16E1A50BF92147F25DAB88026D00B751ACFB03E266` |
+| `draft-infantado-agent-memory-architecture-00.xml` | `72981BDAF58BEA7BC76E8C438BBEE8CAA1F9E3B41917C00CDB2327DFFFEC1EE8` |
+| `draft-infantado-agent-memory-architecture-00.txt` | `76DB72BBDCAC61C4943A3F0B3214FF08147D716DE63B46AD2FBF8764BCCDCFC9` |
+| `draft-infantado-agent-memory-architecture-00.html` | `DDE95B806BEDED97F1CF8400DDD46342DA38C61EC0DC556137CE33A2310248B7` |
 
 ---
 
