@@ -5,7 +5,7 @@ docname: draft-infantado-agent-memory-architecture-latest
 category: info
 ipr: trust200902
 area: General
-submissiontype: IETF
+submissiontype: independent
 date: 2026-07-11
 keyword:
   - agentic systems
@@ -133,7 +133,7 @@ informative:
     title: "HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models"
     target: "https://arxiv.org/abs/2405.14831"
     author:
-      - ins: B. J. Gutiérrez
+      - ins: B. J. Gutierrez
       - ins: Y. Shu
       - ins: Y. Gu
       - ins: M. Yasunaga
@@ -202,7 +202,7 @@ informative:
       - ins: B. Vecchione
       - ins: J. W. Vaughan
       - ins: H. Wallach
-      - ins: H. Daumé III
+      - ins: H. Daume III
       - ins: K. Crawford
     date: 2021
   PROV-AGENT:
@@ -221,7 +221,7 @@ informative:
       - ins: M. Fumero
       - ins: A. Norelli
       - ins: F. Locatello
-      - ins: E. Rodolà
+      - ins: E. Rodola
     date: 2023
   MATRYOSHKA:
     title: "Matryoshka Representation Learning"
@@ -859,7 +859,7 @@ Temporal evaluation explicitly selects observation time, assertion time, validit
 
 Pagination includes a stable cursor or ordering basis when repeatability is claimed. Stable ordering uses deterministic keys such as snapshot identifier, primary score, secondary score, update time, object identifier, and version identifier. Tie-breaking is documented for any profile that claims repeatable retrieval.
 
-The content of each Memory Object envelope returned by query or read operations MUST be stable across repeated calls against the same committed version. Implementations MUST NOT introduce fields that vary per call — such as per-request timestamps, processing identifiers, or random nonces — into the envelope representation of a committed version. When evaluated against identical filter and ordering parameters over the same authoritative state, serialization of the result set MUST be byte-identical across repeated calls.
+The content of each Memory Object envelope returned by query or read operations MUST be stable across repeated calls against the same committed version. Implementations MUST NOT introduce fields that vary per call -- such as per-request timestamps, processing identifiers, or random nonces -- into the envelope representation of a committed version. When evaluated against identical filter and ordering parameters over the same authoritative state, serialization of the result set MUST be byte-identical across repeated calls.
 
 Default retrieval is conservative: Lifecycle State `active`, Availability State `available`, Retention State `retained`, and Validation State `corroborated` form the normal trusted retrieval target. Other states require explicit query policy or filters unless a profile declares different defaults.
 
@@ -931,7 +931,7 @@ Cross-scope access requires explicit policy and authorization. This document doe
 
 A Memory Client or Agent Runtime can become a confused deputy if it uses its own authority to retrieve, transform, or relate memory on behalf of a less-authorized actor. Implementations should bind operations to the requesting actor, delegated authority, scope, purpose, and policy version.
 
-Delegated authority SHOULD be represented explicitly as a **Delegation Object** (`delegation.schema.json`). A Delegation Object is an independently identified, typed, versioned, scope-bound authoritative object that binds a `granting_actor` to a `delegated_actor` over a bounded set of `granted_operations`, an optional `granted_object_types` and `granted_object_ids` restriction, an optional `target_scope_id` for cross-scope delegation, a required `policy_basis`, a `not_before` / `not_after` window, an optional `usage_limit`, and a `revocable` flag. Every exercise of a delegation MUST reference the `delegation_id` in provenance so an audit can reconstruct the chain from operation back to grant. Delegation Objects produce `delegation_granted`, `delegation_revoked`, and `delegation_exercised` Event Ledger entries. A delegation whose `not_after` has passed, whose `usage_limit` is exhausted, or whose grantor no longer holds the granted operations MUST be treated as no longer effective, regardless of Lifecycle State. Delegation Objects do not themselves grant authority — they record that authority was granted by an actor who held it; authorization enforcement remains the responsibility of the Memory Service and its policy engine.
+Delegated authority SHOULD be represented explicitly as a **Delegation Object** (`delegation.schema.json`). A Delegation Object is an independently identified, typed, versioned, scope-bound authoritative object that binds a `granting_actor` to a `delegated_actor` over a bounded set of `granted_operations`, an optional `granted_object_types` and `granted_object_ids` restriction, an optional `target_scope_id` for cross-scope delegation, a required `policy_basis`, a `not_before` / `not_after` window, an optional `usage_limit`, and a `revocable` flag. Every exercise of a delegation MUST reference the `delegation_id` in provenance so an audit can reconstruct the chain from operation back to grant. Delegation Objects produce `delegation_granted`, `delegation_revoked`, and `delegation_exercised` Event Ledger entries. A delegation whose `not_after` has passed, whose `usage_limit` is exhausted, or whose grantor no longer holds the granted operations MUST be treated as no longer effective, regardless of Lifecycle State. Delegation Objects do not themselves grant authority -- they record that authority was granted by an actor who held it; authorization enforcement remains the responsibility of the Memory Service and its policy engine.
 
 ## Injection and Memory Poisoning
 

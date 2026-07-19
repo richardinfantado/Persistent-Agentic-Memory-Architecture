@@ -10,7 +10,7 @@ All items verified against source files in the same turn as this checklist was p
 | Draft name does NOT contain "PAMA" or "PAMSPEC" | PASS | Draft name is `draft-infantado-agent-memory-architecture`. Abbreviation `PAMSPEC` appears only in content, not in the draft identifier. |
 | Category is `info` | PASS | Front matter: `category: info` |
 | IPR is `trust200902` | PASS | Front matter: `ipr: trust200902` |
-| Submission type is IETF | PASS | Front matter: `submissiontype: IETF` |
+| Submission stream is independent | PASS | Front matter: `submissiontype: independent` |
 | Document date present | PASS | Front matter: `date: 2026-07-11` |
 | Title matches expected | PASS | Title: "Architecture and Data Model for Persistent Memory in Agentic Systems" — matches mission specification |
 | Abbreviation `PAMSPEC` is present | PASS | Front matter: `abbrev: PAMSPEC` |

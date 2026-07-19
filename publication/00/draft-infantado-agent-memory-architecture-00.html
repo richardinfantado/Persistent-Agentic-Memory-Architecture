@@ -19,19 +19,19 @@
 <meta content="draft-infantado-agent-memory-architecture-00" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.0
-    Python 3.14.5
+    Python 3.13.5
     ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.1.1
+    lxml 6.0.2
     natsort 8.4.0
     platformdirs 4.10.0
     pycountry 26.2.16
-    pypdf 6.12.2
-    PyYAML 6.0.3
+    pypdf 6.8.0
+    PyYAML 6.0.2
     requests 2.34.2
-    wcwidth 0.8.2
+    wcwidth 0.2.14
 -->
 <link href="draft-infantado-agent-memory-architecture-00.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1295,10 +1295,7 @@ li > p:last-of-type:only-child {
             (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
             publication of this document. Please review these documents
             carefully, as they describe your rights and restrictions with
-            respect to this document. Code Components extracted from this
-            document must include Revised BSD License text as described in
-            Section 4.e of the Trust Legal Provisions and are provided without
-            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+            respect to this document.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="toc">
@@ -2778,7 +2775,7 @@ Memory Service
 <p id="section-11-3">Hybrid retrieval combines structured filters with semantic ranking or reranking. Structured filters are evaluated within scope before protected content is disclosed. Relationship traversal evaluates authorization for each target object. Cross-scope traversal requires explicit policy.<a href="#section-11-3" class="pilcrow">¶</a></p>
 <p id="section-11-4">Temporal evaluation explicitly selects observation time, assertion time, validity interval, commit time, record time, logical sequence, or snapshot. Client-supplied times do not control conflict resolution or Event Ledger ordering. Snapshot-based evaluation provides repeatable retrieval within a named snapshot. If no stable index snapshot exists, semantic retrieval is best-effort and identifies that no stable index snapshot was used.<a href="#section-11-4" class="pilcrow">¶</a></p>
 <p id="section-11-5">Pagination includes a stable cursor or ordering basis when repeatability is claimed. Stable ordering uses deterministic keys such as snapshot identifier, primary score, secondary score, update time, object identifier, and version identifier. Tie-breaking is documented for any profile that claims repeatable retrieval.<a href="#section-11-5" class="pilcrow">¶</a></p>
-<p id="section-11-6">The content of each Memory Object envelope returned by query or read operations MUST be stable across repeated calls against the same committed version. Implementations MUST NOT introduce fields that vary per call — such as per-request timestamps, processing identifiers, or random nonces — into the envelope representation of a committed version. When evaluated against identical filter and ordering parameters over the same authoritative state, serialization of the result set MUST be byte-identical across repeated calls.<a href="#section-11-6" class="pilcrow">¶</a></p>
+<p id="section-11-6">The content of each Memory Object envelope returned by query or read operations MUST be stable across repeated calls against the same committed version. Implementations MUST NOT introduce fields that vary per call -- such as per-request timestamps, processing identifiers, or random nonces -- into the envelope representation of a committed version. When evaluated against identical filter and ordering parameters over the same authoritative state, serialization of the result set MUST be byte-identical across repeated calls.<a href="#section-11-6" class="pilcrow">¶</a></p>
 <p id="section-11-7">Default retrieval is conservative: Lifecycle State <code>active</code>, Availability State <code>available</code>, Retention State <code>retained</code>, and Validation State <code>corroborated</code> form the normal trusted retrieval target. Other states require explicit query policy or filters unless a profile declares different defaults.<a href="#section-11-7" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2994,7 +2991,7 @@ Memory Service
 <a href="#section-15.4" class="section-number selfRef">15.4. </a><a href="#name-confused-deputy-risks" class="section-name selfRef">Confused-Deputy Risks</a>
         </h3>
 <p id="section-15.4-1">A Memory Client or Agent Runtime can become a confused deputy if it uses its own authority to retrieve, transform, or relate memory on behalf of a less-authorized actor. Implementations should bind operations to the requesting actor, delegated authority, scope, purpose, and policy version.<a href="#section-15.4-1" class="pilcrow">¶</a></p>
-<p id="section-15.4-2">Delegated authority SHOULD be represented explicitly as a <strong>Delegation Object</strong> (<code>delegation.schema.json</code>). A Delegation Object is an independently identified, typed, versioned, scope-bound authoritative object that binds a <code>granting_actor</code> to a <code>delegated_actor</code> over a bounded set of <code>granted_operations</code>, an optional <code>granted_object_types</code> and <code>granted_object_ids</code> restriction, an optional <code>target_scope_id</code> for cross-scope delegation, a required <code>policy_basis</code>, a <code>not_before</code> / <code>not_after</code> window, an optional <code>usage_limit</code>, and a <code>revocable</code> flag. Every exercise of a delegation MUST reference the <code>delegation_id</code> in provenance so an audit can reconstruct the chain from operation back to grant. Delegation Objects produce <code>delegation_granted</code>, <code>delegation_revoked</code>, and <code>delegation_exercised</code> Event Ledger entries. A delegation whose <code>not_after</code> has passed, whose <code>usage_limit</code> is exhausted, or whose grantor no longer holds the granted operations MUST be treated as no longer effective, regardless of Lifecycle State. Delegation Objects do not themselves grant authority — they record that authority was granted by an actor who held it; authorization enforcement remains the responsibility of the Memory Service and its policy engine.<a href="#section-15.4-2" class="pilcrow">¶</a></p>
+<p id="section-15.4-2">Delegated authority SHOULD be represented explicitly as a <strong>Delegation Object</strong> (<code>delegation.schema.json</code>). A Delegation Object is an independently identified, typed, versioned, scope-bound authoritative object that binds a <code>granting_actor</code> to a <code>delegated_actor</code> over a bounded set of <code>granted_operations</code>, an optional <code>granted_object_types</code> and <code>granted_object_ids</code> restriction, an optional <code>target_scope_id</code> for cross-scope delegation, a required <code>policy_basis</code>, a <code>not_before</code> / <code>not_after</code> window, an optional <code>usage_limit</code>, and a <code>revocable</code> flag. Every exercise of a delegation MUST reference the <code>delegation_id</code> in provenance so an audit can reconstruct the chain from operation back to grant. Delegation Objects produce <code>delegation_granted</code>, <code>delegation_revoked</code>, and <code>delegation_exercised</code> Event Ledger entries. A delegation whose <code>not_after</code> has passed, whose <code>usage_limit</code> is exhausted, or whose grantor no longer holds the granted operations MUST be treated as no longer effective, regardless of Lifecycle State. Delegation Objects do not themselves grant authority -- they record that authority was granted by an actor who held it; authorization enforcement remains the responsibility of the Memory Service and its policy engine.<a href="#section-15.4-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="injection-and-memory-poisoning">
@@ -3467,7 +3464,7 @@ Memory Service
 <dd class="break"></dd>
 <dt id="HIPPORAG">[HIPPORAG]</dt>
         <dd>
-<span class="refAuthor">Gutiérrez, B. J.</span>, <span class="refAuthor">Shu, Y.</span>, <span class="refAuthor">Gu, Y.</span>, <span class="refAuthor">Yasunaga, M.</span>, and <span class="refAuthor">Y. Su</span>, <span class="refTitle">"HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models"</span>, <time datetime="2024" class="refDate">2024</time>, <span>&lt;<a href="https://arxiv.org/abs/2405.14831">https://arxiv.org/abs/2405.14831</a>&gt;</span>. </dd>
+<span class="refAuthor">Gutierrez, B. J.</span>, <span class="refAuthor">Shu, Y.</span>, <span class="refAuthor">Gu, Y.</span>, <span class="refAuthor">Yasunaga, M.</span>, and <span class="refAuthor">Y. Su</span>, <span class="refTitle">"HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models"</span>, <time datetime="2024" class="refDate">2024</time>, <span>&lt;<a href="https://arxiv.org/abs/2405.14831">https://arxiv.org/abs/2405.14831</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="AGENT-MEMORY-SURVEY">[AGENT-MEMORY-SURVEY]</dt>
         <dd>
@@ -3495,7 +3492,7 @@ Memory Service
 <dd class="break"></dd>
 <dt id="DATASHEETS">[DATASHEETS]</dt>
         <dd>
-<span class="refAuthor">Gebru, T.</span>, <span class="refAuthor">Morgenstern, J.</span>, <span class="refAuthor">Vecchione, B.</span>, <span class="refAuthor">Vaughan, J. W.</span>, <span class="refAuthor">Wallach, H.</span>, <span class="refAuthor">Daumé III, H.</span>, and <span class="refAuthor">K. Crawford</span>, <span class="refTitle">"Datasheets for Datasets"</span>, <time datetime="2021" class="refDate">2021</time>, <span>&lt;<a href="https://arxiv.org/abs/1803.09010">https://arxiv.org/abs/1803.09010</a>&gt;</span>. </dd>
+<span class="refAuthor">Gebru, T.</span>, <span class="refAuthor">Morgenstern, J.</span>, <span class="refAuthor">Vecchione, B.</span>, <span class="refAuthor">Vaughan, J. W.</span>, <span class="refAuthor">Wallach, H.</span>, <span class="refAuthor">Daume III, H.</span>, and <span class="refAuthor">K. Crawford</span>, <span class="refTitle">"Datasheets for Datasets"</span>, <time datetime="2021" class="refDate">2021</time>, <span>&lt;<a href="https://arxiv.org/abs/1803.09010">https://arxiv.org/abs/1803.09010</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="PROV-AGENT">[PROV-AGENT]</dt>
         <dd>
@@ -3503,7 +3500,7 @@ Memory Service
 <dd class="break"></dd>
 <dt id="RELATIVE-REPRESENTATIONS">[RELATIVE-REPRESENTATIONS]</dt>
         <dd>
-<span class="refAuthor">Moschella, L.</span>, <span class="refAuthor">Maiorca, V.</span>, <span class="refAuthor">Fumero, M.</span>, <span class="refAuthor">Norelli, A.</span>, <span class="refAuthor">Locatello, F.</span>, and <span class="refAuthor">E. Rodolà</span>, <span class="refTitle">"Relative Representations Enable Zero-Shot Latent Space Communication"</span>, <time datetime="2023" class="refDate">2023</time>, <span>&lt;<a href="https://arxiv.org/abs/2209.15430">https://arxiv.org/abs/2209.15430</a>&gt;</span>. </dd>
+<span class="refAuthor">Moschella, L.</span>, <span class="refAuthor">Maiorca, V.</span>, <span class="refAuthor">Fumero, M.</span>, <span class="refAuthor">Norelli, A.</span>, <span class="refAuthor">Locatello, F.</span>, and <span class="refAuthor">E. Rodola</span>, <span class="refTitle">"Relative Representations Enable Zero-Shot Latent Space Communication"</span>, <time datetime="2023" class="refDate">2023</time>, <span>&lt;<a href="https://arxiv.org/abs/2209.15430">https://arxiv.org/abs/2209.15430</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="MATRYOSHKA">[MATRYOSHKA]</dt>
         <dd>

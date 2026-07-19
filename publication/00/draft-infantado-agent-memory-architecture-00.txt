@@ -67,10 +67,7 @@ Copyright Notice
    Provisions Relating to IETF Documents (https://trustee.ietf.org/
    license-info) in effect on the date of publication of this document.
    Please review these documents carefully, as they describe your rights
-   and restrictions with respect to this document.  Code Components
-   extracted from this document must include Revised BSD License text as
-   described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Revised BSD License.
+   and restrictions with respect to this document.
 
 Table of Contents
 
@@ -106,6 +103,9 @@ Table of Contents
      8.5.  Relationships . . . . . . . . . . . . . . . . . . . . . .  18
      8.6.  Provenance  . . . . . . . . . . . . . . . . . . . . . . .  19
      8.7.  Integrity Metadata  . . . . . . . . . . . . . . . . . . .  19
+   9.  Lifecycle, Availability, Retention, and Validation  . . . . .  19
+     9.1.  Lifecycle State . . . . . . . . . . . . . . . . . . . . .  20
+     9.2.  Validation State  . . . . . . . . . . . . . . . . . . . .  20
 
 
 
@@ -114,9 +114,6 @@ Infantado                Expires 12 January 2027                [Page 2]
 Internet-Draft                   PAMSPEC                       July 2026
 
 
-   9.  Lifecycle, Availability, Retention, and Validation  . . . . .  19
-     9.1.  Lifecycle State . . . . . . . . . . . . . . . . . . . . .  20
-     9.2.  Validation State  . . . . . . . . . . . . . . . . . . . .  20
      9.3.  Availability State  . . . . . . . . . . . . . . . . . . .  21
      9.4.  Retention State . . . . . . . . . . . . . . . . . . . . .  21
      9.5.  State Transitions . . . . . . . . . . . . . . . . . . . .  22
@@ -162,6 +159,9 @@ Internet-Draft                   PAMSPEC                       July 2026
      17.6.  Capacity and Retention Planning  . . . . . . . . . . . .  37
    18. Interoperability and Conformance  . . . . . . . . . . . . . .  37
      18.1.  PAMSPEC-Lite . . . . . . . . . . . . . . . . . . . . . .  37
+     18.2.  PAMSPEC-Delegation . . . . . . . . . . . . . . . . . . .  38
+     18.3.  PAMSPEC-Subscribe  . . . . . . . . . . . . . . . . . . .  39
+     18.4.  PAMSPEC-Core . . . . . . . . . . . . . . . . . . . . . .  39
 
 
 
@@ -170,9 +170,6 @@ Infantado                Expires 12 January 2027                [Page 3]
 Internet-Draft                   PAMSPEC                       July 2026
 
 
-     18.2.  PAMSPEC-Delegation . . . . . . . . . . . . . . . . . . .  38
-     18.3.  PAMSPEC-Subscribe  . . . . . . . . . . . . . . . . . . .  39
-     18.4.  PAMSPEC-Core . . . . . . . . . . . . . . . . . . . . . .  39
      18.5.  PAMSPEC-Versioning . . . . . . . . . . . . . . . . . . .  40
      18.6.  PAMSPEC-Ledger . . . . . . . . . . . . . . . . . . . . .  40
      18.7.  PAMSPEC-Structured-Query . . . . . . . . . . . . . . . .  40
@@ -217,7 +214,10 @@ Internet-Draft                   PAMSPEC                       July 2026
    is the Persistent Agentic Memory Architecture.  PAMSPEC is not an
    IETF standard, working group, or published RFC.
 
-
+   The Persistent Agentic Memory Architecture separates transient
+   computation from authoritative state.  The Compute Plane performs
+   model inference, planning, orchestration, transformation, tool
+   execution, and context assembly.  The Persistent State Plane stores
 
 
 
@@ -226,10 +226,6 @@ Infantado                Expires 12 January 2027                [Page 4]
 Internet-Draft                   PAMSPEC                       July 2026
 
 
-   The Persistent Agentic Memory Architecture separates transient
-   computation from authoritative state.  The Compute Plane performs
-   model inference, planning, orchestration, transformation, tool
-   execution, and context assembly.  The Persistent State Plane stores
    authoritative Memory Objects, Relationship Objects, versions,
    provenance, lifecycle, availability, retention, and validation state,
    scope and policy metadata, Event Ledger entries, snapshots, and
@@ -272,6 +268,10 @@ Internet-Draft                   PAMSPEC                       July 2026
    Section 18 defines testable conformance profiles.  Section 19 records
    IANA considerations.  Appendices summarize schemas, state
    transitions, examples, rationale, and related architectures.
+
+
+
+
 
 
 
@@ -1629,9 +1629,9 @@ Internet-Draft                   PAMSPEC                       July 2026
    The content of each Memory Object envelope returned by query or read
    operations MUST be stable across repeated calls against the same
    committed version.  Implementations MUST NOT introduce fields that
-   vary per call — such as per-request timestamps, processing
-   identifiers, or random nonces — into the envelope representation of a
-   committed version.  When evaluated against identical filter and
+   vary per call -- such as per-request timestamps, processing
+   identifiers, or random nonces -- into the envelope representation of
+   a committed version.  When evaluated against identical filter and
    ordering parameters over the same authoritative state, serialization
    of the result set MUST be byte-identical across repeated calls.
 
@@ -1908,7 +1908,7 @@ Internet-Draft                   PAMSPEC                       July 2026
 
    exhausted, or whose grantor no longer holds the granted operations
    MUST be treated as no longer effective, regardless of Lifecycle
-   State.  Delegation Objects do not themselves grant authority — they
+   State.  Delegation Objects do not themselves grant authority -- they
    record that authority was granted by an actor who held it;
    authorization enforcement remains the responsibility of the Memory
    Service and its policy engine.
@@ -2485,7 +2485,7 @@ Internet-Draft                   PAMSPEC                       July 2026
               Interactive Simulacra of Human Behavior", 2023,
               <https://arxiv.org/abs/2304.03442>.
 
-   [HIPPORAG] Gutiérrez, B. J., Shu, Y., Gu, Y., Yasunaga, M., and Y.
+   [HIPPORAG] Gutierrez, B. J., Shu, Y., Gu, Y., Yasunaga, M., and Y.
               Su, "HippoRAG: Neurobiologically Inspired Long-Term Memory
               for Large Language Models", 2024,
               <https://arxiv.org/abs/2405.14831>.
@@ -2530,7 +2530,7 @@ Internet-Draft                   PAMSPEC                       July 2026
 
    [DATASHEETS]
               Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W.,
-              Wallach, H., Daumé III, H., and K. Crawford, "Datasheets
+              Wallach, H., Daume III, H., and K. Crawford, "Datasheets
               for Datasets", 2021, <https://arxiv.org/abs/1803.09010>.
 
    [PROV-AGENT]
@@ -2540,7 +2540,7 @@ Internet-Draft                   PAMSPEC                       July 2026
 
    [RELATIVE-REPRESENTATIONS]
               Moschella, L., Maiorca, V., Fumero, M., Norelli, A.,
-              Locatello, F., and E. Rodolà, "Relative Representations
+              Locatello, F., and E. Rodola, "Relative Representations
               Enable Zero-Shot Latent Space Communication", 2023,
               <https://arxiv.org/abs/2209.15430>.
 
