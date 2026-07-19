@@ -117,4 +117,4 @@ Critical review, interoperability feedback, security analysis, privacy analysis,
 
 ## Contributors
 
-Richard M. Infantado is the primary author and specification editor. Robert Leroux (rl.isapience@gmail.com) is a confirmed Contributor. Contributor listing is separate from formal Internet-Draft authorship; Robert Leroux is not listed in the Internet-Draft front matter. See [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
+Richard M. Infantado is the primary and first-listed author and specification editor. Robert Leroux (rl.isapience@gmail.com) is the second-listed formal co-author and technical reviewer, and is not an editor. See [`CONTRIBUTORS.md`](CONTRIBUTORS.md).

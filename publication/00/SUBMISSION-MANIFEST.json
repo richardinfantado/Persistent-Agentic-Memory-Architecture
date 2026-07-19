@@ -1,44 +1,58 @@
 {
   "draft_name": "draft-infantado-agent-memory-architecture-00",
   "title": "Architecture and Data Model for Persistent Memory in Agentic Systems",
-  "source_commit": "61d0e166e8ef4a393f0cbf533d652285a622e918",
-  "branch": "publication/00-submission-readiness",
-  "author": {
-    "name": "Richard M. Infantado",
-    "organization": "Independent",
-    "email": "richard.infantado@gmail.com"
+  "source_commit": "6215739bcce972d930c680ca59c293b11e2c104a",
+  "branch": "publication/00-author-date-correction",
+  "document_date": "2026-07-19",
+  "source": {
+    "path": "draft-infantado-agent-memory-architecture.md",
+    "sha256": "C5FD0211F0588D8FB6658AAE721C78FC278B6894B742873A58F7B86BF4CE31E5"
   },
-  "contributors": [
+  "generator": {
+    "path": "scripts/build_draft.py",
+    "sha256": "FE19C33F742EF0D003B4383ABFBCB15AA4176CC657B31FDA6F8B0CCCB62D62F8"
+  },
+  "authors": [
     {
+      "order": 1,
+      "name": "Richard M. Infantado",
+      "organization": "Independent",
+      "country": "Philippines",
+      "email": "richard.infantado@gmail.com",
+      "role": "Primary Author"
+    },
+    {
+      "order": 2,
       "name": "Robert Leroux",
+      "country": "Australia",
       "email": "rl.isapience@gmail.com",
-      "role": "Contributor"
+      "role": "Co-Author and Technical Reviewer"
     }
   ],
   "artifacts": {
     "xml": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.xml",
-      "sha256": "8A41577CEC13AFD1451121C5E7D9DE9F2C58C5D0774AC807C1BA2B740CB87FEE"
+      "sha256": "72981BDAF58BEA7BC76E8C438BBEE8CAA1F9E3B41917C00CDB2327DFFFEC1EE8"
     },
     "txt": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.txt",
-      "sha256": "441214720126F6CFBA6CE5B7E6F33F265C946CA328948BB6BCA3C525CA1FD784"
+      "sha256": "76DB72BBDCAC61C4943A3F0B3214FF08147D716DE63B46AD2FBF8764BCCDCFC9"
     },
     "html": {
       "path": "publication/00/draft-infantado-agent-memory-architecture-00.html",
-      "sha256": "0B4ADC6D33219869430897E29531B5069FC7B92DBAFE69645EB84F70851A8FAF"
+      "sha256": "DDE95B806BEDED97F1CF8400DDD46342DA38C61EC0DC556137CE33A2310248B7"
     }
   },
   "build": {
     "tool_chain": {
       "kramdown_rfc": "1.7.39",
       "xml2rfc": "3.34.0",
-      "python": "3.14.5",
+      "python": "3.13.5",
       "ruby": "3.3.11"
     },
     "reproducible": true,
     "build_warnings": [
-      "xml2rfc advisory: document date (2026-07-11) is more than 3 days from build date — non-blocking"
+      "xml2rfc document-date advisory resolved by rebuilding with document date 2026-07-19"
     ]
   },
   "validation": {

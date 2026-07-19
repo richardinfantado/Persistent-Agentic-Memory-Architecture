@@ -2,9 +2,9 @@
 
 ## Decision
 
-**GO FOR DATATRACKER UPLOAD**
+**PAMSPEC -00 METADATA CORRECTION: GO FOR RE-UPLOAD**
 
-All submission blockers are resolved. One manual check (idnits) is required before the editor initiates the actual upload; it is not a blocker to this GO decision but must be completed as part of the upload workflow.
+The metadata correction package is internally validated. One manual check (idnits) remains required before re-upload; it is not a blocker to this package-level GO decision.
 
 ---
 
@@ -15,8 +15,9 @@ None. All of the following were verified clean:
 - Draft name and revision correct: `draft-infantado-agent-memory-architecture-00`
 - XML structurally valid (xml2rfc --v3 --strict passed)
 - Draft name does not contain "PAMA" or "PAMSPEC"
-- Author metadata correct: Richard M. Infantado, Independent, richard.infantado@gmail.com
-- Robert Leroux correctly listed as Contributor only — NOT in front matter as author or editor
+- Author metadata correct: Richard M. Infantado first, Independent, Philippines, richard.infantado@gmail.com
+- Author 2 metadata correct: Robert Leroux second, Australia, rl.isapience@gmail.com, not an editor
+- Document date is 2026-07-19, matching the artifact rebuild date
 - Requirements language boilerplate present (BCP 14 / RFC 2119 / RFC 8174)
 - Security Considerations present with substantial normative content
 - Privacy Considerations present
@@ -37,7 +38,7 @@ None. All of the following were verified clean:
 
 | Warning | Classification | Action |
 |---|---|---|
-| xml2rfc advisory: document date (2026-07-11) is more than 3 days from build date (2026-07-19) | Non-blocking. IETF Datatracker accepts past dates in document front matter. The date reflects the R9 source freeze. | None required before upload. |
+| xml2rfc document-date advisory | Resolved by rebuilding with document date 2026-07-19. | Re-upload the regenerated XML. |
 
 ---
 
@@ -51,9 +52,8 @@ None. All of the following were verified clean:
 
 ## Artifact Commit
 
-Source commit (baseline): `61d0e166e8ef4a393f0cbf533d652285a622e918`
-Publication commit: `90cb33502bcb37297aefd8bf1ceea7b7280f9e94`
-Publication branch: `publication/00-submission-readiness`
+Source commit (baseline): `6215739bcce972d930c680ca59c293b11e2c104a`
+Publication branch: `publication/00-author-date-correction`
 
 ## Artifact SHA-256 Hashes
 
@@ -74,8 +74,8 @@ The following steps MUST be performed manually by the editor (Richard M. Infanta
 3. Log in with IETF credentials.
 4. Upload `draft-infantado-agent-memory-architecture-00.xml` (preferred) or `draft-infantado-agent-memory-architecture-00.txt`.
 5. Confirm draft name `draft-infantado-agent-memory-architecture-00` in the Datatracker UI.
-6. Confirm author: Richard M. Infantado, Independent, richard.infantado@gmail.com.
-7. Confirm there is NO Robert Leroux in the author field.
+6. Confirm Author 1: Richard M. Infantado, Independent, Philippines, richard.infantado@gmail.com.
+7. Confirm Author 2: Robert Leroux, Australia, rl.isapience@gmail.com, with no editor role.
 8. Complete the submission flow and record the Datatracker confirmation reference.
 9. After confirmed submission, update `pamspec-version.json`:
    - Set `ietf_submission_status` to `"submitted"`
@@ -88,4 +88,4 @@ The following steps MUST be performed manually by the editor (Richard M. Infanta
 
 **No IETF Datatracker upload or submission was performed during this publication readiness pass.**
 
-This file and all artifacts in `publication/00/` constitute a submission-ready package. Actual submission requires a deliberate manual action by the editor as described above.
+This file and all artifacts in `publication/00/` constitute a corrected re-upload package. Actual submission requires a deliberate manual action by the editor as described above.

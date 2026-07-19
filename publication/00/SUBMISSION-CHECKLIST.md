@@ -11,7 +11,7 @@ All items verified against source files in the same turn as this checklist was p
 | Category is `info` | PASS | Front matter: `category: info` |
 | IPR is `trust200902` | PASS | Front matter: `ipr: trust200902` |
 | Submission stream is independent | PASS | Front matter: `submissiontype: independent` |
-| Document date present | PASS | Front matter: `date: 2026-07-11` |
+| Document date present | PASS | Front matter: `date: 2026-07-19`; this is the artifact rebuild date |
 | Title matches expected | PASS | Title: "Architecture and Data Model for Persistent Memory in Agentic Systems" — matches mission specification |
 | Abbreviation `PAMSPEC` is present | PASS | Front matter: `abbrev: PAMSPEC` |
 | `ietf_submission_status` in manifest is `not_submitted` | PASS | `pamspec-version.json`: `"ietf_submission_status": "not_submitted"` |
@@ -36,12 +36,14 @@ All items verified against source files in the same turn as this checklist was p
 
 | Item | Status | Evidence |
 |---|---|---|
-| Primary author is Richard M. Infantado | PASS | Front matter: `ins: R. M. Infantado`, `name: Richard M. Infantado`, `role: editor`, `org: Independent`, `email: richard.infantado@gmail.com` |
+| Author count is two | PASS | Front matter contains Richard M. Infantado first and Robert Leroux second |
+| Primary author is Richard M. Infantado | PASS | Front matter: `ins: R. M. Infantado`, `name: Richard M. Infantado`, `role: editor`, `org: Independent`, `country: Philippines`, `email: richard.infantado@gmail.com` |
 | Author organization is Independent | PASS | Front matter: `org: Independent` |
+| Richard's country is Philippines | PASS | Front matter: `country: Philippines` |
 | Author email is richard.infantado@gmail.com | PASS | Front matter confirmed |
-| Robert Leroux is NOT listed as author or editor in front matter | PASS | Front matter has exactly one author entry (Richard M. Infantado). Robert Leroux does not appear in front matter. |
-| Robert Leroux is correctly acknowledged as Contributor | PASS | Acknowledgements section: "Robert Leroux (rl.isapience@gmail.com) contributed project review and specification feedback and is confirmed as a Contributor. He is not listed as a formal Internet-Draft author or editor in the front matter." |
-| CONTRIBUTORS.md correctly reflects contributor status | PASS | CONTRIBUTORS.md lists Robert Leroux as Contributor (not author/editor); explicitly states he is not listed as formal author or editor in front matter |
+| Robert Leroux is Author 2 | PASS | Front matter: `ins: R. Leroux`, `name: Robert Leroux`, `country: Australia`, `email: rl.isapience@gmail.com`; no organization and no editor role |
+| Robert Leroux is correctly acknowledged | PASS | Acknowledgements section: "Robert Leroux contributed technical review, implementation feedback, and editorial input to this document." |
+| CONTRIBUTORS.md correctly reflects co-authorship | PASS | CONTRIBUTORS.md lists Robert Leroux as second-listed co-author and technical reviewer, not editor |
 
 ## Normative Language (RFC 2119 / RFC 8174)
 
